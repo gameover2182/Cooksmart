@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cook Smart | Recetas con lo que tienes</title>
+    
+    <!-- Fuente Poppins desde Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Íconos de FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    
+    <style>
+        /* =========================================
+           VARIABLES Y CONFIGURACIÓN BASE
+           ========================================= */
+        :root {
+            --primary: #FF6B00;    /* Naranja principal */
+            --dark: #1A1A1A;       /* Negro navbar/footer */
+            --light: #FFFFFF;      /* Blanco fondos */
+            --text-dark: #1A1A1A;  /* Texto oscuro */
+            --gray: #888888;
+            --light-gray: #F5F5F5;
+            --border: #EEEEEE;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           NAVBAR (Fijo arriba)
+           ========================================= */
+        .navbar {
+            background-color: var(--dark);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--light);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .nav-badge {
+            background-color: var(--primary);
+            color: var(--light);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 50px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        /* Botón pill naranja */
+        .btn-login {
+            background-color: var(--primary);
+            color: var(--light) !important;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600 !important;
+            transition: filter 0.2s ease;
+            border-bottom: none !important;
+        }
+
+        .btn-login:hover {
+            filter: brightness(0.85); /* Oscurecer en hover */
+        }
+
+        .menu-icon {
+            display: none;
+            color: var(--light);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* =========================================
+           HERO SECTION
+           ========================================= */
+        .hero {
+            background-color: var(--primary);
+            padding: 80px 5%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s ease-out; /* Fade-in suave al cargar */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Fondo sutil de vegetales */
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-bg i {
+            position: absolute;
+            color: #D95A00; /* Naranja más oscuro */
+            opacity: 0.4;   /* Semi-transparente */
+        }
+        
+        /* Posiciones aleatorias para los íconos de fondo */
+        .hero-bg i:nth-child(1) { top: 15%; left: 10%; font-size: 80px; transform: rotate(-20deg); }
+        .hero-bg i:nth-child(2) { top: 60%; left: 5%; font-size: 100px; transform: rotate(15deg); }
+        .hero-bg i:nth-child(3) { top: 20%; right: 15%; font-size: 70px; transform: rotate(30deg); }
+        .hero-bg i:nth-child(4) { top: 65%; right: 8%; font-size: 90px; transform: rotate(-10deg); }
+        .hero-bg i:nth-child(5) { top: 80%; left: 30%; font-size: 60px; transform: rotate(45deg); }
+        .hero-bg i:nth-child(6) { top: 10%; left: 60%; font-size: 85px; transform: rotate(-45deg); }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            color: var(--light);
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            color: var(--light);
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .search-input-container {
+            background: var(--light);
+            border-radius: 50px;
+            padding: 5px 25px;
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .search-input-container input {
+            border: none;
+            outline: none;
+            padding: 15px 10px;
+            width: 100%;
+            font-size: 16px;
+            background: transparent;
+        }
+
+        .search-input-container i {
+            color: var(--dark);
+            font-size: 18px;
+        }
+
+        .btn-generate {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 18px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-generate:hover {
+            background-color: #000000; /* Oscurecer en hover */
+        }
+
+        /* =========================================
+           SECCIÓN CATEGORÍAS
+           ========================================= */
+        .categories {
+            padding: 50px 5%;
+            background-color: var(--light);
+        }
+
+        .categories-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: nowrap;
+        }
+
+        .category-card {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px 20px;
+            text-align: center;
+            min-width: 140px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: all 0.3s ease; /* Transición suave */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-icon {
+            font-size: 28px;
+        }
+
+        .category-text {
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 15px;
+            transition: color 0.3s ease;
+        }
+
+        /* Hover de categorías: flip de color */
+        .category-card:hover {
+            background-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(255, 107, 0, 0.2);
+        }
+
+        .category-card:hover .category-text {
+            color: var(--light);
+        }
+
+        /* =========================================
+           SECCIÓN RECETAS POPULARES
+           ========================================= */
+        .recipes {
+            padding: 50px 5%;
+            background-color: var(--light);
+            min-height: 500px;
+        }
+
+        .recipes-header {
+            margin-bottom: 40px;
+        }
+
+        .recipes-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .recipe-card {
+            background: var(--light);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        /* Elevan sombra en hover */
+        .recipe-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+        }
+
+        .recipe-img-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+
+        .recipe-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-match {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-fav {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            color: var(--light);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-fav:hover {
+            background: rgba(0,0,0,0.5);
+        }
+
+        .btn-fav.active {
+            color: var(--primary);
+        }
+
+        /* Corazón favorito: animación bounce */
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-fav.bounce i {
+            animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .recipe-info {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .recipe-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .recipe-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+
+        .recipe-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .recipe-time i {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .chip-difficulty {
+            background-color: #FFF0E6; /* Naranja muy clarito */
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 107, 0, 0.2);
+        }
+
+        /* Mensaje cuando no hay resultados */
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--light-gray);
+            border-radius: 16px;
+            display: none; /* Oculto por defecto */
+        }
+
+        .no-results i {
+            font-size: 48px;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        .no-results p {
+            font-size: 18px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        /* =========================================
+           FOOTER
+           ========================================= */
+        footer {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 60px 5% 20px;
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--light);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .footer-logo span {
+            color: var(--primary);
+        }
+
+        .footer-desc {
+            color: #AAAAAA;
+            font-size: 14px;
+            max-width: 320px;
+            line-height: 1.6;
+        }
+
+        .footer-col h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--light);
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links a {
+            color: #CCCCCC;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 15px;
+        }
+
+        .footer-social a {
+            color: var(--primary);
+            background: rgba(255,255,255,0.05);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .footer-social a:hover {
+            background: var(--primary);
+            color: var(--light);
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333333; /* Línea separadora gris */
+            padding-top: 20px;
+            text-align: center;
+            color: #AAAAAA;
+            font-size: 14px;
+        }
+
+        /* =========================================
+           MODAL DE RECETA
+           ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--light);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .btn-close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--light);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-dark);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .modal-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .modal-ingredients {
+            margin-top: 20px;
+        }
+
+        .modal-ingredients h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .modal-ingredients ul {
+            list-style-type: none;
+        }
+
+        .modal-ingredients li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 15px;
+        }
+
+        .modal-ingredients li::before {
+            content: '\f00c'; /* Check icon */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--primary);
+            display: inline-block; 
+            width: 1.5em;
+        }
+
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed;
+            bottom: -100px;
+            right: 20px;
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+            z-index: 3000;
+            transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast-notification.show {
+            bottom: 20px;
+        }
+
+        /* =========================================
+           RESPONSIVE
+           ========================================= */
+        @media (max-width: 1024px) {
+            .recipes-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 columnas en tablet */
+            }
+            .hero h1 {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Menú móvil */
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: var(--dark);
+                flex-direction: column;
+                padding: 20px 0;
+                gap: 20px;
+                display: none;
+                box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .menu-icon {
+                display: block;
+            }
+
+            .search-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-generate {
+                width: 100%;
+            }
+
+            /* Scroll horizontal en móvil */
+            .categories-container {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 15px;
+                /* Scrollbar estilización */
+                -webkit-overflow-scrolling: touch;
+            }
+            .categories-container::-webkit-scrollbar {
+                height: 6px;
+            }
+            .categories-container::-webkit-scrollbar-thumb {
+                background: #ddd;
+                border-radius: 10px;
+            }
+
+            /* Columnas apiladas en móvil */
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            .footer-social {
+                justify-content: center;
+            }
+            .footer-desc {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .recipes-grid {
+                grid-template-columns: 1fr; /* 1 columna en móvil */
+            }
+            .hero h1 {
+                font-size: 36px;
+            }
+            .hero {
+                padding: 60px 5%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Cook<span>Smart</span></a>
+        
+        <div class="nav-links">
+            <a href="index.html" class="active">Inicio</a>
+            <a href="recetas.html">Buscar Recetas</a>
+            <a href="mi-nevera.html">Mi Nevera</a>
+            <a href="favoritos.html">Favoritos <span class="nav-badge" id="navFavBadge" style="display:none">0</span></a>
+            <a href="login.html" class="btn-login" id="btn-login">Iniciar Sesión</a>
+        </div>
+        
+        <!-- Menú hamburguesa móvil -->
+        <div class="menu-icon">
+            <i class="fas fa-bars"></i>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="buscar">
+        <div class="hero-bg">
+            <i class="fas fa-carrot"></i>
+            <i class="fas fa-leaf"></i>
+            <i class="fas fa-apple-alt"></i>
+            <i class="fas fa-lemon"></i>
+            <i class="fas fa-pepper-hot"></i>
+            <i class="fas fa-seedling"></i>
+        </div>
+        
+        <div class="hero-content">
+            <h1>¿Qué hay en tu nevera?</h1>
+            <p>Ingresa tus ingredientes y te generamos recetas para no desperdiciar nada.</p>
+            
+            <div class="search-box">
+                <div class="search-input-container">
+                    <input type="text" id="searchInput" placeholder="Ej: pollo, arroz, tomate...">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button class="btn-generate" id="btnGenerate">Generar Recetas</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN CATEGORÍAS -->
+    <section class="categories">
+        <div class="categories-container">
+            <a href="desayunos.html" class="category-card" style="text-decoration:none;color:inherit;">
+                <span class="category-icon">☕</span>
+                <span class="category-text">Desayunos</span>
+            </a>
+            <a href="almuerzos.html" class="category-card" style="text-decoration:none;color:inherit;">
+                <span class="category-icon">🍽️</span>
+                <span class="category-text">Almuerzos</span>
+            </a>
+            <a href="cenas.html" class="category-card" style="text-decoration:none;color:inherit;">
+                <span class="category-icon">🌙</span>
+                <span class="category-text">Cenas</span>
+            </a>
+            <a href="vegetariano.html" class="category-card" style="text-decoration:none;color:inherit;">
+                <span class="category-icon">🌿</span>
+                <span class="category-text">Vegetariano</span>
+            </a>
+            <a href="rapido.html" class="category-card" style="text-decoration:none;color:inherit;">
+                <span class="category-icon">⏱️</span>
+                <span class="category-text">Rápido (<30 min)</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- SECCIÓN PARA TI (oculta por defecto) -->
+    <section id="recommendationsSection" 
+      style="display:none; padding:40px 5%;">
+      <div style="display:flex;justify-content:space-between;
+        align-items:center;margin-bottom:8px;">
+        <h2 style="font-size:28px;font-weight:700;
+          color:#1A1A1A;">🍽️ Recomendado para ti</h2>
+        <a href="recetas.html" 
+          style="color:#FF6B00;font-weight:600;
+          font-size:14px;text-decoration:none;
+          display:flex;align-items:center;gap:6px;">
+          Ver todas 
+          <span style="font-size:18px;">→</span>
+        </a>
+      </div>
+      <p style="color:#888;margin-bottom:24px;
+        font-size:15px;">
+        Basado en tus preferencias guardadas
+      </p>
+      <!-- Carrusel con flechas -->
+      <div style="position:relative;">
+        <button id="recomPrev" onclick="scrollRecom(-1)"
+          style="position:absolute;left:-20px;top:50%;
+          transform:translateY(-50%);z-index:10;
+          background:#1A1A1A;color:white;border:none;
+          border-radius:50%;width:40px;height:40px;
+          font-size:18px;cursor:pointer;
+          display:none;align-items:center;
+          justify-content:center;box-shadow:0 4px 12px 
+          rgba(0,0,0,0.2);">‹</button>
+        
+        <div id="recomGrid" style="display:grid;
+          grid-template-columns:repeat(4,1fr);
+          gap:24px;overflow:hidden;"></div>
+        
+        <button id="recomNext" onclick="scrollRecom(1)"
+          style="position:absolute;right:-20px;top:50%;
+          transform:translateY(-50%);z-index:10;
+          background:#1A1A1A;color:white;border:none;
+          border-radius:50%;width:40px;height:40px;
+          font-size:18px;cursor:pointer;
+          display:none;align-items:center;
+          justify-content:center;box-shadow:0 4px 12px 
+          rgba(0,0,0,0.2);">›</button>
+      </div>
+    </section>
+
+    <!-- SECCIÓN RECETAS POPULARES -->
+    <section class="recipes">
+        <div class="recipes-header">
+            <h2 id="recipesTitle" class="recipes-title">Recetas Populares</h2>
+        </div>
+        
+        <div id="recipesGrid" class="recipes-grid">
+            <!-- Las tarjetas de recetas se generarán por JavaScript -->
+        </div>
+
+        <!-- Mensaje de no resultados (oculto por defecto) -->
+        <div id="noResultsMsg" class="no-results">
+            <i class="far fa-frown-open"></i>
+            <p>No encontramos recetas con esos ingredientes.<br>¡Intenta con otros!</p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-container">
+            <!-- COLUMNA 1 -->
+            <div class="footer-col">
+                <a href="#" class="footer-logo">Cook<span>Smart</span></a>
+                <p class="footer-desc">Reduce el desperdicio de comida con recetas personalizadas usando solo los ingredientes que tienes.</p>
+            </div>
+            
+            <!-- COLUMNA 2 -->
+            <div class="footer-col">
+                <h3>Enlaces</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="recetas.html">Recetas</a></li>
+                    <li><a href="#">Nosotros</a></li>
+                    <li><a href="#">Contacto</a></li>
+                </ul>
+            </div>
+            
+            <!-- COLUMNA 3 -->
+            <div class="footer-col">
+                <h3>Síguenos</h3>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>© 2026 Cook Smart. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL DE RECETA -->
+    <div id="recipeModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="btn-close-modal" id="modalClose">
+                <i class="fas fa-times"></i>
+            </button>
+            <img src="" alt="Receta" id="modalImg" class="modal-img">
+            <div class="modal-body">
+                <h3 id="modalTitle" class="modal-title">Nombre Receta</h3>
+                <div class="modal-ingredients">
+                    <h4>Ingredientes Necesarios:</h4>
+                    <ul id="modalIngredientsList">
+                        <!-- Se llena con JS -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="favToast" class="toast-notification">
+        <i class="fas fa-heart"></i> Guardado en favoritos
+    </div>
+
+    <!-- CÓDIGO JAVASCRIPT -->
+    <script src="recetas-db.js"></script>
+    <script>
+        // Leer favoritos de localStorage al iniciar
+        let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+
+        // Referencias del DOM
+        const recipesGrid = document.getElementById('recipesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const btnGenerate = document.getElementById('btnGenerate');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        const recipesTitle = document.getElementById('recipesTitle');
+        const menuIcon = document.querySelector('.menu-icon');
+        const navLinks = document.querySelector('.nav-links');
+
+        // Menú hamburguesa (Móvil)
+        menuIcon.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const icon = menuIcon.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Función para renderizar las tarjetas en el grid
+        function renderRecetas(recetas, gridId) {
+            const grid = gridId 
+                ? document.getElementById(gridId) 
+                : recipesGrid;
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            // Si no hay recetas, mostramos el mensaje de error
+            if (recetas.length === 0) {
+                grid.style.display = 'none';
+                noResultsMsg.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            noResultsMsg.style.display = 'none';
+            
+            recetas.forEach(receta => {
+                const isFav = favoritos.some(f => f.id === receta.id);
+                
+                // Al renderizar cada receta, calcular match real
+                const misIngredientes = JSON.parse(
+                    localStorage.getItem('cookSmartIngredientes') || '[]'
+                );
+                const gustos = JSON.parse(
+                    localStorage.getItem('cookSmartGustos') || '[]'
+                );
+
+                let matchReal = receta.match || 0;
+
+                if (misIngredientes.length > 0 && receta.ingredientes) {
+                    const coincidencias = receta.ingredientes.filter(
+                        ing => misIngredientes.some(mi => 
+                            ing.toLowerCase().includes(mi.toLowerCase()) ||
+                            mi.toLowerCase().includes(ing.toLowerCase())
+                        )
+                    ).length;
+                    matchReal = Math.round(
+                        (coincidencias / receta.ingredientes.length) * 100
+                    );
+                }
+
+                // Color del badge según porcentaje
+                const badgeColor = matchReal >= 80 ? '#2E7D32' : 
+                                   matchReal >= 50 ? '#FF6B00' : 
+                                   matchReal > 0   ? '#888' : '#CCC';
+
+                // Crear contenedor de la tarjeta
+                const card = document.createElement('div');
+                card.className = 'recipe-card';
+                // Al hacer clic en la tarjeta (excepto el corazón), se redirige al detalle
+                card.onclick = (e) => {
+                    if(!e.target.closest('.btn-fav')) {
+                        window.location.href = `receta-detalle.html?id=${receta.id}`;
+                    }
+                };
+                
+                card.innerHTML = `
+                    <div class="recipe-img-container">
+                        <img 
+                          src="${receta.imagen}" 
+                          alt="${receta.nombre}"
+                          onerror="this.src='https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80'"
+                        >
+                        <div class="badge-match" style="background:${badgeColor}">${matchReal}% Match</div>
+                        <button class="btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav(event, ${receta.id}, this)">
+                            <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="recipe-info">
+                        <h3 class="recipe-name">${receta.nombre}</h3>
+                        <div class="recipe-meta">
+                            <div class="recipe-time">
+                                <i class="far fa-clock"></i>
+                                <span>${receta.tiempo}</span>
+                            </div>
+                            <div class="chip-difficulty">${receta.dificultad}</div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        let recomTodasLasRecetas = [];
+        let recomPaginaActual = 0;
+        const RECOM_POR_PAGINA = 4;
+
+        function scrollRecom(direccion) {
+            recomPaginaActual += direccion;
+            const total = recomTodasLasRecetas.length;
+            const maxPagina = Math.ceil(total/RECOM_POR_PAGINA) - 1;
+            
+            if (recomPaginaActual < 0) recomPaginaActual = 0;
+            if (recomPaginaActual > maxPagina) 
+                recomPaginaActual = maxPagina;
+            
+            const inicio = recomPaginaActual * RECOM_POR_PAGINA;
+            const fin = inicio + RECOM_POR_PAGINA;
+            renderRecetas(
+                recomTodasLasRecetas.slice(inicio, fin), 
+                'recomGrid'
+            );
+            
+            // Mostrar/ocultar flechas
+            document.getElementById('recomPrev').style.display = 
+                recomPaginaActual > 0 ? 'flex' : 'none';
+            document.getElementById('recomNext').style.display = 
+                recomPaginaActual < maxPagina ? 'flex' : 'none';
+        }
+
+        // Filtro universal de restricciones (BUG 2)
+        function filtrarPorRestricciones(recetas) {
+            const restricciones = JSON.parse(
+                localStorage.getItem('cookSmartRestricciones') || '[]'
+            );
+            const gustos = JSON.parse(
+                localStorage.getItem('cookSmartGustos') || '[]'
+            );
+            return recetas.filter(receta => {
+                if (!receta || !receta.nombre) return false;
+                if (restricciones.length > 0) {
+                    const cumple = restricciones.every(r =>
+                        receta.restricciones && receta.restricciones.includes(r)
+                    );
+                    if (!cumple) return false;
+                }
+                const gustosEstrictos = ['vegetariano', 'vegetariana', 'vegana'];
+                if (gustos.some(g => gustosEstrictos.includes(g))) {
+                    const esVeg = (receta.etiquetas && (
+                        receta.etiquetas.includes('vegetariano') ||
+                        receta.etiquetas.includes('vegetariana') ||
+                        receta.etiquetas.includes('vegana')
+                    )) || receta.categoria === 'vegetariano';
+                    if (!esVeg) return false;
+                }
+                return true;
+            });
+        }
+
+        // BUG 3: Recetas Populares basadas en favoritos
+        function cargarRecetasPopulares() {
+            const favs = JSON.parse(
+                localStorage.getItem('cooksmart_favoritos') || '[]'
+            );
+            const titulo = document.getElementById('recipesTitle');
+            
+            let base;
+            if (favs.length > 0) {
+                if (titulo) titulo.textContent = '❤️ Basado en tus favoritos';
+                const etiquetas = [...new Set(
+                    favs.flatMap(f => f.etiquetas || [])
+                )];
+                const idsEnFavs = new Set(favs.map(f => f.id));
+                const similares = RECETAS_DB.filter(r =>
+                    r && !idsEnFavs.has(r.id) &&
+                    r.etiquetas && r.etiquetas.some(
+                        t => etiquetas.includes(t)
+                    )
+                );
+                base = [...favs.slice(-2), ...similares];
+            } else {
+                if (titulo) titulo.textContent = '🍽️ Recetas Populares';
+                base = RECETAS_DB.filter(r => r && r.nombre);
+            }
+            
+            const filtradas = filtrarPorRestricciones(base);
+            renderRecetas(filtradas.slice(0, 4));
+        }
+
+        cargarRecetasPopulares();
+
+        // Actualizar cuando cambien los favoritos
+        window.addEventListener('storage', e => {
+            if (e.key === 'cooksmart_favoritos') {
+                cargarRecetasPopulares();
+            }
+        });
+
+        // Funcionalidad BÚSQUEDA
+        btnGenerate.addEventListener('click', () => { window.location.href = 'recetas.html'; });
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.location.href = 'recetas.html';
+        });
+
+        function mostrarToast() {
+            const toast = document.getElementById('favToast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Funcionalidad FAVORITOS
+        function toggleFav(e, id, btnElement) {
+            e.stopPropagation(); // Evitar que el clic abra el modal
+            
+            let favoritosLocales = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const icon = btnElement.querySelector('i');
+            
+            const receta = RECETAS_DB.find(r => r.id === id);
+            if (!receta) return;
+            
+            const existeIndex = favoritosLocales.findIndex(f => f.id === id);
+            
+            if (existeIndex === -1) {
+                // No está en favoritos, se agrega el objeto completo
+                favoritosLocales.push(receta);
+                btnElement.classList.add('active', 'bounce');
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                
+                // Remover la clase de animación para que se pueda repetir después
+                setTimeout(() => btnElement.classList.remove('bounce'), 400);
+                mostrarToast();
+            } else {
+                // Ya estaba en favoritos, se remueve
+                favoritosLocales.splice(existeIndex, 1);
+                btnElement.classList.remove('active');
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+            }
+            
+            favoritos = favoritosLocales; // update memory state
+            // Actualizar persistencia
+            localStorage.setItem('cooksmart_favoritos', JSON.stringify(favoritosLocales));
+            updateNavBadge();
+        }
+
+        // Funcionalidad Badge Navegación
+        function updateNavBadge() {
+            const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const badge = document.getElementById('navFavBadge');
+            if (badge) {
+                if (favs.length > 0) {
+                    badge.textContent = favs.length;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        updateNavBadge();
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'cooksmart_favoritos') updateNavBadge();
+        });
+
+        // Funcionalidad MODAL
+        const modalOverlay = document.getElementById('recipeModal');
+        const modalClose = document.getElementById('modalClose');
+
+        function abrirModal(receta) {
+            document.getElementById('modalImg').src = receta.imagen;
+            document.getElementById('modalTitle').textContent = receta.nombre;
+            
+            const ingredientsList = document.getElementById('modalIngredientsList');
+            ingredientsList.innerHTML = '';
+            
+            // Llenar lista de ingredientes en el modal
+            receta.ingredientes.forEach(ing => {
+                const li = document.createElement('li');
+                // Capitalizar primera letra
+                li.textContent = ing.charAt(0).toUpperCase() + ing.slice(1);
+                ingredientsList.appendChild(li);
+            });
+            
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Evitar scroll del fondo
+        }
+
+        modalClose.addEventListener('click', cerrarModal);
+        modalOverlay.addEventListener('click', (e) => {
+            // Cerrar si hace clic fuera del contenido (en el overlay oscuro)
+            if (e.target === modalOverlay) cerrarModal();
+        });
+
+        function cerrarModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Restaurar scroll
+        }
+    // RECOMENDACIONES PERSONALIZADAS
+    // Se ejecuta cuando Firebase confirma sesión
+    window.addEventListener('authUpdated', async () => {
+        const user = fbAuth.currentUser;
+        if (user) {
+            // Verificar si es primera vez en esta sesión
+            const yaVioWelcome = sessionStorage.getItem('welcomeShown');
+            if (!yaVioWelcome) {
+                sessionStorage.setItem('welcomeShown', '1');
+                const nombre = user.displayName ? user.displayName.split(' ')[0] : 'de vuelta';
+                const toast = document.createElement('div');
+                toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:#1A1A1A;color:white;padding:16px 28px;border-radius:50px;font-family:Poppins,sans-serif;font-size:15px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.3);z-index:9999;transition:transform 0.4s ease;border-left:4px solid #FF6B00;`;
+                toast.innerHTML = `👋 ¡Bienvenid@ de vuelta, ${nombre}!`;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(0)'; }, 100);
+                setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(100px)'; setTimeout(() => toast.remove(), 400); }, 3500);
+            }
+        }
+        if (!user) {
+            document.getElementById(
+                'recommendationsSection'
+            ).style.display = 'none';
+            return;
+        }
+        
+        try {
+            const snap = await fbDB.ref(
+                'usuarios/' + user.uid + '/preferencias'
+            ).get();
+            
+            if (!snap.exists()) return;
+            
+            const prefs = snap.val();
+            const gustos = prefs.gustos || [];
+            // Compatibilidad: leer "restricciones" (nuevo) 
+            // o "restriccion" (viejo campo singular)
+            const restricciones = 
+                prefs.restricciones || 
+                (prefs.restriccion ? [prefs.restriccion] : []);
+            
+            // Guardar en localStorage
+            localStorage.setItem(
+                'cookSmartRestricciones',
+                JSON.stringify(restricciones)
+            );
+            localStorage.setItem(
+                'cookSmartGustos',
+                JSON.stringify(gustos)
+            );
+            
+            // Filtrar por restricciones
+            let filtradas = RECETAS_DB.filter(receta => {
+                if (restricciones.length === 0) return true;
+                return restricciones.every(r =>
+                    receta.restricciones &&
+                    receta.restricciones.includes(r)
+                );
+            });
+            
+            // Puntuar por gustos
+            filtradas = filtradas.map(r => {
+                let score = 0;
+                
+                // Para CADA gusto del usuario, filtrar y puntuar
+                const gustosAFiltrar = [
+                    'vegetariana','vegana','colombiana','italiana',
+                    'asiatica','mexicana','rapida','saludable',
+                    'postres','mariscos','parrilla','sopas'
+                ];
+
+                let debeExcluir = false;
+                gustos.forEach(gusto => {
+                    const gustoNorm = gusto
+                        .replace('vegetariano','vegetariana')
+                        .replace('rapida','rapida');
+                    
+                    if (gustosAFiltrar.includes(gusto) || 
+                        gustosAFiltrar.includes(gustoNorm)) {
+                        const tieneEtiqueta = r.etiquetas && (
+                            r.etiquetas.includes(gusto) ||
+                            r.etiquetas.includes(gustoNorm) ||
+                            r.categoria === gusto ||
+                            r.categoria === gustoNorm
+                        );
+                        if (tieneEtiqueta) {
+                            score += 3;
+                        }
+                    }
+                });
+                
+                // Para otros gustos, sumar puntos por coincidencia
+                if (r.etiquetas && gustos.length > 0) {
+                    r.etiquetas.forEach(tag => {
+                        if (gustos.some(g =>
+                            g === tag ||
+                            g === tag.replace(/a$/, 'o') ||
+                            tag === g.replace(/o$/, 'a')
+                        )) score += 2;
+                    });
+                    if (gustos.includes(r.categoria)) score += 1;
+                }
+                
+                return { ...r, score };
+            });
+
+            // Filtrar recetas con score -1 (no son del gusto)
+            filtradas = filtradas.filter(r => r.score >= 0);
+
+            // Ordenar por score
+            filtradas.sort((a, b) => b.score - a.score);
+            
+            const recomSection = document.getElementById(
+                'recommendationsSection'
+            );
+            
+            if (filtradas.length > 0 && 
+                (gustos.length > 0 || restricciones.length > 0)) {
+                recomSection.style.display = 'block';
+                recomTodasLasRecetas = filtradas;
+                recomPaginaActual = 0;
+                renderRecetas(filtradas.slice(0, 4), 'recomGrid');
+                
+                // Mostrar flecha siguiente si hay más de 4
+                const btnNext = document.getElementById('recomNext');
+                if (btnNext && filtradas.length > 4) {
+                    btnNext.style.display = 'flex';
+                }
+            } else {
+                recomSection.style.display = 'none';
+            }
+            
+            // BUG 3: Recetas Populares basadas en favoritos
+            const favoritosUsuario = JSON.parse(
+                localStorage.getItem('cooksmart_favoritos') || '[]'
+            );
+
+            let populares;
+
+            if (favoritosUsuario.length > 0) {
+                const titulo = document.getElementById('recipesTitle');
+                if (titulo) titulo.textContent = '❤️ Basado en tus favoritos';
+                
+                const idsEnFavs = new Set(favoritosUsuario.map(f=>f.id));
+                const etiquetasFavs = [...new Set(
+                    favoritosUsuario.flatMap(f => f.etiquetas || [])
+                )];
+                
+                const similares = RECETAS_DB.filter(r => 
+                    r && !idsEnFavs.has(r.id) &&
+                    r.etiquetas && r.etiquetas.some(
+                        tag => etiquetasFavs.includes(tag)
+                    )
+                );
+                
+                const favRecientes = favoritosUsuario.slice(-2);
+                populares = [...favRecientes, ...similares];
+            } else {
+                const titulo = document.getElementById('recipesTitle');
+                if (titulo) titulo.textContent = '🍽️ Recetas Populares';
+                populares = RECETAS_DB.filter(r => r && r.nombre);
+            }
+
+            // Aplicar restricciones
+            populares = filtrarPorRestricciones(populares);
+            renderRecetas(populares.slice(0, 4));
+            
+        } catch(e) { 
+            console.warn('Error cargando preferencias:', e); 
+        }
+    });
+    </script>
+    <script src="firebase-sync.js"></script>
+</body>
+</html>

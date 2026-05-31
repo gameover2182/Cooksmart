@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cook Smart | Buscar Recetas</title>
+    
+    <!-- Fuente Poppins desde Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Íconos de FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    
+    <style>
+        /* =========================================
+           VARIABLES Y CONFIGURACIÓN BASE
+           ========================================= */
+        :root {
+            --primary: #FF6B00;    /* Naranja principal */
+            --dark: #1A1A1A;       /* Negro navbar/footer */
+            --light: #FFFFFF;      /* Blanco fondos */
+            --text-dark: #1A1A1A;  /* Texto oscuro */
+            --gray: #888888;
+            --light-gray: #F5F5F5;
+            --border: #EEEEEE;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           NAVBAR (Copia exacta de index.html)
+           ========================================= */
+        .navbar {
+            background-color: var(--dark);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--light);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .nav-badge {
+            background-color: var(--primary);
+            color: var(--light);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 50px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .btn-login {
+            background-color: var(--primary);
+            color: var(--light) !important;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600 !important;
+            transition: filter 0.2s ease;
+            border-bottom: none !important;
+        }
+
+        .btn-login:hover {
+            filter: brightness(0.85);
+        }
+
+        .menu-icon {
+            display: none;
+            color: var(--light);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* =========================================
+           HERO PEQUEÑO
+           ========================================= */
+        .hero-small {
+            background-color: var(--primary);
+            padding: 40px 5%;
+            text-align: center;
+        }
+
+        .hero-small h1 {
+            color: var(--light);
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .hero-small p {
+            color: var(--light);
+            font-size: 16px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input-container {
+            background: var(--light);
+            border-radius: 50px;
+            padding: 5px 25px;
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .search-input-container input {
+            border: none;
+            outline: none;
+            padding: 12px 10px;
+            width: 100%;
+            font-size: 16px;
+            background: transparent;
+        }
+
+        .search-input-container i {
+            color: var(--dark);
+            font-size: 18px;
+        }
+
+        .btn-generate {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-generate:hover {
+            background-color: #000000;
+        }
+
+        /* =========================================
+           LAYOUT BÚSQUEDA (Dos Columnas)
+           ========================================= */
+        .search-page {
+            padding: 40px 5%;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* COLUMNA IZQUIERDA: FILTROS */
+        .filters-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--light);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .filter-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 25px;
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .filter-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .filter-subtitle {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        /* Slider de tiempo */
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-value {
+            font-size: 14px;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--light-gray);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Checkboxes Dificultad */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Chips Tipo */
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 6px 14px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            background: var(--light);
+            color: var(--text-dark);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .chip.active {
+            background: var(--primary);
+            color: var(--light);
+            border-color: var(--primary);
+        }
+
+        /* Toggle Switch "Solo con MIS ingredientes" */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-toggle {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #E0E0E0;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider-toggle {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider-toggle:before {
+            transform: translateX(22px);
+        }
+
+        /* Botones del filtro */
+        .btn-filter-apply {
+            width: 100%;
+            background: var(--primary);
+            color: var(--light);
+            border: none;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: filter 0.2s;
+        }
+
+        .btn-filter-apply:hover {
+            filter: brightness(0.9);
+        }
+
+        .btn-filter-clear {
+            width: 100%;
+            background: var(--light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-filter-clear:hover {
+            background: var(--primary);
+            color: var(--light);
+        }
+
+        /* Botón toggle móvil */
+        .filter-toggle-mobile {
+            display: none;
+            width: 100%;
+            background: var(--light);
+            border: 1px solid var(--border);
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--dark);
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .filter-toggle-mobile i {
+            color: var(--primary);
+        }
+
+        /* COLUMNA DERECHA: RESULTADOS */
+        .results-container {
+            flex-grow: 1;
+        }
+
+        .results-header {
+            margin-bottom: 25px;
+            color: var(--gray);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        /* TARJETAS DE RECETA (Estilo idéntico a index.html) */
+        .recipe-card {
+            background: var(--light);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-4px); /* Sube 4px como se solicitó */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); /* Sombra más pronunciada */
+        }
+
+        .recipe-img-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+
+        .recipe-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-match {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-fav {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            color: var(--light);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-fav:hover {
+            background: rgba(0,0,0,0.5);
+        }
+
+        .btn-fav.active {
+            color: var(--primary);
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-fav.bounce i {
+            animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .recipe-info {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .recipe-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .recipe-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+
+        .recipe-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .recipe-time i {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .chip-difficulty {
+            background-color: #FFF0E6;
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 107, 0, 0.2);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--light-gray);
+            border-radius: 16px;
+            display: none;
+            grid-column: 1 / -1;
+        }
+
+        .no-results i {
+            font-size: 48px;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        .no-results p {
+            font-size: 18px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        /* =========================================
+           FOOTER (Copia exacta)
+           ========================================= */
+        footer {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 60px 5% 20px;
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--light);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .footer-logo span {
+            color: var(--primary);
+        }
+
+        .footer-desc {
+            color: #AAAAAA;
+            font-size: 14px;
+            max-width: 320px;
+            line-height: 1.6;
+        }
+
+        .footer-col h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--light);
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links a {
+            color: #CCCCCC;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 15px;
+        }
+
+        .footer-social a {
+            color: var(--primary);
+            background: rgba(255,255,255,0.05);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .footer-social a:hover {
+            background: var(--primary);
+            color: var(--light);
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333333;
+            padding-top: 20px;
+            text-align: center;
+            color: #AAAAAA;
+            font-size: 14px;
+        }
+
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed;
+            bottom: -100px;
+            right: 20px;
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+            z-index: 3000;
+            transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast-notification.show {
+            bottom: 20px;
+        }
+
+        /* =========================================
+           RESPONSIVE
+           ========================================= */
+        @media (max-width: 1024px) {
+            .results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: var(--dark);
+                flex-direction: column;
+                padding: 20px 0;
+                gap: 20px;
+                display: none;
+                box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .menu-icon {
+                display: block;
+            }
+
+            .search-page {
+                flex-direction: column;
+            }
+            .filters-sidebar {
+                width: 100%;
+                display: none; /* Oculto por defecto en móvil */
+            }
+            .filters-sidebar.active {
+                display: block;
+            }
+            .filter-toggle-mobile {
+                display: flex;
+            }
+
+            .search-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-generate {
+                width: 100%;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            .footer-social {
+                justify-content: center;
+            }
+            .footer-desc {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-small h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Cook<span>Smart</span></a>
+        
+        <div class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="recetas.html" class="active">Buscar Recetas</a>
+            <a href="mi-nevera.html">Mi Nevera</a>
+            <a href="favoritos.html">Favoritos <span class="nav-badge" id="navFavBadge" style="display:none">0</span></a>
+            <a href="login.html" class="btn-login" id="btn-login">Iniciar Sesión</a>
+        </div>
+        
+        <!-- Menú hamburguesa móvil -->
+        <div class="menu-icon">
+            <i class="fas fa-bars"></i>
+        </div>
+    </nav>
+
+    <!-- HERO PEQUEÑO -->
+    <section class="hero-small">
+        <h1>Buscar Recetas</h1>
+        <p>Encuentra recetas con los ingredientes que tienes en casa</p>
+        
+        <div class="search-box">
+            <div class="search-input-container">
+                <input type="text" id="searchInput" placeholder="Ej: pollo, arroz, tomate...">
+                <i class="fas fa-search"></i>
+            </div>
+            <button class="btn-generate" id="btnSearch">Buscar</button>
+        </div>
+    </section>
+
+    <!-- LAYOUT PRINCIPAL -->
+    <section class="search-page">
+        
+        <!-- Botón toggle para móvil -->
+        <button class="filter-toggle-mobile" id="btnFilterToggle">
+            Filtros <i class="fas fa-sliders-h"></i>
+        </button>
+
+        <!-- COLUMNA IZQUIERDA: FILTROS -->
+        <aside class="filters-sidebar" id="sidebarFilters">
+            <h2 class="filter-title">Filtros</h2>
+            
+            <!-- Tiempo -->
+            <div class="filter-section">
+                <h3 class="filter-subtitle">Tiempo máximo</h3>
+                <div class="slider-container">
+                    <span class="slider-value" id="timeDisplay">Hasta 60 min</span>
+                    <input type="range" id="timeSlider" min="10" max="60" value="60" step="5">
+                </div>
+            </div>
+            
+            <!-- Dificultad -->
+            <div class="filter-section">
+                <h3 class="filter-subtitle">Dificultad</h3>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="diff-checkbox" value="Fácil"> Fácil
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="diff-checkbox" value="Media"> Media
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="diff-checkbox" value="Difícil"> Difícil
+                </label>
+            </div>
+            
+            <!-- Tipo -->
+            <div class="filter-section">
+                <h3 class="filter-subtitle">Tipo</h3>
+                <div class="chips-container">
+                    <div class="chip" data-type="Desayuno">Desayuno</div>
+                    <div class="chip" data-type="Almuerzo">Almuerzo</div>
+                    <div class="chip" data-type="Cena">Cena</div>
+                    <div class="chip" data-type="Vegetariano">Vegetariano</div>
+                    <div class="chip" data-type="Rápido">Rápido</div>
+                </div>
+            </div>
+            
+            <!-- Toggle MIS ingredientes -->
+            <div class="filter-section">
+                <div class="toggle-container">
+                    <span>Solo con MIS ingredientes</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggleMyIng">
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn-filter-apply" id="btnApply">Aplicar filtros</button>
+            <button class="btn-filter-clear" id="btnClear">Limpiar filtros</button>
+        </aside>
+
+        <!-- COLUMNA DERECHA: RESULTADOS -->
+        <main class="results-container">
+            <div class="results-header" id="resultsCount">Cargando recetas...</div>
+            
+            <div class="recipes-grid" id="recipesGrid">
+                <!-- Se llena con JS -->
+            </div>
+            
+            <!-- Mensaje de no resultados -->
+            <div id="noResultsMsg" class="no-results">
+                <i class="far fa-folder-open"></i>
+                <p>No encontramos recetas con estos filtros.<br>Intenta ajustarlos o buscar otra cosa.</p>
+            </div>
+        </main>
+        
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-col">
+                <a href="index.html" class="footer-logo">Cook<span>Smart</span></a>
+                <p class="footer-desc">Reduce el desperdicio de comida con recetas personalizadas usando solo los ingredientes que tienes.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Enlaces</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="recetas.html">Recetas</a></li>
+                    <li><a href="#">Nosotros</a></li>
+                    <li><a href="#">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Síguenos</h3>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Cook Smart. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="favToast" class="toast-notification">
+        <i class="fas fa-heart"></i> Guardado en favoritos
+    </div>
+
+    <!-- CÓDIGO JAVASCRIPT -->
+    <script src="recetas-db.js"></script>
+    <script>
+        // Leer parámetros de URL
+        const urlParams = new URLSearchParams(
+            window.location.search
+        );
+        const desdeNevera = urlParams.get('desde') === 'nevera';
+        const ingredientesURL = urlParams.get('ingredientes');
+        
+        let urlIngredientesParsed = null;
+        if (desdeNevera && ingredientesURL) {
+            urlIngredientesParsed = decodeURIComponent(
+                ingredientesURL
+            ).split(',').map(i => i.trim());
+            
+            // Guardar en localStorage
+            localStorage.setItem(
+                'cookSmartIngredientes', 
+                JSON.stringify(urlIngredientesParsed)
+            );
+        }
+
+        // 2. Estado
+        let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+        let filtrosActivos = {
+            tiempo: 60,
+            dificultad: [],
+            tipos: [],
+            soloMisIngredientes: false,
+            busqueda: ""
+        };
+
+        // BUG 4: Modo urgente desde mi-nevera
+        const modoUrgente = urlParams.get('urgente') === 'true' ||
+            localStorage.getItem('cookSmartModoUrgente') === 'true';
+
+        if (modoUrgente) {
+            // Limpiar el flag
+            localStorage.removeItem('cookSmartModoUrgente');
+
+            // Mostrar banner urgente
+            const bannerUrgente = document.createElement('div');
+            bannerUrgente.style.cssText = `
+                background:#D32F2F;color:white;
+                padding:12px 16px;border-radius:8px;
+                font-size:14px;font-weight:600;
+                margin-bottom:16px;
+                display:flex;align-items:center;gap:8px;
+            `;
+            bannerUrgente.innerHTML = `
+                ⚠️ Recetas con ingredientes que vencen pronto.
+                ¡Úsalos hoy para no desperdiciar!
+                <a href="recetas.html" style="color:white;
+                margin-left:auto;text-decoration:underline;
+                font-size:13px;">Ver todas las recetas</a>
+            `;
+            const mainContent = document.querySelector(
+                '.results-container, .recipes-container, main'
+            ) || document.body;
+            mainContent.insertBefore(
+                bannerUrgente, mainContent.firstChild
+            );
+
+            // Activar filtro solo mis ingredientes
+            filtrosActivos.soloMisIngredientes = true;
+            const toggleMisIng = document.getElementById(
+                'toggleMyIng'
+            );
+            if (toggleMisIng) toggleMisIng.checked = true;
+        }
+
+        // 3. Referencias DOM
+        const recipesGrid = document.getElementById('recipesGrid');
+        const resultsCount = document.getElementById('resultsCount');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        
+        const timeSlider = document.getElementById('timeSlider');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const diffCheckboxes = document.querySelectorAll('.diff-checkbox');
+        const chips = document.querySelectorAll('.chip');
+        const toggleMyIng = document.getElementById('toggleMyIng');
+        const searchInput = document.getElementById('searchInput');
+        
+        const btnSearch = document.getElementById('btnSearch');
+        const btnApply = document.getElementById('btnApply');
+        const btnClear = document.getElementById('btnClear');
+        
+        const btnFilterToggle = document.getElementById('btnFilterToggle');
+        const sidebarFilters = document.getElementById('sidebarFilters');
+        
+        const menuIcon = document.querySelector('.menu-icon');
+        const navLinks = document.querySelector('.nav-links');
+
+        // Menú móvil
+        menuIcon.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const icon = menuIcon.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.replace('fa-bars', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
+        });
+
+        // Toggle filtros móvil
+        btnFilterToggle.addEventListener('click', () => {
+            sidebarFilters.classList.toggle('active');
+            const icon = btnFilterToggle.querySelector('i');
+            if (sidebarFilters.classList.contains('active')) {
+                icon.classList.replace('fa-sliders-h', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-sliders-h');
+            }
+        });
+
+        // 4. Lógica de Renderizado
+        function renderRecetas(recetas) {
+            recipesGrid.innerHTML = '';
+            
+            resultsCount.textContent = `${recetas.length} receta${recetas.length !== 1 ? 's' : ''} encontrada${recetas.length !== 1 ? 's' : ''}`;
+            
+            if (recetas.length === 0) {
+                recipesGrid.style.display = 'none';
+                noResultsMsg.style.display = 'block';
+                return;
+            }
+            
+            recipesGrid.style.display = 'grid';
+            noResultsMsg.style.display = 'none';
+            
+            recetas.forEach(receta => {
+                const isFav = favoritos.some(f => f.id === receta.id);
+
+                // Al renderizar cada receta, calcular match real
+                const misIngredientes = JSON.parse(
+                    localStorage.getItem('cookSmartIngredientes') || '[]'
+                );
+                const gustos = JSON.parse(
+                    localStorage.getItem('cookSmartGustos') || '[]'
+                );
+
+                let matchReal = receta.match || 0;
+
+                if (misIngredientes.length > 0 && receta.ingredientes) {
+                    const coincidencias = receta.ingredientes.filter(
+                        ing => misIngredientes.some(mi => 
+                            ing.toLowerCase().includes(mi.toLowerCase()) ||
+                            mi.toLowerCase().includes(ing.toLowerCase())
+                        )
+                    ).length;
+                    matchReal = Math.round(
+                        (coincidencias / receta.ingredientes.length) * 100
+                    );
+                }
+
+                // Color del badge según porcentaje
+                const badgeColor = matchReal >= 80 ? '#2E7D32' : 
+                                   matchReal >= 50 ? '#FF6B00' : 
+                                   matchReal > 0   ? '#888' : '#CCC';
+
+                const card = document.createElement('div');
+                card.className = 'recipe-card';
+                
+                // Redirección a receta-detalle.html al hacer clic en la tarjeta
+                card.onclick = (e) => {
+                    // Evitar redireccionar si se hizo clic en el botón de favoritos
+                    if(!e.target.closest('.btn-fav')) {
+                        window.location.href = `receta-detalle.html?id=${receta.id}`;
+                    }
+                };
+                
+                card.innerHTML = `
+                    <div class="recipe-img-container">
+                        <img 
+                          src="${receta.imagen}" 
+                          alt="${receta.nombre}"
+                          onerror="this.src='https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80'"
+                        >
+                        <div class="badge-match" style="background:${badgeColor}">${matchReal}% Match</div>
+                        <button class="btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav(event, ${receta.id}, this)">
+                            <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="recipe-info">
+                        <h3 class="recipe-name">${receta.nombre}</h3>
+                        <div class="recipe-meta">
+                            <div class="recipe-time">
+                                <i class="far fa-clock"></i>
+                                <span>${receta.tiempo} min</span>
+                            </div>
+                            <div class="chip-difficulty">${receta.dificultad}</div>
+                        </div>
+                    </div>
+                `;
+                recipesGrid.appendChild(card);
+            });
+        }
+
+        // 5. Favoritos (localStorage)
+        function mostrarToast() {
+            const toast = document.getElementById('favToast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        window.toggleFav = function(e, id, btnElement) {
+            e.stopPropagation(); // Prevenir el clic de la tarjeta (navegación)
+            
+            let favoritosLocales = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const icon = btnElement.querySelector('i');
+            
+            const receta = RECETAS_DB.find(r => r.id === id);
+            if (!receta) return;
+            
+            const existeIndex = favoritosLocales.findIndex(f => f.id === id);
+            
+            if (existeIndex === -1) {
+                favoritosLocales.push(receta);
+                btnElement.classList.add('active', 'bounce');
+                icon.classList.replace('far', 'fas');
+                setTimeout(() => btnElement.classList.remove('bounce'), 400);
+                mostrarToast();
+            } else {
+                favoritosLocales.splice(existeIndex, 1);
+                btnElement.classList.remove('active');
+                icon.classList.replace('fas', 'far');
+            }
+            
+            favoritos = favoritosLocales; // Actualizar estado en memoria
+            localStorage.setItem('cooksmart_favoritos', JSON.stringify(favoritosLocales));
+            updateNavBadge();
+        };
+
+        // Funcionalidad Badge Navegación
+        function updateNavBadge() {
+            const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const badge = document.getElementById('navFavBadge');
+            if (badge) {
+                if (favs.length > 0) {
+                    badge.textContent = favs.length;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        updateNavBadge();
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'cooksmart_favoritos') updateNavBadge();
+        });
+
+        // 6. Lógica de Filtrado (Tiempo Real)
+        function aplicarFiltros() {
+            let baseRecetas = RECETAS_DB;
+            
+            // Si el filtro "Solo mis ingredientes" está activo, calculamos los matches
+            if (filtrosActivos.soloMisIngredientes) {
+                const misIngredientes = JSON.parse(
+                    localStorage.getItem('cookSmartIngredientes')
+                ) || [];
+                if (misIngredientes.length > 0) {
+                    // Usar buscarPorIngredientes que ya calcula el match
+                    baseRecetas = buscarPorIngredientes(misIngredientes);
+                    // Filtrar SOLO recetas con match > 0
+                    baseRecetas = baseRecetas.filter(r => r.match > 0);
+                } else {
+                    // Sin ingredientes → no mostrar nada
+                    baseRecetas = [];
+                }
+            }
+            
+            const filtradas = baseRecetas.filter(receta => {
+                // Filtro Tiempo
+                if (receta.tiempo > filtrosActivos.tiempo) return false;
+                
+                // Filtro Dificultad
+                if (filtrosActivos.dificultad.length > 0 && !filtrosActivos.dificultad.includes(receta.dificultad)) return false;
+                
+                // Filtro Tipo (Chips -> Categoría)
+                if (filtrosActivos.tipos.length > 0) {
+                    const tieneCategoria = filtrosActivos.tipos.some(t => {
+                        // Mapeamos los chips a las categorías de la DB
+                        let cat = t.toLowerCase();
+                        if (cat === 'rápido') cat = 'rapido';
+                        return receta.categoria === cat;
+                    });
+                    if (!tieneCategoria) return false;
+                }
+                
+                // === FILTRO DE RESTRICCIONES DEL PERFIL ===
+                const restriccionesGuardadas = JSON.parse(
+                    localStorage.getItem('cookSmartRestricciones') || '[]'
+                );
+                if (restriccionesGuardadas.length > 0) {
+                    const cumpleRestricciones = restriccionesGuardadas
+                        .every(r => 
+                            receta.restricciones && 
+                            receta.restricciones.includes(r)
+                        );
+                    if (!cumpleRestricciones) return false;
+                }
+
+                // === FILTRO DE GUSTOS DEL PERFIL ===
+                const gustosGuardados = JSON.parse(
+                    localStorage.getItem('cookSmartGustos') || '[]'
+                );
+                if (gustosGuardados.length > 0) {
+                    const gustosEstrictos = ['vegetariana', 'vegetariano', 'vegana'];
+                    const tieneGustoEstricto = gustosGuardados.some(
+                        g => gustosEstrictos.includes(g)
+                    );
+                    if (tieneGustoEstricto) {
+                        const esVegOVegana = receta.etiquetas && (
+                            receta.etiquetas.includes('vegetariano') ||
+                            receta.etiquetas.includes('vegetariana') ||
+                            receta.etiquetas.includes('vegana')
+                        ) || receta.categoria === 'vegetariano';
+                        if (!esVegOVegana) return false;
+                    }
+                }
+                // Filtro Búsqueda Texto
+                if (filtrosActivos.busqueda) {
+                    if (!receta.nombre.toLowerCase().includes(filtrosActivos.busqueda.toLowerCase())) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Ordenamos por mayor match
+            filtradas.sort((a, b) => b.match - a.match);
+            renderRecetas(filtradas);
+        }
+
+        // 7. Event Listeners para actualizar estado en tiempo real
+        
+        // Slider Tiempo
+        timeSlider.addEventListener('input', (e) => {
+            filtrosActivos.tiempo = parseInt(e.target.value);
+            timeDisplay.textContent = `Hasta ${filtrosActivos.tiempo} min`;
+            aplicarFiltros();
+        });
+
+        // Checkboxes Dificultad
+        diffCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.checked) {
+                    filtrosActivos.dificultad.push(cb.value);
+                } else {
+                    filtrosActivos.dificultad = filtrosActivos.dificultad.filter(d => d !== cb.value);
+                }
+                aplicarFiltros();
+            });
+        });
+
+        // Chips Tipo
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('active');
+                const tipo = chip.getAttribute('data-type');
+                if (chip.classList.contains('active')) {
+                    filtrosActivos.tipos.push(tipo);
+                } else {
+                    filtrosActivos.tipos = filtrosActivos.tipos.filter(t => t !== tipo);
+                }
+                aplicarFiltros();
+            });
+        });
+
+        // Toggle "Solo mis ingredientes"
+        toggleMyIng.addEventListener('change', (e) => {
+            filtrosActivos.soloMisIngredientes = e.target.checked;
+            aplicarFiltros();
+        });
+
+        // Barra de Búsqueda
+        searchInput.addEventListener('input', (e) => {
+            filtrosActivos.busqueda = e.target.value.trim();
+            aplicarFiltros();
+        });
+
+        btnSearch.addEventListener('click', () => {
+            filtrosActivos.busqueda = searchInput.value.trim();
+            aplicarFiltros();
+        });
+        
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                filtrosActivos.busqueda = searchInput.value.trim();
+                aplicarFiltros();
+            }
+        });
+
+        // Botón Limpiar Filtros
+        btnClear.addEventListener('click', () => {
+            // Reset state
+            filtrosActivos = { tiempo: 60, dificultad: [], tipos: [], soloMisIngredientes: false, busqueda: "" };
+            
+            // Reset UI
+            timeSlider.value = 60;
+            timeDisplay.textContent = "Hasta 60 min";
+            
+            diffCheckboxes.forEach(cb => cb.checked = false);
+            chips.forEach(chip => chip.classList.remove('active'));
+            toggleMyIng.checked = false;
+            searchInput.value = "";
+            
+            aplicarFiltros();
+        });
+
+        // Botón Aplicar Filtros (Aplica y en móvil cierra el menú)
+        btnApply.addEventListener('click', () => {
+            aplicarFiltros();
+            if (window.innerWidth <= 768) {
+                sidebarFilters.classList.remove('active');
+                btnFilterToggle.querySelector('i').classList.replace('fa-times', 'fa-sliders-h');
+            }
+        });
+
+        // 8. Inicialización
+        if (desdeNevera && ingredientesURL) {
+            // Activar filtro "Solo mis ingredientes"
+            filtrosActivos.soloMisIngredientes = true;
+            
+            // Activar el toggle visualmente si existe
+            const toggle = document.getElementById(
+                'toggleMyIng'
+            );
+            if (toggle) toggle.checked = true;
+            
+            // Mostrar banner informativo
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                background:#FFF3E0;border-left:4px solid #FF6B00;
+                padding:12px 16px;border-radius:8px;
+                font-size:13px;color:#333;margin-bottom:16px;
+            `;
+            banner.innerHTML = `
+                🧊 Mostrando recetas con tus ingredientes 
+                de la nevera: <strong>${urlIngredientesParsed.join(', ')}</strong>
+                <a href="recetas.html" style="color:#FF6B00;
+                margin-left:8px;font-weight:600;">Ver todas</a>
+            `;
+            const grid = document.getElementById('recipesGrid');
+            if (grid) grid.parentNode.insertBefore(banner, grid);
+        }
+        
+        aplicarFiltros();
+
+        // Sincronizar preferencias desde Firebase
+        if (typeof firebase !== 'undefined') {
+            const fbAuth2 = firebase.auth();
+            const fbDB2 = firebase.database();
+            fbAuth2.onAuthStateChanged(async user => {
+                if (user) {
+                    try {
+                        const snap = await fbDB2.ref('usuarios/' + user.uid + '/preferencias').get();
+                        if (snap.exists()) {
+                            const prefs = snap.val();
+                            const restricciones = prefs.restricciones || (prefs.restriccion ? [prefs.restriccion] : []);
+                            const gustos = prefs.gustos || [];
+                            localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
+                            localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
+                            aplicarFiltros();
+                        }
+                    } catch(e) { console.warn(e); }
+                }
+            });
+        }
+
+    </script>
+    <script src="firebase-sync.js"></script>
+</body>
+</html>
