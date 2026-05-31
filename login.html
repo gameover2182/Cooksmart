@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cook Smart | Iniciar Sesión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #FF6B00; --dark: #1A1A1A; --light: #FFFFFF; --gray: #888; --border: #E0E0E0; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+        body { min-height:100vh; display:flex; flex-direction:column; }
+
+        .navbar { background:var(--dark); padding:15px 5%; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:1000; }
+        .logo { font-size:24px; font-weight:700; color:var(--light); text-decoration:none; }
+        .logo span { color:var(--primary); }
+        .nav-links { display:flex; gap:30px; align-items:center; }
+        .nav-links a { color:var(--light); text-decoration:none; font-weight:400; transition:color .2s; }
+        .nav-links a:hover { color:var(--primary); }
+        .nav-badge { background:var(--primary); color:var(--light); font-size:11px; font-weight:700; padding:2px 6px; border-radius:50px; margin-left:5px; vertical-align:middle; }
+        .btn-nav { background:var(--primary); color:var(--light)!important; padding:10px 24px; border-radius:50px; font-weight:600!important; transition:filter .2s; }
+        .btn-nav:hover { filter:brightness(.85); }
+        .menu-icon { display:none; color:var(--light); font-size:24px; cursor:pointer; }
+
+        .login-section {
+            flex:1; display:flex; justify-content:center; align-items:center; padding:60px 20px;
+            background: var(--primary);
+            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='20' y='60' font-size='50' opacity='.08' fill='white'%3E🥕%3C/text%3E%3Ctext x='110' y='120' font-size='50' opacity='.08' fill='white'%3E🍅%3C/text%3E%3Ctext x='50' y='180' font-size='50' opacity='.08' fill='white'%3E🥦%3C/text%3E%3C/svg%3E");
+        }
+
+        .login-card {
+            background:var(--light); width:100%; max-width:440px; padding:48px; border-radius:24px;
+            box-shadow:0 20px 60px rgba(0,0,0,.2); animation:fadeUp .5s ease;
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+        .card-logo { text-align:center; font-size:28px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .card-logo span { color:var(--primary); }
+        .card-line { width:40px; height:4px; background:var(--primary); border-radius:4px; margin:0 auto 24px; }
+        .card-title { text-align:center; font-size:28px; font-weight:700; color:var(--dark); margin-bottom:6px; }
+        .card-sub { text-align:center; color:var(--gray); font-size:14px; margin-bottom:28px; }
+
+        .input-group { margin-bottom:16px; position:relative; }
+        .input-group input {
+            width:100%; padding:14px 16px; border:2px solid var(--border); border-radius:12px;
+            font-size:15px; font-family:'Poppins',sans-serif; outline:none; transition:all .2s;
+        }
+        .input-group input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,107,0,.2); }
+        .toggle-pw { position:absolute; right:14px; top:50%; transform:translateY(-50%); cursor:pointer; color:var(--gray); font-size:18px; }
+
+        .forgot-row { text-align:right; margin-bottom:20px; }
+        .forgot-row a { color:var(--primary); font-size:13px; font-weight:500; text-decoration:none; cursor:pointer; }
+        .forgot-row a:hover { text-decoration:underline; }
+
+        #error-msg { display:none; background:#FDECEA; color:#D32F2F; padding:12px 16px; border-radius:12px; font-size:14px; font-weight:500; margin-bottom:16px; text-align:center; }
+        #success-msg { display:none; background:#E8F5E9; color:#2E7D32; padding:12px 16px; border-radius:12px; font-size:14px; font-weight:500; margin-bottom:16px; text-align:center; }
+
+        .btn-primary {
+            width:100%; padding:15px; background:var(--primary); color:var(--light); border:none; border-radius:50px;
+            font-size:16px; font-weight:600; cursor:pointer; transition:all .2s; font-family:'Poppins',sans-serif;
+        }
+        .btn-primary:hover { filter:brightness(.9); transform:translateY(-1px); }
+        .btn-primary:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+        .divider { display:flex; align-items:center; gap:16px; margin:20px 0; color:var(--gray); font-size:13px; }
+        .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+        .btn-google {
+            width:100%; padding:14px; background:var(--light); color:var(--dark); border:2px solid var(--border);
+            border-radius:50px; font-size:15px; font-weight:600; cursor:pointer; transition:all .2s;
+            display:flex; align-items:center; justify-content:center; gap:10px; font-family:'Poppins',sans-serif;
+        }
+        .btn-google:hover { background:#F5F5F5; border-color:#CCC; }
+        .btn-google svg { width:20px; height:20px; }
+
+        .card-footer { text-align:center; margin-top:24px; font-size:14px; color:var(--gray); }
+        .card-footer a { color:var(--primary); font-weight:600; text-decoration:none; }
+        .card-footer a:hover { text-decoration:underline; }
+
+        @media(max-width:768px) {
+            .nav-links { position:absolute; top:100%; left:0; right:0; background:var(--dark); flex-direction:column; padding:20px 0; gap:20px; display:none; box-shadow:0 10px 15px rgba(0,0,0,.2); }
+            .nav-links.active { display:flex; }
+            .menu-icon { display:block; }
+            .login-card { padding:32px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">Cook<span>Smart</span></a>
+        <div class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="recetas.html">Buscar Recetas</a>
+            <a href="mi-nevera.html">Mi Nevera</a>
+            <a href="favoritos.html">Favoritos <span class="nav-badge" id="navFavBadge" style="display:none">0</span></a>
+            <a href="registro.html" class="btn-nav" style="background:var(--dark);border:1px solid var(--primary);">Registrarse</a>
+        </div>
+        <div class="menu-icon"><i class="fas fa-bars"></i></div>
+    </nav>
+
+    <section class="login-section">
+        <div class="login-card">
+            <div class="card-logo">Cook<span>Smart</span></div>
+            <div class="card-line"></div>
+            <h1 class="card-title">Bienvenido de nuevo</h1>
+            <p class="card-sub">Inicia sesión en tu cuenta</p>
+
+            <div class="input-group">
+                <input type="email" id="email" placeholder="correo@ejemplo.com" autocomplete="email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password">
+                <i class="fas fa-eye toggle-pw" onclick="togglePassword('password', this)"></i>
+            </div>
+
+            <div class="forgot-row"><a onclick="recuperarPassword()">¿Olvidaste tu contraseña?</a></div>
+
+            <div id="error-msg"></div>
+            <div id="success-msg"></div>
+
+            <button class="btn-primary" id="btn-login-form" onclick="iniciarSesion()">Iniciar Sesión</button>
+
+            <div class="divider">o</div>
+
+            <button class="btn-google" onclick="loginGoogle()">
+                <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Iniciar con Google
+            </button>
+
+            <p class="card-footer">¿No tienes cuenta? <a href="registro.html">Regístrate gratis</a></p>
+        </div>
+    </section>
+
+    <script src="recetas-db.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA60XhpKmHY5KV2mozo2_mzMWRTbq7Qwj4",
+            authDomain: "cook-smart-626ff.firebaseapp.com",
+            databaseURL: "https://cook-smart-626ff-default-rtdb.firebaseio.com",
+            projectId: "cook-smart-626ff",
+            storageBucket: "cook-smart-626ff.firebasestorage.app",
+            messagingSenderId: "339922416882",
+            appId: "1:339922416882:web:68891748b48ee00a2d8c6b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // Cargar favoritos del usuario desde Firebase
+        async function cargarFavoritosDesdeFirebase(uid) {
+            try {
+                const snap = await db.ref('usuarios/' + uid + '/favoritos').get();
+                if (snap.exists()) {
+                    const ids = snap.val();
+                    if (typeof RECETAS_DB !== 'undefined' && Array.isArray(ids)) {
+                        const favs = ids.map(id => RECETAS_DB.find(r => r.id === id)).filter(Boolean);
+                        localStorage.setItem('cooksmart_favoritos', JSON.stringify(favs));
+                    }
+                } else {
+                    localStorage.setItem('cooksmart_favoritos', JSON.stringify([]));
+                }
+            } catch(e) { console.warn('Error cargando favoritos:', e); }
+        }
+
+        function togglePassword(id, icon) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
+            else { input.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+        }
+
+        async function iniciarSesion() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            if (!email || !password) { mostrarError("Por favor completa todos los campos"); return; }
+
+            const btn = document.getElementById('btn-login-form');
+            btn.textContent = "Iniciando sesión..."; btn.disabled = true;
+
+            try {
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+                await cargarFavoritosDesdeFirebase(cred.user.uid);
+                sessionStorage.removeItem('welcomeShown');
+                window.location.href = 'index.html';
+            } catch (error) {
+                btn.textContent = "Iniciar Sesión"; btn.disabled = false;
+                if (error.code === 'auth/user-not-found') mostrarError("No existe una cuenta con ese correo");
+                else if (error.code === 'auth/wrong-password') mostrarError("Contraseña incorrecta");
+                else if (error.code === 'auth/invalid-email') mostrarError("El correo no es válido");
+                else if (error.code === 'auth/too-many-requests') mostrarError("Demasiados intentos. Espera un momento");
+                else if (error.code === 'auth/invalid-credential') mostrarError("Correo o contraseña incorrectos");
+                else mostrarError("Error al iniciar sesión. Intenta de nuevo");
+            }
+        }
+
+        async function loginGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                const snapshot = await db.ref('usuarios/' + user.uid).get();
+                if (!snapshot.exists()) {
+                    await db.ref('usuarios/' + user.uid).set({
+                        nombre: user.displayName, email: user.email, fechaRegistro: new Date().toISOString(), favoritos: {}, ingredientes: {}
+                    });
+                }
+                await cargarFavoritosDesdeFirebase(user.uid);
+                sessionStorage.removeItem('welcomeShown');
+                window.location.href = 'index.html';
+            } catch (error) { mostrarError("Error al iniciar con Google"); }
+        }
+
+        async function recuperarPassword() {
+            const email = document.getElementById('email').value.trim();
+            if (!email) { mostrarError("Escribe tu correo primero"); return; }
+            try {
+                await auth.sendPasswordResetEmail(email);
+                mostrarExito("Te enviamos un correo para restablecer tu contraseña");
+            } catch (error) { mostrarError("No encontramos ese correo registrado"); }
+        }
+
+        function mostrarError(msg) {
+            const d = document.getElementById('error-msg'); d.textContent = msg; d.style.display = 'block';
+            const s = document.getElementById('success-msg'); if(s) s.style.display = 'none';
+            setTimeout(() => d.style.display = 'none', 4000);
+        }
+        function mostrarExito(msg) {
+            const d = document.getElementById('success-msg'); d.textContent = msg; d.style.display = 'block';
+            document.getElementById('error-msg').style.display = 'none';
+        }
+
+        // Enter key
+        document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') iniciarSesion(); });
+
+        // Menu mobile
+        document.querySelector('.menu-icon').addEventListener('click', () => {
+            const nav = document.querySelector('.nav-links'); nav.classList.toggle('active');
+            const i = document.querySelector('.menu-icon i');
+            nav.classList.contains('active') ? i.classList.replace('fa-bars','fa-times') : i.classList.replace('fa-times','fa-bars');
+        });
+
+        // Badge
+        function updateNavBadge() {
+            const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const badge = document.getElementById('navFavBadge');
+            if (badge) { if (favs.length > 0) { badge.textContent = favs.length; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
+        }
+        updateNavBadge();
+        window.addEventListener('storage', e => { if (e.key === 'cooksmart_favoritos') updateNavBadge(); });
+    </script>
+</body>
+</html>
