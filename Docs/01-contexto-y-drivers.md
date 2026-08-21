@@ -89,7 +89,6 @@ Estos sí son los drivers arquitectónicos preliminares: fuerzas que moldean dec
 **VERIFICADO:** El repositorio cuenta con un workflow de GitHub Actions que ejecuta validaciones automáticas sobre la estructura y los archivos principales de CookSmart en los `push` a `main` y Pull Requests dirigidos a `main`. La ejecución del workflow fue verificada correctamente.
 
 ## 10. Trazabilidad
-
 - Repositorio: https://github.com/gameover2182/Cooksmart.git
 - Este documento fue commiteado como parte del primer commit del proyecto (contexto y drivers).
 - La CI se encuentra implementada mediante GitHub Actions en `.github/workflows/`.
