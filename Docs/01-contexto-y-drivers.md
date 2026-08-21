@@ -35,9 +35,9 @@
 
 ## 5. Drivers arquitectónicos preliminares
 
-**HECHO VERIFICADO (proyecto, fase inicial, RNF02):** El equipo ya documentó Seguridad como requisito no funcional explícito: protección de datos personales, cumplimiento de normativa colombiana, política de privacidad.
+### 5.1 Requerimientos funcionales verificados (evidencia de que el sistema funciona)
 
-**HECHO VERIFICADO (confirmado por el equipo — funcionalidades que sí operan hoy en el sistema real):**
+Esto **no son drivers arquitectónicos** — son funcionalidades (features) del sistema, confirmadas por el equipo como operativas hoy:
 
 | Código | Nombre | Estado real |
 |---|---|---|
@@ -49,12 +49,18 @@
 | RF06 | Notificación de vencimiento | Funciona |
 | RF08 | Eliminación de ingredientes | Funciona |
 | RF09 | Filtrado de recetas por categoría | Funciona |
+
+### 5.2 Drivers arquitectónicos (atributos de calidad / requerimientos no funcionales)
+
+Estos sí son los drivers arquitectónicos preliminares: fuerzas que moldean decisiones de diseño, no funcionalidades puntuales.
+
+| Código | Driver | Estado real |
+|---|---|---|
+| RNF02 | Seguridad | Documentado en el proyecto (fase inicial): protección de datos personales, cumplimiento de normativa colombiana, política de privacidad |
 | RNF01 | Usabilidad | Funciona, ingreso fácil, aunque falta más organización en la interfaz |
 | Disponibilidad (el documento original usa el código "RF03" para esto, pero es un requisito no funcional — pendiente renombrar a RNF03 para no duplicar el código RF03) | Disponibilidad | En teoría funciona sin mayor complicación |
 | Rendimiento (el documento original usa el código "RF04" para esto, pero es un requisito no funcional — pendiente renombrar a RNF04) | Rendimiento | Responde rápido al crear usuario y registrar ingredientes, incluso sin backend propio |
 | RNF05 | Compatibilidad con navegadores | Funciona en los navegadores probados |
-
-> **Nota metodológica:** un driver arquitectónico no es lo mismo que un requisito funcional (RF) — el profesor probablemente pregunte esta distinción. Los RF de la tabla (registro, login, recetas, etc.) son evidencia de que el sistema *funciona*, pero los verdaderos drivers arquitectónicos son los atributos de calidad detrás de ellos: Seguridad (RNF02), Usabilidad (RNF01), Disponibilidad, Rendimiento y Compatibilidad. Esto no lo decide este documento — se señala para que el equipo esté preparado si les preguntan "¿cuál de estos es realmente un driver y cuál es solo una funcionalidad que probaron?".
 
 ## 6. Riesgos iniciales
 
