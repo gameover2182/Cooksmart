@@ -13,18 +13,15 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 ## Sistema base
 
 - **Repositorio:** https://github.com/gameover2182/Cooksmart.git
-- **Commit/versión evaluada:** Primer commit del repositorio (aún no realizado al momento de escribir este documento — actualizar hash real al hacer el commit)
+- **Commit/versión evaluada:** ver historial de commits del repo (actualizar aquí con el hash exacto antes de la entrega final)
 - **Stack real (verificado en el repo):** HTML, CSS, JavaScript, Firebase Auth, Firebase Realtime Database. Sin backend propio, sin base de datos relacional, sin tests, sin CI.
 - **Semana actual:** Semana 4
 
-> ⚠️ **Nota importante:** existe un documento de proyecto (fase inicial) (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, y un plan de pruebas extenso. Esa arquitectura **no está implementada** en el repositorio actual. **Decisión de equipo:** esa arquitectura se documenta como Roadmap / Trabajo futuro, no como el sistema evaluado en Semana 4. El sistema base evaluado es el actual: estático + Firebase.
+> ⚠️ **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, y un plan de pruebas extenso. Esa arquitectura **no está implementada** en el repositorio actual. **Decisión de equipo:** esa arquitectura se documenta como Roadmap / Trabajo futuro, no como el sistema evaluado en Semana 4. El sistema base evaluado es el actual: estático + Firebase.
 
 ## Roadmap / Trabajo futuro
 
-<!-- Aquí va la arquitectura de microservicios del proyecto (fase inicial), dejada explícitamente como
-     dirección planeada y NO como arquitectura implementada. Mover el contenido del PDF
-     (diagrama de componentes, diagrama de despliegue, plan de QA) a esta sección si se
-     conserva en el repo, dejando claro que es propuesta, no evidencia actual. -->
+> **Pendiente:** mover aquí el contenido del PDF del proyecto en fase inicial (diagrama de componentes, diagrama de despliegue, plan de QA), dejando explícito que es una dirección planeada y no la arquitectura implementada hoy.
 
 ## Cómo levantar el sistema
 
@@ -32,23 +29,40 @@ El sistema no requiere instalación: los archivos `.html` se abren directamente 
 
 ```bash
 # Clonar el repositorio
-git clone <URL-del-repo>
+git clone https://github.com/gameover2182/Cooksmart.git
 # Abrir index.html directamente en el navegador
 # No requiere servidor local, build ni dependencias adicionales
 ```
 
-<!-- Falta confirmar: ¿las credenciales/config de Firebase están hardcodeadas en firebase-sync.js
-     o requieren alguna variable de entorno / archivo de config aparte? -->
+> **Pendiente:** confirmar si las credenciales/config de Firebase están hardcodeadas en `firebase-sync.js` o requieren alguna variable de entorno / archivo de config aparte.
 
 ## Estructura del dossier
 
-| Documento | Ruta | Estado |
+| Documento | Ruta real en el repo | Estado |
 |---|---|---|
-| Contexto y drivers | `dossier/01-contexto-y-drivers.md` | En progreso |
-| Escenarios de calidad | `docs/02-escenarios-de-calidad.md` | Pendiente |
-| Evidencia ejecutable | `docs/04-evidencia-ejecutable.md` | Pendiente |
-| Experimento línea base | `experimentos/EXP-001-linea-base/` | Pendiente |
+| Contexto y drivers | `01-contexto-y-drivers.md` (raíz) | Completo |
+| Escenarios de calidad | `Docs/02-Escenarios-de-calidad.md` | Completo |
+| Evidencia ejecutable | Pendiente de definir ruta | Pendiente |
+| Experimento línea base | Pendiente de definir ruta | Pendiente |
+
+> ⚠️ **Nota de estructura para el equipo:** actualmente `01-contexto-y-drivers.md` está en la raíz del repo y `02-Escenarios-de-calidad.md` está dentro de `Docs/` (con mayúscula). Antes de seguir agregando documentos, el equipo debe decidir una sola convención (por ejemplo, todo dentro de `docs/` en minúscula) y mover los archivos existentes para que coincidan, o el profesor va a encontrar rutas inconsistentes al revisar el repo.
+
+## Convención de commits
+
+El equipo usa Conventional Commits para los mensajes de commit:
+
+- `feat:` una nueva característica para el usuario
+- `fix:` arregla un bug que afecta al usuario
+- `docs:` cambios en la documentación
+- `refactor:` refactorización del código (sin cambiar comportamiento)
+- `style:` cambios de formato que no afectan al usuario
+- `test:` añade o refactoriza tests
+- `perf:` cambios que mejoran el rendimiento
+- `build:` cambios en el sistema de build o despliegue
+- `ci:` cambios en integración continua
+
+Ejemplo: `docs: agregar contexto y drivers arquitectónicos preliminares`
 
 ## Trazabilidad Git
 
-<!-- Enlace a los Pull Requests fusionados, uno por integrante -->
+> **Pendiente:** cada integrante debe abrir su propio Pull Request para su parte del dossier y enlazarlo aquí una vez fusionado.
