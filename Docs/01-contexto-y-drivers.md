@@ -77,15 +77,19 @@ Estos sí son los drivers arquitectónicos preliminares: fuerzas que moldean dec
 
 ## 8. Referencia a la hipótesis inicial
 
-> **Pendiente:** el equipo aún no ha definido una hipótesis sobre dónde estaría el cuello de botella o riesgo arquitectónico principal del sistema real (no el propuesto en el documento inicial).
+**Hipótesis de riesgo arquitectónico principal:** El principal riesgo arquitectónico del sistema actual es la dependencia de Firebase para la autenticación y persistencia de datos. Una indisponibilidad, configuración incorrecta o cambio en este servicio podría afectar directamente el acceso de los usuarios y la gestión de la información, debido a que el sistema actual no cuenta con un backend propio que desacople estas responsabilidades.
 
 ## 9. Qué todavía no ha sido verificado
 
-- Si el sistema corre sin errores en consola al día de hoy
-- Si existe algún tipo de CI configurado
-- Commit/versión exacta que se va a evaluar en la entrega final
+- Commit/versión exacta que se va a evaluar en la entrega final.
+- Evidencia de pruebas automatizadas del sistema, ya que actualmente no se cuenta con tests automatizados.
+
+**VERIFICADO:** El sistema se ejecuta correctamente y sus funcionalidades principales fueron probadas, funcionando de manera adecuada durante la revisión del proyecto.
+
+**VERIFICADO:** El repositorio cuenta con un workflow de GitHub Actions que ejecuta validaciones automáticas sobre la estructura y los archivos principales de CookSmart en los `push` a `main` y Pull Requests dirigidos a `main`. La ejecución del workflow fue verificada correctamente.
 
 ## 10. Trazabilidad
 
 - Repositorio: https://github.com/gameover2182/Cooksmart.git
 - Este documento fue commiteado como parte del primer commit del proyecto (contexto y drivers).
+- La CI se encuentra implementada mediante GitHub Actions en `.github/workflows/`.
