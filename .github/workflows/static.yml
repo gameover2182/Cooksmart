@@ -1,0 +1,50 @@
+name: CI CookSmart
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validar CookSmart
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Verificar archivos principales
+        run: |
+          test -f index.html
+          test -f login.html
+          test -f registro.html
+          test -f mi-nevera.html
+          test -f recetas.html
+          test -f receta-detalle.html
+          test -f favoritos.html
+          test -f perfil.html
+          test -f rapido.html
+          test -f vegetariano.html
+          test -f script.js
+          test -f recetas-db.js
+          test -f firebase-sync.js
+          test -f style.css
+
+      - name: Verificar documentación
+        run: |
+          test -f Docs/01-contexto-y-drivers.md
+          test -f Docs/02-Escenarios-de-calidad.md
+
+      - name: Verificar estructura HTML
+        run: |
+          for file in *.html; do
+            grep -qi "<html" "$file"
+            grep -qi "</html>" "$file"
+          done
+
+      - name: CI completada
+        run: echo "Todas las validaciones de CookSmart fueron superadas."
