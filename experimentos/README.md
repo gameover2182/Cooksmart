@@ -103,3 +103,45 @@ La primera ejecución se realizó como corrida de calentamiento y fue descartada
 
 ```powershell
 k6 run --summary-export=experimentos/EXP-001-linea-base/resultados/run-01.json experimentos/EXP-001-linea-base/scripts/load-test.js
+Resultados
+Corrida	p95	Throughput	Errores
+RUN-01	93 ms	10.483579 req/s	0%
+RUN-02	104 ms	9.306505 req/s	0%
+RUN-03	98 ms	9.989478 req/s	0%
+Resultado final
+p95
+
+Los valores obtenidos fueron:
+
+93 ms
+104 ms
+98 ms
+
+Ordenados:
+
+93 ms
+98 ms
+104 ms
+
+Por lo tanto:
+
+Mediana del p95 = 98 ms
+
+Throughput
+
+Los valores obtenidos fueron:
+
+10.483579 req/s
+9.306505 req/s
+9.989478 req/s
+
+Ordenados:
+
+9.306505 req/s
+9.989478 req/s
+10.483579 req/s
+
+Por lo tanto:
+
+Mediana del throughput = 9.989478 req/s
+
