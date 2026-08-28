@@ -50,25 +50,61 @@ Esto **no son drivers arquitectónicos** — son funcionalidades (features) del 
 | RF08 | Eliminación de ingredientes | Funciona |
 | RF09 | Filtrado de recetas por categoría | Funciona |
 
-### 5.2 Drivers arquitectónicos (atributos de calidad / requerimientos no funcionales)
+### 5.2 Drivers arquitectónicos preliminares priorizados
 
-Estos sí son los drivers arquitectónicos preliminares: fuerzas que moldean decisiones de diseño, no funcionalidades puntuales.
+Los siguientes drivers representan las fuerzas que pueden condicionar decisiones arquitectónicas del sistema. Se priorizan según el impacto que tendría su incumplimiento sobre los usuarios, el funcionamiento del sistema y el alcance académico del proyecto.
 
-| Código | Driver | Estado real |
-|---|---|---|
-| RNF02 | Seguridad | Documentado en el proyecto (fase inicial): protección de datos personales, cumplimiento de normativa colombiana, política de privacidad |
-| RNF01 | Usabilidad | Funciona, ingreso fácil, aunque falta más organización en la interfaz |
-| Disponibilidad (el documento original usa el código "RF03" para esto, pero es un requisito no funcional — pendiente renombrar a RNF03 para no duplicar el código RF03) | Disponibilidad | En teoría funciona sin mayor complicación |
-| Rendimiento (el documento original usa el código "RF04" para esto, pero es un requisito no funcional — pendiente renombrar a RNF04) | Rendimiento | Responde rápido al crear usuario y registrar ingredientes, incluso sin backend propio |
-| RNF05 | Compatibilidad con navegadores | Funciona en los navegadores probados |
+| Prioridad | Código | Driver         | Justificación                                                                                                                                                                                            | Estado actual                                                                                                            |
+| --------- | ------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1         | RNF02  | Seguridad      | CookSmart maneja cuentas de usuario e información almacenada en Firebase. Una configuración incorrecta de las reglas de seguridad podría permitir acceso no autorizado a los datos.                      | Configurado y verificado parcialmente; las reglas dependen de Firebase                                                   |
+| 2         | RNF01  | Usabilidad     | El sistema está dirigido a usuarios que necesitan encontrar recetas e ingresar ingredientes de manera sencilla y rápida. Una interfaz compleja afectaría directamente el objetivo funcional del sistema. | Funciona; se identificaron oportunidades de mejora en la organización de la interfaz                                     |
+| 3         | RNF04  | Rendimiento    | Las operaciones principales, como autenticación y registro de ingredientes, deben responder en tiempos adecuados para que el usuario pueda utilizar el sistema de manera fluida.                         | Se observa respuesta rápida en las pruebas funcionales; la medición cuantitativa se realizará mediante k6 en el Módulo 2 |
+| 4         | RNF03  | Disponibilidad | La autenticación y persistencia dependen de Firebase. Una indisponibilidad del servicio externo puede impedir el acceso o la gestión de información del usuario.                                         | No se ha realizado una prueba específica de disponibilidad                                                               |
+| 5         | RNF05  | Compatibilidad | CookSmart se ejecuta como aplicación web y debe mantener su funcionamiento en los navegadores utilizados por los usuarios.                                                                               | Verificado en los navegadores probados                                                                                   |
 
-## 6. Riesgos iniciales
+#### Criterio de priorización
 
-**RIESGO VERIFICADO:** El sistema real no tiene tests automatizados, a pesar de que el proyecto (fase inicial) documenta un plan de QA extenso (pruebas unitarias, integración, rendimiento, seguridad) que no se ha ejecutado. Esto es evidencia faltante crítica para el checkpoint de Semana 2.
+La prioridad se estableció considerando primero los atributos cuyo incumplimiento tendría mayor impacto sobre los datos y la operación básica del sistema. Por esta razón, Seguridad ocupa el primer lugar. Usabilidad ocupa el segundo debido a que la interacción sencilla es fundamental para el propósito de CookSmart. Rendimiento y Disponibilidad se priorizan posteriormente porque afectan directamente la experiencia y continuidad del servicio, mientras que Compatibilidad tiene un impacto menor dentro del alcance actual.
 
-**RIESGO VERIFICADO:** RF07 (Historial de recetas) está documentado en el proyecto (fase inicial) pero **no está implementado** en el sistema real — es evidencia faltante, no una funcionalidad verificada.
+#### Trazabilidad hacia decisiones futuras
 
-**RIESGO VERIFICADO (confirmado por el equipo):** Las reglas de seguridad de Firebase (Firebase Security Rules) están configuradas y son administradas exclusivamente desde la cuenta de correo de un solo integrante (Leonardo). Esto es un punto único de fallo: si esa persona no está disponible, el resto del equipo no puede modificar la seguridad de la base de datos ni verificar su configuración de forma independiente. Este riesgo se relaciona directamente con el driver de Seguridad (RNF02).
+| Driver         | Decisión arquitectónica que deberá responder                                       |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Seguridad      | Configuración de autenticación, reglas de Firebase y límites de acceso a los datos |
+| Usabilidad     | Organización de funcionalidades y flujo de navegación                              |
+| Rendimiento    | Medición de tiempos de respuesta y evaluación de posibles optimizaciones           |
+| Disponibilidad | Evaluación de la dependencia de Firebase y posibles estrategias de recuperación    |
+| Compatibilidad | Validación del comportamiento en navegadores objetivo                              |
+
+
+## 6. Inventario inicial de riesgos
+
+Los riesgos iniciales se identificaron a partir de la revisión del sistema real, el repositorio y las diferencias encontradas entre las funcionalidades documentadas en la fase inicial y las funcionalidades actualmente implementadas.
+
+| ID   | Riesgo                                                                  | Causa                                                                                                                                                              | Impacto                                                                                                                                                       | Probabilidad | Nivel | Mitigación inicial                                                                                                                         | Estado  |
+| ---- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| R-01 | Ausencia de pruebas automatizadas                                       | El sistema actual no cuenta con una suite de pruebas automatizadas, aunque el proyecto inicial plantea pruebas unitarias, de integración, rendimiento y seguridad. | Dificulta detectar regresiones y demostrar de forma reproducible que las funcionalidades continúan funcionando.                                               | Alta         | Alto  | Implementar y documentar pruebas automatizadas progresivamente y utilizar la CI para ejecutar validaciones.                                | Abierto |
+| R-02 | RF07 no implementado                                                    | El requisito funcional de historial de recetas está documentado en el proyecto inicial, pero no se encuentra implementado en el sistema real.                      | Existe una diferencia entre el alcance funcional documentado y las capacidades reales del sistema.                                                            | Alta         | Alto  | Marcar RF07 como pendiente/no implementado y evitar presentarlo como funcionalidad disponible hasta que exista evidencia.                  | Abierto |
+| R-03 | Dependencia de una sola cuenta para administrar Firebase Security Rules | La configuración de las reglas de seguridad de Firebase es administrada actualmente desde la cuenta de un solo integrante.                                         | Puede impedir que el equipo modifique o verifique las reglas si el integrante responsable no está disponible y genera un punto único de fallo organizacional. | Media        | Alto  | Documentar la configuración, establecer acceso administrativo para más de un integrante autorizado y mantener trazabilidad de los cambios. | Abierto |
+| R-04 | Dependencia de Firebase para autenticación y persistencia               | CookSmart utiliza Firebase como servicio externo para autenticación y almacenamiento de datos y no cuenta actualmente con un backend propio.                       | Una indisponibilidad o configuración incorrecta del servicio puede afectar el acceso de usuarios y la gestión de sus datos.                                   | Media        | Alto  | Documentar la dependencia, verificar las reglas de seguridad y evaluar alternativas de recuperación o desacoplamiento como trabajo futuro. | Abierto |
+
+### 6.1 Criterio de valoración
+
+La probabilidad y el impacto se clasifican de forma cualitativa como Baja, Media o Alta. El nivel del riesgo se determina considerando conjuntamente la probabilidad de ocurrencia y el impacto que tendría sobre el funcionamiento, seguridad, mantenibilidad o evidencia del sistema.
+
+Los riesgos R-01 y R-02 tienen prioridad alta durante la línea base porque afectan directamente la capacidad del equipo para demostrar el comportamiento real del sistema. R-03 y R-04 se relacionan principalmente con la dependencia de Firebase y la administración de la seguridad.
+
+### 6.2 Riesgos prioritarios
+
+Los riesgos que requieren mayor atención inicialmente son:
+
+1. **R-01 — Ausencia de pruebas automatizadas.**
+2. **R-02 — RF07 no implementado.**
+3. **R-03 — Punto único de administración de las reglas de Firebase.**
+4. **R-04 — Dependencia de Firebase para autenticación y persistencia.**
+
+Estos riesgos serán considerados en las decisiones arquitectónicas y mediciones posteriores del proyecto.
+
 
 ## 7. Supuestos
 
@@ -89,7 +125,6 @@ Estos sí son los drivers arquitectónicos preliminares: fuerzas que moldean dec
 **VERIFICADO:** El repositorio cuenta con un workflow de GitHub Actions que ejecuta validaciones automáticas sobre la estructura y los archivos principales de CookSmart en los `push` a `main` y Pull Requests dirigidos a `main`. La ejecución del workflow fue verificada correctamente.
 
 ## 10. Trazabilidad
-
 - Repositorio: https://github.com/gameover2182/Cooksmart.git
 - Este documento fue commiteado como parte del primer commit del proyecto (contexto y drivers).
 - La CI se encuentra implementada mediante GitHub Actions en `.github/workflows/`.
