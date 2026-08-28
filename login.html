@@ -8,9 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #FF6B00; --dark: #1A1A1A; --light: #FFFFFF; --gray: #888; --border: #E0E0E0; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
@@ -136,37 +133,11 @@
         </div>
     </section>
 
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="firebase-sync.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA60XhpKmHY5KV2mozo2_mzMWRTbq7Qwj4",
-            authDomain: "cook-smart-626ff.firebaseapp.com",
-            databaseURL: "https://cook-smart-626ff-default-rtdb.firebaseio.com",
-            projectId: "cook-smart-626ff",
-            storageBucket: "cook-smart-626ff.firebasestorage.app",
-            messagingSenderId: "339922416882",
-            appId: "1:339922416882:web:68891748b48ee00a2d8c6b"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-
-        // Cargar favoritos del usuario desde Firebase
-        async function cargarFavoritosDesdeFirebase(uid) {
-            try {
-                const snap = await db.ref('usuarios/' + uid + '/favoritos').get();
-                if (snap.exists()) {
-                    const ids = snap.val();
-                    if (typeof RECETAS_DB !== 'undefined' && Array.isArray(ids)) {
-                        const favs = ids.map(id => RECETAS_DB.find(r => r.id === id)).filter(Boolean);
-                        localStorage.setItem('cooksmart_favoritos', JSON.stringify(favs));
-                    }
-                } else {
-                    localStorage.setItem('cooksmart_favoritos', JSON.stringify([]));
-                }
-            } catch(e) { console.warn('Error cargando favoritos:', e); }
-        }
-
         function togglePassword(id, icon) {
             const input = document.getElementById(id);
             if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
@@ -182,8 +153,10 @@
             btn.textContent = "Iniciando sesión..."; btn.disabled = true;
 
             try {
-                const cred = await auth.signInWithEmailAndPassword(email, password);
-                await cargarFavoritosDesdeFirebase(cred.user.uid);
+                // auth.signInWithEmailAndPassword es 100% Firebase Auth. Una
+                // vez autenticado, firebase-sync.js (onAuthStateChanged) se
+                // encarga de pedirle los favoritos al backend/Postgres.
+                await auth.signInWithEmailAndPassword(email, password);
                 sessionStorage.removeItem('welcomeShown');
                 window.location.href = 'index.html';
             } catch (error) {
@@ -197,18 +170,11 @@
             }
         }
 
+        // Google login SÍ sigue disponible con este enfoque (es Firebase Auth puro)
         async function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             try {
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                const snapshot = await db.ref('usuarios/' + user.uid).get();
-                if (!snapshot.exists()) {
-                    await db.ref('usuarios/' + user.uid).set({
-                        nombre: user.displayName, email: user.email, fechaRegistro: new Date().toISOString(), favoritos: {}, ingredientes: {}
-                    });
-                }
-                await cargarFavoritosDesdeFirebase(user.uid);
+                await auth.signInWithPopup(provider);
                 sessionStorage.removeItem('welcomeShown');
                 window.location.href = 'index.html';
             } catch (error) { mostrarError("Error al iniciar con Google"); }
