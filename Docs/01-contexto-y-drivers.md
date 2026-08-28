@@ -50,17 +50,32 @@ Esto **no son drivers arquitectónicos** — son funcionalidades (features) del 
 | RF08 | Eliminación de ingredientes | Funciona |
 | RF09 | Filtrado de recetas por categoría | Funciona |
 
-### 5.2 Drivers arquitectónicos (atributos de calidad / requerimientos no funcionales)
+### 5.2 Drivers arquitectónicos preliminares priorizados
 
-Estos sí son los drivers arquitectónicos preliminares: fuerzas que moldean decisiones de diseño, no funcionalidades puntuales.
+Los siguientes drivers representan las fuerzas que pueden condicionar decisiones arquitectónicas del sistema. Se priorizan según el impacto que tendría su incumplimiento sobre los usuarios, el funcionamiento del sistema y el alcance académico del proyecto.
 
-| Código | Driver | Estado real |
-|---|---|---|
-| RNF02 | Seguridad | Documentado en el proyecto (fase inicial): protección de datos personales, cumplimiento de normativa colombiana, política de privacidad |
-| RNF01 | Usabilidad | Funciona, ingreso fácil, aunque falta más organización en la interfaz |
-| Disponibilidad (el documento original usa el código "RF03" para esto, pero es un requisito no funcional — pendiente renombrar a RNF03 para no duplicar el código RF03) | Disponibilidad | En teoría funciona sin mayor complicación |
-| Rendimiento (el documento original usa el código "RF04" para esto, pero es un requisito no funcional — pendiente renombrar a RNF04) | Rendimiento | Responde rápido al crear usuario y registrar ingredientes, incluso sin backend propio |
-| RNF05 | Compatibilidad con navegadores | Funciona en los navegadores probados |
+| Prioridad | Código | Driver         | Justificación                                                                                                                                                                                            | Estado actual                                                                                                            |
+| --------- | ------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1         | RNF02  | Seguridad      | CookSmart maneja cuentas de usuario e información almacenada en Firebase. Una configuración incorrecta de las reglas de seguridad podría permitir acceso no autorizado a los datos.                      | Configurado y verificado parcialmente; las reglas dependen de Firebase                                                   |
+| 2         | RNF01  | Usabilidad     | El sistema está dirigido a usuarios que necesitan encontrar recetas e ingresar ingredientes de manera sencilla y rápida. Una interfaz compleja afectaría directamente el objetivo funcional del sistema. | Funciona; se identificaron oportunidades de mejora en la organización de la interfaz                                     |
+| 3         | RNF04  | Rendimiento    | Las operaciones principales, como autenticación y registro de ingredientes, deben responder en tiempos adecuados para que el usuario pueda utilizar el sistema de manera fluida.                         | Se observa respuesta rápida en las pruebas funcionales; la medición cuantitativa se realizará mediante k6 en el Módulo 2 |
+| 4         | RNF03  | Disponibilidad | La autenticación y persistencia dependen de Firebase. Una indisponibilidad del servicio externo puede impedir el acceso o la gestión de información del usuario.                                         | No se ha realizado una prueba específica de disponibilidad                                                               |
+| 5         | RNF05  | Compatibilidad | CookSmart se ejecuta como aplicación web y debe mantener su funcionamiento en los navegadores utilizados por los usuarios.                                                                               | Verificado en los navegadores probados                                                                                   |
+
+#### Criterio de priorización
+
+La prioridad se estableció considerando primero los atributos cuyo incumplimiento tendría mayor impacto sobre los datos y la operación básica del sistema. Por esta razón, Seguridad ocupa el primer lugar. Usabilidad ocupa el segundo debido a que la interacción sencilla es fundamental para el propósito de CookSmart. Rendimiento y Disponibilidad se priorizan posteriormente porque afectan directamente la experiencia y continuidad del servicio, mientras que Compatibilidad tiene un impacto menor dentro del alcance actual.
+
+#### Trazabilidad hacia decisiones futuras
+
+| Driver         | Decisión arquitectónica que deberá responder                                       |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Seguridad      | Configuración de autenticación, reglas de Firebase y límites de acceso a los datos |
+| Usabilidad     | Organización de funcionalidades y flujo de navegación                              |
+| Rendimiento    | Medición de tiempos de respuesta y evaluación de posibles optimizaciones           |
+| Disponibilidad | Evaluación de la dependencia de Firebase y posibles estrategias de recuperación    |
+| Compatibilidad | Validación del comportamiento en navegadores objetivo                              |
+
 
 ## 6. Riesgos iniciales
 
