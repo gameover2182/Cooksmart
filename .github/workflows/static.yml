@@ -30,7 +30,8 @@ jobs:
           test -f rapido.html
           test -f vegetariano.html
           test -f script.js
-          test -f recetas-db.js
+          test -f recetas-loader.js
+          test -f themealdb.js
           test -f firebase-sync.js
           test -f style.css
 
@@ -38,6 +39,14 @@ jobs:
         run: |
           test -f Docs/01-contexto-y-drivers.md
           test -f Docs/02-Escenarios-de-calidad.md
+
+      - name: Verificar backend (API + PostgreSQL en Docker)
+        run: |
+          test -f Docker/Postgre/docker-compose.yml
+          test -f Docker/Postgre/.env.example
+          test -f Docker/Postgre/init/01_schema.sql
+          test -f Docker/Postgre/init/02_seed.sql
+          test -f Docker/Postgre/backend/src/server.js
 
       - name: Verificar estructura HTML
         run: |
