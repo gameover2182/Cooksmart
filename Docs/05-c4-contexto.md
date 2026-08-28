@@ -98,3 +98,23 @@ implementación correspondiente en el repositorio actual.
 
 Esta corrección evita representar como arquitectura existente componentes que
 pertenecen al roadmap o trabajo futuro.
+
+## 10. Trazabilidad del contexto al código
+
+| Elemento del contexto | Evidencia en el repositorio | Responsabilidad |
+|---|---|---|
+| Usuario final | `login.html`, `registro.html`, `index.html`, `mi-nevera.html`, `recetas.html`, `favoritos.html`, `perfil.html` | Permitir al usuario interactuar con las funcionalidades de CookSmart |
+| CookSmart | Archivos HTML, JavaScript y CSS de la raíz del repositorio | Implementar la interfaz y la lógica de interacción de la aplicación web |
+| Firebase Authentication | `firebase-sync.js` y páginas de autenticación | Gestionar registro, inicio y cierre de sesión |
+| Firebase Realtime Database | `firebase-sync.js` y `recetas-db.js` | Persistir y consultar información utilizada por la aplicación |
+| Recetas locales | `recetas-db.js` | Contener y proporcionar los datos de recetas utilizados por la aplicación |
+
+### Evidencia de corrección arquitectónica
+
+Durante la revisión de la arquitectura se comparó el modelo documentado inicialmente con la implementación disponible en el repositorio.
+
+Se identificó que elementos como API Gateway, microservicios, MySQL/PostgreSQL, Redis y un motor de IA no cuentan actualmente con una implementación correspondiente en el código.
+
+Por esta razón, estos elementos fueron excluidos del C4 de contexto de la arquitectura actual y se mantienen únicamente como arquitectura propuesta o trabajo futuro.
+
+La vista C4 actual representa únicamente elementos que pueden ser relacionados con la implementación disponible en el repositorio.
