@@ -77,13 +77,34 @@ La prioridad se estableció considerando primero los atributos cuyo incumplimien
 | Compatibilidad | Validación del comportamiento en navegadores objetivo                              |
 
 
-## 6. Riesgos iniciales
+## 6. Inventario inicial de riesgos
 
-**RIESGO VERIFICADO:** El sistema real no tiene tests automatizados, a pesar de que el proyecto (fase inicial) documenta un plan de QA extenso (pruebas unitarias, integración, rendimiento, seguridad) que no se ha ejecutado. Esto es evidencia faltante crítica para el checkpoint de Semana 2.
+Los riesgos iniciales se identificaron a partir de la revisión del sistema real, el repositorio y las diferencias encontradas entre las funcionalidades documentadas en la fase inicial y las funcionalidades actualmente implementadas.
 
-**RIESGO VERIFICADO:** RF07 (Historial de recetas) está documentado en el proyecto (fase inicial) pero **no está implementado** en el sistema real — es evidencia faltante, no una funcionalidad verificada.
+| ID   | Riesgo                                                                  | Causa                                                                                                                                                              | Impacto                                                                                                                                                       | Probabilidad | Nivel | Mitigación inicial                                                                                                                         | Estado  |
+| ---- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| R-01 | Ausencia de pruebas automatizadas                                       | El sistema actual no cuenta con una suite de pruebas automatizadas, aunque el proyecto inicial plantea pruebas unitarias, de integración, rendimiento y seguridad. | Dificulta detectar regresiones y demostrar de forma reproducible que las funcionalidades continúan funcionando.                                               | Alta         | Alto  | Implementar y documentar pruebas automatizadas progresivamente y utilizar la CI para ejecutar validaciones.                                | Abierto |
+| R-02 | RF07 no implementado                                                    | El requisito funcional de historial de recetas está documentado en el proyecto inicial, pero no se encuentra implementado en el sistema real.                      | Existe una diferencia entre el alcance funcional documentado y las capacidades reales del sistema.                                                            | Alta         | Alto  | Marcar RF07 como pendiente/no implementado y evitar presentarlo como funcionalidad disponible hasta que exista evidencia.                  | Abierto |
+| R-03 | Dependencia de una sola cuenta para administrar Firebase Security Rules | La configuración de las reglas de seguridad de Firebase es administrada actualmente desde la cuenta de un solo integrante.                                         | Puede impedir que el equipo modifique o verifique las reglas si el integrante responsable no está disponible y genera un punto único de fallo organizacional. | Media        | Alto  | Documentar la configuración, establecer acceso administrativo para más de un integrante autorizado y mantener trazabilidad de los cambios. | Abierto |
+| R-04 | Dependencia de Firebase para autenticación y persistencia               | CookSmart utiliza Firebase como servicio externo para autenticación y almacenamiento de datos y no cuenta actualmente con un backend propio.                       | Una indisponibilidad o configuración incorrecta del servicio puede afectar el acceso de usuarios y la gestión de sus datos.                                   | Media        | Alto  | Documentar la dependencia, verificar las reglas de seguridad y evaluar alternativas de recuperación o desacoplamiento como trabajo futuro. | Abierto |
 
-**RIESGO VERIFICADO (confirmado por el equipo):** Las reglas de seguridad de Firebase (Firebase Security Rules) están configuradas y son administradas exclusivamente desde la cuenta de correo de un solo integrante (Leonardo). Esto es un punto único de fallo: si esa persona no está disponible, el resto del equipo no puede modificar la seguridad de la base de datos ni verificar su configuración de forma independiente. Este riesgo se relaciona directamente con el driver de Seguridad (RNF02).
+### 6.1 Criterio de valoración
+
+La probabilidad y el impacto se clasifican de forma cualitativa como Baja, Media o Alta. El nivel del riesgo se determina considerando conjuntamente la probabilidad de ocurrencia y el impacto que tendría sobre el funcionamiento, seguridad, mantenibilidad o evidencia del sistema.
+
+Los riesgos R-01 y R-02 tienen prioridad alta durante la línea base porque afectan directamente la capacidad del equipo para demostrar el comportamiento real del sistema. R-03 y R-04 se relacionan principalmente con la dependencia de Firebase y la administración de la seguridad.
+
+### 6.2 Riesgos prioritarios
+
+Los riesgos que requieren mayor atención inicialmente son:
+
+1. **R-01 — Ausencia de pruebas automatizadas.**
+2. **R-02 — RF07 no implementado.**
+3. **R-03 — Punto único de administración de las reglas de Firebase.**
+4. **R-04 — Dependencia de Firebase para autenticación y persistencia.**
+
+Estos riesgos serán considerados en las decisiones arquitectónicas y mediciones posteriores del proyecto.
+
 
 ## 7. Supuestos
 
