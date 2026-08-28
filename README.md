@@ -8,20 +8,22 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 |---|---|
 | Juan Manuel Bermúdez Rodríguez | Contexto y base ejecutable |
 | Miguel Ángel Santamaría Cuero | Escenarios de calidad |
-| Leonardo Juan Pablo Leon Robelto | Medición ejecutable (k6) |
+| Leonardo Juan Pablo Leon Robelto | Medición ejecutable (k6), C4, decisión de estilo arquitectónico |
 
 ## Sistema base
 
 - **Repositorio:** https://github.com/gameover2182/Cooksmart.git
-- **Commit/versión evaluada:** ver historial de commits del repo (actualizar aquí con el hash exacto antes de la entrega final)
-- **Stack real (verificado en el repo):** HTML, CSS, JavaScript, Firebase Auth, Firebase Realtime Database. Sin backend propio, sin base de datos relacional, sin tests, sin CI.
-- **Semana actual:** Semana 4
+- **Commit/versión evaluada:** ver el último commit de `main` en el momento de la entrega (`git log -1`)
+- **Stack real (verificado en el repo):** HTML, CSS, JavaScript, Firebase Auth, Firebase Realtime Database. Sin backend propio, sin base de datos relacional, sin tests automatizados.
+- **Semana actual:** Semana 8 (Módulo 4 — Estilos arquitectónicos)
 
-> ⚠️ **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, y un plan de pruebas extenso. Esa arquitectura **no está implementada** en el repositorio actual. **Decisión de equipo:** esa arquitectura se documenta como Roadmap / Trabajo futuro, no como el sistema evaluado en Semana 4. El sistema base evaluado es el actual: estático + Firebase.
+> ⚠️ **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, y un plan de pruebas extenso. Esa arquitectura **no está implementada** en el repositorio actual. **Decisión de equipo (M1 y ratificada en M4):** esa arquitectura se documenta como Roadmap / Trabajo futuro, no como el sistema evaluado. El sistema base evaluado es el actual: estático + Firebase, organizado como monolito modular por capas (ver `Docs/08-decision-estilo-arquitectonico.md`).
 
 ## Roadmap / Trabajo futuro
 
-> **Pendiente:** mover aquí el contenido del PDF del proyecto en fase inicial (diagrama de componentes, diagrama de despliegue, plan de QA), dejando explícito que es una dirección planeada y no la arquitectura implementada hoy.
+- Arquitectura de microservicios del PDF original (Auth, Usuarios, Inventario, Recomendación, Notificaciones detrás de API Gateway).
+- Migración de parte de la lógica a Firebase Cloud Functions (evaluado y descartado del alcance actual en `Docs/08-decision-estilo-arquitectonico.md`, sección 2).
+- Automatizar como *fitness function* las reglas de dependencia entre módulos definidas en `Docs/adr/ADR-002-limites-modulos-dependencias.md`.
 
 ## Cómo levantar el sistema
 
@@ -34,18 +36,22 @@ git clone https://github.com/gameover2182/Cooksmart.git
 # No requiere servidor local, build ni dependencias adicionales
 ```
 
-> **Pendiente:** confirmar si las credenciales/config de Firebase están hardcodeadas en `firebase-sync.js` o requieren alguna variable de entorno / archivo de config aparte.
+Las credenciales de configuración de Firebase están en `firebase-sync.js`. Para el experimento de medición (`experimentos/EXP-001-linea-base/`), la autenticación de prueba usa variables de entorno (`FIREBASE_API_KEY`, `FIREBASE_TEST_EMAIL`, `FIREBASE_TEST_PASSWORD`) en lugar de credenciales hardcodeadas en el script.
 
 ## Estructura del dossier
 
-| Documento | Ruta real en el repo | Estado |
+| Documento | Ruta real en el repo | Módulo |
 |---|---|---|
-| Contexto y drivers | `01-contexto-y-drivers.md` (raíz) | Completo |
-| Escenarios de calidad | `Docs/02-Escenarios-de-calidad.md` | Completo |
-| Evidencia ejecutable | Pendiente de definir ruta | Pendiente |
-| Experimento línea base | Pendiente de definir ruta | Pendiente |
-
-> ⚠️ **Nota de estructura para el equipo:** actualmente `01-contexto-y-drivers.md` está en la raíz del repo y `02-Escenarios-de-calidad.md` está dentro de `Docs/` (con mayúscula). Antes de seguir agregando documentos, el equipo debe decidir una sola convención (por ejemplo, todo dentro de `docs/` en minúscula) y mover los archivos existentes para que coincidan, o el profesor va a encontrar rutas inconsistentes al revisar el repo.
+| Contexto y drivers | `Docs/01-contexto-y-drivers.md` | M1 |
+| Escenarios de calidad | `Docs/02-Escenarios-de-calidad.md` | M2 |
+| Experimento de línea base (k6) | `experimentos/EXP-001-linea-base/` y `experimentos/condiciones.md` | M2 |
+| C4 — Contexto | `Docs/05-c4-contexto.md` | M3 |
+| C4 — Contenedores | `Docs/06-c4-contenedores.md` | M3 |
+| C4 — Componentes | `Docs/07-c4-componentes.md` | M3 |
+| Validación C4 vs. código | `Docs/08-validacion-c4-codigo.md` | M3 |
+| Decisión de estilo arquitectónico | `Docs/08-decision-estilo-arquitectonico.md` | M4 |
+| ADR 1 — Estilo arquitectónico | `Docs/adr/ADR-001-estilo-arquitectonico.md` | M4 |
+| ADR 2 — Límites de módulos y dependencias | `Docs/adr/ADR-002-limites-modulos-dependencias.md` | M4 |
 
 ## Convención de commits
 
@@ -65,4 +71,4 @@ Ejemplo: `docs: agregar contexto y drivers arquitectónicos preliminares`
 
 ## Trazabilidad Git
 
-> **Pendiente:** cada integrante debe abrir su propio Pull Request para su parte del dossier y enlazarlo aquí una vez fusionado.
+Cada integrante trabaja en su propia rama y abre un Pull Request hacia `main` antes de fusionar. El historial completo de PRs fusionados queda visible en la pestaña **Pull Requests** del repositorio: https://github.com/gameover2182/Cooksmart/pulls?q=is%3Apr+is%3Aclosed
