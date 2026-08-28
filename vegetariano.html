@@ -8,9 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <style>
         :root { --primary:#FF6B00; --dark:#1A1A1A; --light:#FFFFFF; --text-dark:#1A1A1A; --gray:#888; --light-gray:#F5F5F5; --border:#EEE; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
@@ -188,7 +185,9 @@
         <div class="footer-bottom"><p>&copy; 2026 Cook Smart. Todos los derechos reservados.</p></div>
     </footer>
 
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script>
         const CATEGORIA = "vegetariano";
 
@@ -220,9 +219,7 @@
             });
         }
 
-        let recetasCategoria = filtrarPorRestricciones(
-            RECETAS_DB.filter(r => r.categoria === CATEGORIA)
-        );
+        let recetasCategoria = [];
         let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
 
         // Menu mobile
@@ -346,8 +343,18 @@
         updateNavBadge();
         window.addEventListener('storage', e => { if (e.key === 'cooksmart_favoritos') updateNavBadge(); });
 
-        // Init
-        renderRecetas(recetasCategoria);
+        function iniciar() {
+            recetasCategoria = filtrarPorRestricciones(
+                RECETAS_DB.filter(r => r.categoria === CATEGORIA)
+            );
+            renderRecetas(recetasCategoria);
+        }
+
+        if (window.recetasDBListo) {
+            iniciar();
+        } else {
+            window.addEventListener('recetasDBReady', iniciar);
+        }
     </script>
     <script src="firebase-sync.js"></script>
 </body>
