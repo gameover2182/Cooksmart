@@ -19,7 +19,20 @@ Se establecen las siguientes reglas de dependencia, obligatorias para todo códi
 | 5 | Ningún módulo de acceso a datos (`firebase-sync.js`, `themealdb.js`) puede depender de la capa de dominio ni de la de presentación — la dependencia es de arriba hacia abajo únicamente. |
 
 ## Implicaciones de seguridad
+## Módulos de dominio dentro de la capa de dominio
 
+La capa de Dominio no es un bloque único: se organiza en submódulos funcionales, cada uno responsable de una parte del comportamiento de CookSmart.
+
+| Submódulo de dominio | Responsabilidad | Implementado en |
+|---|---|---|
+| Recetas | Catálogo y presentación de recetas | `recetas-db.js` |
+| Filtros | Filtrado por categoría (rápido, vegetariano, desayunos, almuerzos, cenas) | `script.js` |
+| Favoritos | Guardar y consultar recetas marcadas por el usuario | `script.js` + `firebase-sync.js` (persistencia) |
+| Mi Nevera | Registro y eliminación de ingredientes disponibles | `script.js` |
+| Autenticación | Registro, inicio y cierre de sesión | `firebase-sync.js` (delegando en Firebase Auth) |
+| Persistencia | Sincronización de datos del usuario con Firebase Realtime Database | `firebase-sync.js` |
+
+Estos submódulos siguen las mismas reglas de dependencia definidas arriba: ninguno accede a Firebase o a la API externa directamente, todos pasan por `firebase-sync.js` o `themealdb.js`.
 Concentrar el acceso a Firebase en un único módulo (`firebase-sync.js`) tiene un impacto directo sobre el driver de Seguridad (prioridad 1) y sobre los riesgos ya documentados:
 
 - **Mitiga R-03 parcialmente:** aunque la administración de las reglas de seguridad de Firebase sigue dependiendo de una sola cuenta, tener un único punto de código que las consume facilita que cualquier integrante audite o modifique ese acceso sin tener que rastrear llamadas a Firebase dispersas por todo el proyecto.
