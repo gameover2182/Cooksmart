@@ -51,26 +51,26 @@ INSERT INTO receta_ingrediente (id_receta, id_ingrediente, cantidad, unidad) VAL
 -- ---------------------------------------------------------------------
 -- 3. Usuarios
 --    - usuario 1: cuenta fija de QA para pruebas de seguridad (PSeg)
---      (contraseña real "CookSmart2026!", hash de ejemplo — reemplazar
---      por el hash bcrypt generado por la propia app antes de correr
---      pruebas de login/fuerza bruta reales)
+--      Contraseña real de prueba: CookSmart2026!
+--      (el hash de abajo fue generado con bcrypt, costo 12, mediante
+--      generar_hash.py — NO es un valor inventado a mano)
 --    - usuarios 2-6: cuentas funcionales para pruebas de disponibilidad (PI)
 --    - usuarios 7-206: volumen para pruebas de carga (PR)
 -- ---------------------------------------------------------------------
 INSERT INTO usuario (nombre, correo, contrasena_hash, fecha_registro) VALUES
-    ('QA Seguridad', 'qa.seguridad@cooksmart.test', '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL', now()),
-    ('Ana Torres', 'ana.torres@cooksmart.test', '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL', now()),
-    ('Carlos Ruiz', 'carlos.ruiz@cooksmart.test', '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL', now()),
-    ('Diana Pérez', 'diana.perez@cooksmart.test', '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL', now()),
-    ('Elena Gómez', 'elena.gomez@cooksmart.test', '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL', now()),
-    ('Felipe Rojas', 'felipe.rojas@cooksmart.test', '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL', now());
+    ('QA Seguridad', 'qa.seguridad@cooksmart.test', '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq', now()),
+    ('Ana Torres', 'ana.torres@cooksmart.test', '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq', now()),
+    ('Carlos Ruiz', 'carlos.ruiz@cooksmart.test', '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq', now()),
+    ('Diana Pérez', 'diana.perez@cooksmart.test', '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq', now()),
+    ('Elena Gómez', 'elena.gomez@cooksmart.test', '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq', now()),
+    ('Felipe Rojas', 'felipe.rojas@cooksmart.test', '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq', now());
 
 -- Volumen adicional de usuarios para pruebas de rendimiento (PR01-PR07)
 INSERT INTO usuario (nombre, correo, contrasena_hash, fecha_registro)
 SELECT
     'Usuario Carga ' || g,
     'carga.usuario' || g || '@cooksmart.test',
-    '$2b$12$REEMPLAZAR_CON_HASH_BCRYPT_REAL',
+    '$2b$12$3Wtnb7I6jqFok4rE0pd2PeYlDy9xVfJFWoVCfUkUkZSgJ94l75cAq',
     now() - (random() * interval '180 days')
 FROM generate_series(1, 200) AS g;
 
