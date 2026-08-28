@@ -1,98 +1,126 @@
 /* =============================================
-   FIREBASE SYNC - Cook Smart
-   Archivo compartido para TODAS las páginas.
-   Maneja: auth navbar, favoritos sync, perfil.
+   FIREBASE SYNC - Cook Smart (arquitectura híbrida)
+   Firebase se usa ÚNICAMENTE para autenticación (login/registro).
+   Los favoritos, inventario e historial YA NO se guardan en Firebase
+   Realtime Database -- viven en Postgres, a través de /api/me/* del
+   backend propio. El backend verifica el ID token de Firebase en cada
+   request (no confía en nada que venga del navegador sin verificar).
    ============================================= */
 
-const FIREBASE_CONFIG = {
+const COOKSMART_API_BASE = window.COOKSMART_API_BASE || 'http://localhost:3000/api';
+
+const firebaseConfig = {
     apiKey: "AIzaSyA60XhpKmHY5KV2mozo2_mzMWRTbq7Qwj4",
     authDomain: "cook-smart-626ff.firebaseapp.com",
-    databaseURL: "https://cook-smart-626ff-default-rtdb.firebaseio.com",
     projectId: "cook-smart-626ff",
     storageBucket: "cook-smart-626ff.firebasestorage.app",
     messagingSenderId: "339922416882",
     appId: "1:339922416882:web:68891748b48ee00a2d8c6b"
+    // Nota: ya no se necesita "databaseURL" -- Firebase Realtime Database
+    // no se usa más para datos de la app, solo Firebase Auth.
 };
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-const fbAuth = firebase.auth();
-const fbDB = firebase.database();
+let _favoritosConocidos = [];
 
-// ---- FAVORITOS SYNC ----
-
-// Guardar favoritos en Firebase
-function syncFavoritosToFirebase(favs) {
-    const user = fbAuth.currentUser;
-    if (!user) return;
-    fbDB.ref('usuarios/' + user.uid + '/favoritos').set(
-        favs.map(f => f.id)
-    );
+async function _idTokenActual() {
+    const usuario = auth.currentUser;
+    if (!usuario) return null;
+    return usuario.getIdToken(); // el SDK de Firebase refresca solo si venció
 }
 
-// Cargar favoritos desde Firebase al localStorage
-async function loadFavoritosFromFirebase(uid) {
+async function _apiFetch(path, opciones = {}) {
+    const token = await _idTokenActual();
+    const headers = { 'Content-Type': 'application/json', ...(opciones.headers || {}) };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const resp = await fetch(`${COOKSMART_API_BASE}${path}`, { ...opciones, headers });
+    if (!resp.ok) {
+        const cuerpo = await resp.json().catch(() => ({}));
+        throw Object.assign(new Error(cuerpo.error || `Error ${resp.status}`), { status: resp.status });
+    }
+    return resp.status === 204 ? null : resp.json();
+}
+
+// ---- FAVORITOS (equivalente a lo que antes hacía Realtime Database) ----
+
+async function cargarFavoritosDesdeAPI() {
     try {
-        const snap = await fbDB.ref('usuarios/' + uid + '/favoritos').get();
-        if (snap.exists()) {
-            const ids = snap.val();
-            // Reconstruir objetos completos desde RECETAS_DB si existe
-            if (typeof RECETAS_DB !== 'undefined') {
-                const favs = ids.map(id => RECETAS_DB.find(r => r.id === id)).filter(Boolean);
-                localStorage.setItem('cooksmart_favoritos', JSON.stringify(favs));
-            } else {
-                localStorage.setItem('cooksmart_favoritos', JSON.stringify(ids));
-            }
+        const favoritos = await _apiFetch('/me/favoritos');
+        const idsFavoritos = favoritos.map(f => f.id_receta);
+
+        if (typeof window.RECETAS_DB !== 'undefined' && window.RECETAS_DB.length) {
+            const favs = idsFavoritos.map(id => window.RECETAS_DB.find(r => r.id === id)).filter(Boolean);
+            _favoritosConocidos = favs;
+            localStorage.setItem('cooksmart_favoritos', JSON.stringify(favs));
         } else {
-            localStorage.setItem('cooksmart_favoritos', JSON.stringify([]));
+            _favoritosConocidos = idsFavoritos;
+            localStorage.setItem('cooksmart_favoritos', JSON.stringify(idsFavoritos));
         }
     } catch (e) {
-        console.warn('Error cargando favoritos:', e);
+        console.warn('Error cargando favoritos desde la API:', e);
     }
 }
 
-// Interceptar cambios en localStorage para sincronizar
+async function _sincronizarFavoritosConAPI(nuevaLista) {
+    const idsNuevos = nuevaLista.map(r => (typeof r === 'object' ? r.id : r));
+    const idsViejos = _favoritosConocidos.map(r => (typeof r === 'object' ? r.id : r));
+
+    const agregados = idsNuevos.filter(id => !idsViejos.includes(id));
+    const quitados = idsViejos.filter(id => !idsNuevos.includes(id));
+
+    for (const idReceta of agregados) {
+        await _apiFetch('/me/favoritos', { method: 'POST', body: JSON.stringify({ idReceta }) })
+            .catch(e => console.warn('No se pudo agregar favorito:', e));
+    }
+    for (const idReceta of quitados) {
+        await _apiFetch(`/me/favoritos/${idReceta}`, { method: 'DELETE' })
+            .catch(e => console.warn('No se pudo quitar favorito:', e));
+    }
+
+    _favoritosConocidos = nuevaLista;
+}
+
 const _origSetItem = localStorage.setItem.bind(localStorage);
-localStorage.setItem = function(key, value) {
+localStorage.setItem = function (key, value) {
     _origSetItem(key, value);
-    if (key === 'cooksmart_favoritos' && fbAuth.currentUser) {
+    if (key === 'cooksmart_favoritos' && auth.currentUser) {
         try {
-            const favs = JSON.parse(value);
-            syncFavoritosToFirebase(favs);
-        } catch(e) {}
+            _sincronizarFavoritosConAPI(JSON.parse(value));
+        } catch (e) {
+            /* valor no parseable, se ignora */
+        }
     }
 };
 
-// ---- AUTH STATE & NAVBAR ----
+// ---- NAVBAR + ESTADO DE SESIÓN ----
 
-fbAuth.onAuthStateChanged(async (user) => {
+function updateNavAuthUI(usuario) {
     const btn = document.getElementById('btn-login');
     if (!btn) return;
 
-    if (user) {
-        // Cargar favoritos del usuario desde Firebase
-        await loadFavoritosFromFirebase(user.uid);
-
-        // Actualizar badge si existe la función
-        if (typeof updateNavBadge === 'function') updateNavBadge();
-
-        // Actualizar botón navbar → perfil
-        const nombre = user.displayName ? user.displayName.split(' ')[0] : 'Usuario';
+    if (usuario) {
+        const nombre = usuario.displayName ? usuario.displayName.split(' ')[0] : 'Usuario';
         btn.innerHTML = `👤 ${nombre} ▾`;
         btn.href = 'perfil.html';
-        btn.onclick = null;
-
     } else {
-        // Limpiar favoritos locales al cerrar sesión
-        localStorage.removeItem('cooksmart_favoritos');
-        localStorage.removeItem('cookSmartIngredientes');
-
-        if (typeof updateNavBadge === 'function') updateNavBadge();
-
         btn.textContent = 'Iniciar Sesión';
         btn.href = 'login.html';
-        btn.onclick = null;
     }
+}
 
-    // Disparar evento para que las páginas reaccionen
+// onAuthStateChanged sigue siendo 100% de Firebase -- es la parte que
+// SÍ seguimos usando tal cual. Lo único nuevo es que, en vez de leer
+// favoritos de Realtime Database, los pide a la API/Postgres.
+auth.onAuthStateChanged(async (usuario) => {
+    if (usuario) {
+        await cargarFavoritosDesdeAPI();
+        if (typeof window.updateNavBadge === 'function') window.updateNavBadge();
+        updateNavAuthUI(usuario);
+    } else {
+        localStorage.removeItem('cooksmart_favoritos');
+        updateNavAuthUI(null);
+    }
     window.dispatchEvent(new Event('authUpdated'));
 });

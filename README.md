@@ -10,7 +10,7 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 | Miguel Ángel Santamaría Cuero | Escenarios de calidad |
 | Leonardo Juan Pablo Leon Robelto | Medición ejecutable (k6), C4, decisión de estilo arquitectónico |
 
-## Sistema base
+## Sistema base — arquitectura actual (en migración)
 
 - **Repositorio:** https://github.com/gameover2182/Cooksmart.git
 - **Commit/versión evaluada:** ver el último commit de `main` en el momento de la entrega (`git log -1`)
@@ -27,10 +27,11 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 ## Cómo levantar el sistema
 
-El sistema no requiere instalación: los archivos `.html` se abren directamente en el navegador y funcionan contra Firebase (Auth + Realtime Database) como backend.
+El sistema tiene ahora dos partes que se levantan por separado:
+
+**1. Frontend estático** (raíz del repo):
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/gameover2182/Cooksmart.git
 # Abrir index.html directamente en el navegador
 # No requiere servidor local, build ni dependencias adicionales
@@ -38,7 +39,7 @@ git clone https://github.com/gameover2182/Cooksmart.git
 
 Las credenciales de configuración de Firebase están en `firebase-sync.js`. Para el experimento de medición (`experimentos/EXP-001-linea-base/`), la autenticación de prueba usa variables de entorno (`FIREBASE_API_KEY`, `FIREBASE_TEST_EMAIL`, `FIREBASE_TEST_PASSWORD`) en lugar de credenciales hardcodeadas en el script.
 
-## Estructura del dossier
+## Estructura del dossier y del repositorio (actualizada)
 
 | Documento | Ruta real en el repo | Módulo |
 |---|---|---|

@@ -1,0 +1,45 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - .env
+    container_name: cooksmart
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Cooksmart2024
+      POSTGRES_DB: cooksmart
+
+    volumes:
+      - cooksmart_pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    container_name: cooksmart-api
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://admin:Cooksmart2024@db:5432/cooksmart
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5433:8080
+
+volumes:
+  cooksmart_pgdata:
