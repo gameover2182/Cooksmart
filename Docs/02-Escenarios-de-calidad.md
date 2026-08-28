@@ -2,11 +2,13 @@
 
 Con base a lo anteriormente propuesto y soportado por requisitos no funcionales, se escogen los siguientes atributos de calidad:
 
-| Atributo |Soporte  |
+> **Alcance arquitectónico:** Los escenarios de calidad se analizan considerando el estado actual verificable de CookSmart y, cuando corresponda, las decisiones arquitectónicas propuestas como trabajo futuro. La arquitectura de microservicios, API Gateway, Redis, base de datos relacional y motor de IA no se presenta como infraestructura actualmente implementada, sino como una arquitectura objetivo para evaluar riesgos y posibles decisiones futuras.
+
+| Atributo | Soporte |
 |--|--|
-| Seguridad |RNF02 - Ley 1581 del 2012 - Pruebas de seguridad (PSeg01 - PSeg10)   ||--|--|
-| Rendimiento |RNF04 - Pruebas de rendimiento (PR01 - PR07)   ||--|--|
-| Disponibilidad |RNF03 - Debe estar disponible al menos el 95% de los accesos - Pruebas de estrés/resistencia (PR04 - PR05)   |
+| Seguridad | RNF02 - Ley 1581 del 2012 - Pruebas de seguridad (PSeg01 - PSeg10) |
+| Rendimiento | RNF04 - Pruebas de rendimiento (PR01 - PR07) |
+| Disponibilidad | RNF03 - Debe estar disponible al menos el 95% de los accesos - Pruebas de estrés/resistencia (PR04 - PR05) |
 
 Se espera que estos escenarios entren en revision exhaustiva cuando los riesgos iniciales del proyecto se mitiguen.
 
