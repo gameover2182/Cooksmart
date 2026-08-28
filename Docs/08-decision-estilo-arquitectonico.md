@@ -69,7 +69,11 @@ Se prioriza el estilo que exige el menor número de piezas nuevas de infraestruc
 ---
 
 ## 5. Reglas de dependencia entre módulos
-
+| Módulo | Responsabilidad | Dependencias permitidas | Dependencias prohibidas |
+|---|---|---|---|
+| Presentación (`.html`, `style.css`) | Mostrar la interfaz y capturar eventos del usuario | Capa de Dominio | Firebase directo, TheMealDB directo |
+| Dominio (`script.js`, `recetas-db.js`) | Filtrado y recomendación de recetas, reglas de negocio | Capa de Acceso a Datos | Manipular el DOM, Presentación |
+| Acceso a Datos (`firebase-sync.js`, `themealdb.js`) | Único punto de contacto con Firebase y con la API externa | Ninguna (capa base) | Dominio, Presentación |
 1. Ningún archivo `.html` ni su script embebido puede llamar directamente a `firebase-sync.js`; debe pasar por funciones de la capa de dominio (`recetas-db.js` / `script.js`).
 2. `firebase-sync.js` es el **único** archivo autorizado para leer/escribir en Firebase Realtime Database o llamar a Firebase Authentication.
 3. `themealdb.js` es el único punto de integración con la API externa de recetas (TheMealDB); no debe ser llamado desde la capa de presentación.
