@@ -29,6 +29,7 @@ services:
     environment:
       DATABASE_URL: postgresql://admin:Cooksmart2024@db:5432/cooksmart
       PORT: 3000
+      JWT_SECRET: v1Gj3Yd7rL1fi9fo
     ports:
       - "3000:3000"
     depends_on:
@@ -43,3 +44,4 @@ services:
 
 volumes:
   cooksmart_pgdata:
+
