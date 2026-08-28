@@ -1,5 +1,5 @@
 const { inicializarFirebaseAdmin, estaConfigurado, admin } = require('../config/firebaseAdmin');
-const usuariosRepo = require('../repositories/Usuarios.repository');
+const usuariosRepo = require('../repositories/usuarios.repository');
 
 async function requireFirebaseAuth(req, res, next) {
     if (!estaConfigurado()) {
@@ -18,6 +18,9 @@ async function requireFirebaseAuth(req, res, next) {
         inicializarFirebaseAdmin();
         const decoded = await admin.auth().verifyIdToken(idToken);
 
+        // "Just-in-time provisioning": la primera vez que este firebase_uid
+        // llega al backend, se crea su fila en Postgres. Así no hace falta
+        // duplicar el registro en dos sistemas ni sincronizar manualmente.
         let usuario = await usuariosRepo.findByFirebaseUid(decoded.uid);
         if (!usuario) {
             usuario = await usuariosRepo.createFromFirebase({
