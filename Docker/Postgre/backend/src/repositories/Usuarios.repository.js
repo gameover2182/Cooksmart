@@ -17,6 +17,9 @@ async function findByFirebaseUid(firebaseUid) {
 }
 
 async function createFromFirebase({ firebaseUid, nombre, correo }) {
+    // ON CONFLICT en correo: cubre el caso de que el correo ya exista
+    // (ej. una cuenta de QA sembrada con ese mismo correo) vinculándolo
+    // en vez de fallar con un error de duplicado.
     const { rows } = await query(
         `INSERT INTO usuario (firebase_uid, nombre, correo)
          VALUES ($1, $2, $3)
