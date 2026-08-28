@@ -43,3 +43,5 @@ services:
 
 volumes:
   cooksmart_pgdata:
+
+JWT_SECRET: v1Gj3Yd7rL1fi9fo
