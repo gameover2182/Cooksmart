@@ -294,6 +294,128 @@ Firebase para verificar tokens).
 | Services | Repositories | Delegan el acceso a datos |
 | Repositories | PostgreSQL | Ejecutan SQL vía `src/config/db.js` |
 
+### 4.1 Walking Skeleton Trace
+
+El Walking Skeleton representa un recorrido funcional de extremo a extremo a través de los principales elementos arquitectónicos de CookSmart. Su propósito es demostrar cómo una solicitud del usuario atraviesa la interfaz web, la API, la lógica de negocio y la persistencia, manteniendo trazabilidad con los componentes identificados en este documento.
+
+Para el estado actual del proyecto se selecciona como flujo principal la **consulta del catálogo de recetas**.
+
+#### Flujo E2E: Consulta del catálogo de recetas
+
+```text
+┌──────────────────────┐
+│       Usuario        │
+│ Consulta recetas     │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│       CookSmart Web          │
+│                              │
+│ Gestor de recetas            │
+│ renderRecetas()              │
+│ cargarRecetasPopulares()     │
+└──────────┬───────────────────┘
+           │
+           │ utiliza catálogo
+           ▼
+┌──────────────────────────────┐
+│ Adaptador de catálogo        │
+│ recetas-loader.js            │
+│                              │
+│ _cargarRecetasDesdeAPI()     │
+│ _adaptarReceta()             │
+└──────────┬───────────────────┘
+           │
+           │ fetch
+           │ GET /api/recetas
+           ▼
+┌──────────────────────────────┐
+│       CookSmart API          │
+│                              │
+│ Routes                       │
+│      ↓                       │
+│ Controllers                  │
+│      ↓                       │
+│ Services                     │
+│      ↓                       │
+│ Repositories                 │
+└──────────┬───────────────────┘
+           │
+           │ SQL
+           ▼
+┌──────────────────────────────┐
+│         PostgreSQL           │
+│                              │
+│ Persistencia de recetas      │
+└──────────┬───────────────────┘
+           │
+           │ resultado
+           ▼
+┌──────────────────────────────┐
+│       CookSmart API          │
+│ Respuesta HTTP               │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│ Adaptador de catálogo        │
+│                              │
+│ adapta respuesta y actualiza  │
+│ window.RECETAS_DB             │
+│ emite recetasDBReady          │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│ Gestor de recetas            │
+│                              │
+│ renderRecetas()              │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────┐
+│       Usuario        │
+│ Recetas mostradas    │
+└──────────────────────┘
+```
+
+#### Trazabilidad del recorrido
+
+| Paso | Elemento              | Evidencia en código                                                  | Relación                            |
+| ---- | --------------------- | -------------------------------------------------------------------- | ----------------------------------- |
+| 1    | Usuario               | Interfaz HTML de CookSmart                                           | Usuario → CookSmart Web             |
+| 2    | Gestor de recetas     | `index.html` — `renderRecetas()`, `cargarRecetasPopulares()`         | Gestor → catálogo                   |
+| 3    | Adaptador de catálogo | `recetas-loader.js` — `_cargarRecetasDesdeAPI()`, `_adaptarReceta()` | Adaptador → API                     |
+| 4    | Endpoint de recetas   | `src/routes/recetas.routes.js`                                       | Web → `GET /api/recetas`            |
+| 5    | Capa de negocio       | `src/controllers`, `src/services`                                    | Controllers → Services              |
+| 6    | Acceso a datos        | `src/repositories`                                                   | Services → Repositories             |
+| 7    | Persistencia          | `src/config/db.js`, PostgreSQL                                       | Repository → PostgreSQL             |
+| 8    | Respuesta             | `fetch()` en `recetas-loader.js`                                     | API → Adaptador                     |
+| 9    | Adaptación            | `_adaptarReceta()`                                                   | Respuesta API → `window.RECETAS_DB` |
+| 10   | Renderizado           | `renderRecetas()`                                                    | Catálogo → interfaz                 |
+| 11   | Resultado             | Interfaz web                                                         | CookSmart Web → Usuario             |
+
+#### Estado de verificación
+
+El recorrido anterior representa la arquitectura y las relaciones identificadas en el código actual. La API dispone de rutas, controladores, servicios, repositorios y conexión a PostgreSQL. Asimismo, `recetas-loader.js` implementa la consulta mediante `fetch` a la API y adapta la respuesta al formato utilizado por la interfaz.
+
+Sin embargo, la adopción del nuevo recorrido no es todavía uniforme en todas las páginas. La auditoría identificó que únicamente `login.html`, `registro.html` y `vegetariano.html` cargan actualmente `recetas-loader.js`, mientras que otras páginas todavía contienen referencias al archivo eliminado `recetas-db.js`. Por esta razón, el Walking Skeleton se considera **arquitectónicamente trazable y parcialmente implementado**, pero no completamente integrado en todas las páginas del sistema.
+
+Esta situación se registra en la tabla de trazabilidad mediante los elementos T-07 y T-20 y se mantiene como deuda técnica conocida.
+
+#### Criterio de aceptación del Walking Skeleton
+
+Se considera que el Walking Skeleton está correctamente trazado cuando cada salto del recorrido puede relacionarse con:
+
+1. Un elemento del modelo C4.
+2. Un archivo o módulo real del repositorio.
+3. Una función, ruta, configuración o símbolo verificable.
+4. Una relación observable entre el origen y el destino.
+5. Un estado explícito de verificación o corrección.
+
+Con este criterio, el recorrido presentado mantiene trazabilidad desde el usuario hasta PostgreSQL y de regreso a la interfaz, identificando explícitamente las partes que todavía requieren completar la migración del catálogo.
+
 ---
 
 ## 5. Tabla de trazado C4
