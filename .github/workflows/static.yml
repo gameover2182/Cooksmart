@@ -37,8 +37,8 @@ jobs:
 
       - name: Verificar documentación
         run: |
-          test -f Docs/01-contexto-y-drivers.md
-          test -f Docs/02-Escenarios-de-calidad.md
+          test -f docs/01-contexto-y-drivers.md
+          test -f docs/02-Escenarios-de-calidad.md
 
       - name: Verificar backend (API + PostgreSQL en Docker)
         run: |
