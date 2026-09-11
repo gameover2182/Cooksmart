@@ -21,14 +21,15 @@
 -- la gestión de la nevera (RF04), independiente de si existe o no
 -- un mecanismo de notificación sobre ese campo.
 --
--- CAMBIO DE ARQUITECTURA (decisión del equipo, en curso): Firebase se
--- mantiene ÚNICAMENTE como proveedor de autenticación (login/registro).
--- Todo lo demás -- recetas, favoritos, inventario, historial -- vive en
--- Postgres. Por eso "usuario" tiene firebase_uid (identidad real,
--- verificada por el backend contra Firebase en cada request) y
--- contrasena_hash pasa a ser opcional: solo lo usan las cuentas de
--- prueba de QA que se autentican directo contra el backend (bcrypt+JWT),
--- sin pasar por Firebase -- conviven dos mecanismos de auth a propósito.
+-- CAMBIO DE ARQUITECTURA (decisión final del equipo): el sistema se
+-- probó primero con Firebase como proveedor único de autenticación
+-- (arquitectura híbrida), pero requería credenciales de cuenta de
+-- servicio que el equipo nunca terminó de configurar. Se decidió
+-- eliminar la dependencia de Firebase por completo: autenticación,
+-- recetas, favoritos, inventario e historial viven 100% en Postgres,
+-- vía el backend propio (bcrypt + JWT). "firebase_uid" queda como
+-- columna nullable sin uso activo -- se conserva por si se retoma esa
+-- vía en el futuro, pero ningún endpoint la escribe ni la lee hoy.
 -- =====================================================================
 
 CREATE TABLE usuario (
@@ -37,7 +38,8 @@ CREATE TABLE usuario (
     nombre            VARCHAR(100) NOT NULL,
     correo            VARCHAR(150) NOT NULL UNIQUE,
     contrasena_hash   VARCHAR(255),
-    fecha_registro    TIMESTAMP NOT NULL DEFAULT now()
+    fecha_registro    TIMESTAMP NOT NULL DEFAULT now(),
+    preferencias      JSONB NOT NULL DEFAULT '{"gustos": [], "restricciones": []}'::jsonb
 );
 
 CREATE TABLE categoria_ingrediente (
@@ -82,10 +84,15 @@ CREATE TABLE receta (
     nombre_receta    VARCHAR(150) NOT NULL,
     descripcion      TEXT,
     instrucciones    TEXT,
+    pasos            TEXT[],
     tiempo_prep_min  INT NOT NULL CHECK (tiempo_prep_min > 0),
     imagen_url       VARCHAR(500),
     dificultad       VARCHAR(20) NOT NULL DEFAULT 'Fácil' CHECK (dificultad IN ('Fácil','Media','Difícil')),
-    porciones        INT NOT NULL DEFAULT 2 CHECK (porciones > 0)
+    porciones        INT NOT NULL DEFAULT 2 CHECK (porciones > 0),
+    calorias         INT,
+    proteina_g       INT,
+    carbos_g         INT,
+    grasa_g          INT
 );
 
 -- Ingredientes requeridos por una receta (referencia el catálogo, no la nevera)

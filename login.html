@@ -134,9 +134,7 @@
     </section>
 
     <script src="recetas-loader.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="firebase-sync.js"></script>
+    <script src="auth-sync.js"></script>
     <script>
         function togglePassword(id, icon) {
             const input = document.getElementById(id);
@@ -153,40 +151,32 @@
             btn.textContent = "Iniciando sesión..."; btn.disabled = true;
 
             try {
-                // auth.signInWithEmailAndPassword es 100% Firebase Auth. Una
-                // vez autenticado, firebase-sync.js (onAuthStateChanged) se
-                // encarga de pedirle los favoritos al backend/Postgres.
-                await auth.signInWithEmailAndPassword(email, password);
+                // CookSmartAuth.login habla con /api/auth/login (bcrypt + JWT,
+                // 100% Postgres). Al terminar, auth-sync.js ya dejó el token y
+                // los favoritos cargados en localStorage.
+                await CookSmartAuth.login(email, password);
                 sessionStorage.removeItem('welcomeShown');
                 window.location.href = 'index.html';
             } catch (error) {
                 btn.textContent = "Iniciar Sesión"; btn.disabled = false;
-                if (error.code === 'auth/user-not-found') mostrarError("No existe una cuenta con ese correo");
-                else if (error.code === 'auth/wrong-password') mostrarError("Contraseña incorrecta");
-                else if (error.code === 'auth/invalid-email') mostrarError("El correo no es válido");
-                else if (error.code === 'auth/too-many-requests') mostrarError("Demasiados intentos. Espera un momento");
-                else if (error.code === 'auth/invalid-credential') mostrarError("Correo o contraseña incorrectos");
+                if (error.status === 401) mostrarError("Correo o contraseña incorrectos");
                 else mostrarError("Error al iniciar sesión. Intenta de nuevo");
             }
         }
 
-        // Google login SÍ sigue disponible con este enfoque (es Firebase Auth puro)
+        // NOTA: "Iniciar sesión con Google" y "Recuperar contraseña" dependían
+        // de Firebase Auth (OAuth de Google y envío de correos), que ya no se
+        // usa en este sistema (autenticación 100% Postgres). Implementarlos
+        // aquí requeriría integrar OAuth2 de Google directamente y un
+        // servicio de envío de correo (ej. nodemailer + SMTP) en el backend
+        // propio -- quedan deshabilitados con un aviso claro en vez de
+        // simular que funcionan.
         async function loginGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                await auth.signInWithPopup(provider);
-                sessionStorage.removeItem('welcomeShown');
-                window.location.href = 'index.html';
-            } catch (error) { mostrarError("Error al iniciar con Google"); }
+            mostrarError("El inicio de sesión con Google no está disponible en esta versión");
         }
 
         async function recuperarPassword() {
-            const email = document.getElementById('email').value.trim();
-            if (!email) { mostrarError("Escribe tu correo primero"); return; }
-            try {
-                await auth.sendPasswordResetEmail(email);
-                mostrarExito("Te enviamos un correo para restablecer tu contraseña");
-            } catch (error) { mostrarError("No encontramos ese correo registrado"); }
+            mostrarError("La recuperación de contraseña por correo no está disponible en esta versión");
         }
 
         function mostrarError(msg) {

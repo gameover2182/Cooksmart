@@ -32,7 +32,7 @@ jobs:
           test -f script.js
           test -f recetas-loader.js
           test -f themealdb.js
-          test -f firebase-sync.js
+          test -f auth-sync.js
           test -f style.css
 
       - name: Verificar documentación

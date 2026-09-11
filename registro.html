@@ -222,9 +222,7 @@
     </section>
 
     <script src="recetas-loader.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="firebase-sync.js"></script>
+    <script src="auth-sync.js"></script>
     <script>
         function togglePassword(id, icon) {
             const input = document.getElementById(id);
@@ -244,22 +242,20 @@
 
             if (!nombre || !email || !password || !confirmar) { mostrarError("Por favor completa todos los campos"); return; }
             if (password !== confirmar) { mostrarError("Las contraseñas no coinciden"); return; }
-            if (password.length < 6) { mostrarError("La contraseña debe tener mínimo 6 caracteres"); return; }
+            // El backend exige mínimo 8 caracteres (validación real en /api/auth/registro)
+            if (password.length < 8) { mostrarError("La contraseña debe tener mínimo 8 caracteres"); return; }
 
             const btn = document.getElementById('btn-registro');
             btn.textContent = "Creando cuenta..."; btn.disabled = true;
 
             try {
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                await cred.user.updateProfile({ displayName: nombre });
+                // CookSmartAuth.registrar habla con /api/auth/registro
+                // (bcrypt + JWT, 100% Postgres) y ya deja la sesión guardada.
+                await CookSmartAuth.registrar(nombre, email, password);
 
-                // La fila del usuario en Postgres se crea sola en el primer
-                // llamado autenticado a /api/me/* (ver firebaseAuthMiddleware:
-                // "just-in-time provisioning"). No hay que crearla a mano aquí.
-
-                // Gustos/restricciones: por ahora solo quedan en localStorage,
-                // igual que antes -- el backend todavía no tiene un endpoint
-                // para guardar preferencias por usuario (queda pendiente).
+                // Gustos/restricciones: por ahora solo quedan en localStorage
+                // -- el backend todavía no tiene un endpoint para guardar
+                // preferencias por usuario (queda pendiente, documentado).
                 const gustos = [...document.querySelectorAll(
                     '#gustosRegistro .pref-chip-reg.active:not(.restriccion-reg)'
                 )].map(c => c.dataset.val);
@@ -274,19 +270,16 @@
                 setTimeout(() => { window.location.href = 'index.html'; }, 1500);
             } catch (error) {
                 btn.textContent = "Crear cuenta"; btn.disabled = false;
-                if (error.code === 'auth/email-already-in-use') mostrarError("Este correo ya está registrado");
-                else if (error.code === 'auth/invalid-email') mostrarError("El correo no es válido");
-                else if (error.code === 'auth/weak-password') mostrarError("La contraseña es muy débil");
+                if (error.status === 409) mostrarError("Este correo ya está registrado");
+                else if (error.status === 400) mostrarError(error.message || "Datos inválidos");
                 else mostrarError("Error al crear cuenta. Intenta de nuevo");
             }
         }
 
+        // Registro con Google dependía de Firebase OAuth, ya no disponible
+        // en este sistema (autenticación 100% Postgres).
         async function registroGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                await auth.signInWithPopup(provider);
-                window.location.href = 'index.html';
-            } catch (error) { mostrarError("Error al registrarse con Google"); }
+            mostrarError("El registro con Google no está disponible en esta versión");
         }
 
         function mostrarError(msg) {

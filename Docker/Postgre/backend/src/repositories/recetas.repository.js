@@ -18,6 +18,7 @@ async function findAll({ idCategoriaRec, idTipoCocina } = {}) {
     const { rows } = await query(
         `SELECT r.id_receta, r.nombre_receta, r.descripcion, r.tiempo_prep_min,
                 r.imagen_url, r.dificultad, r.porciones,
+                r.pasos, r.calorias, r.proteina_g, r.carbos_g, r.grasa_g,
                 cr.nombre_categoria AS categoria_receta,
                 tc.nombre_tipo AS tipo_cocina,
                 COALESCE(
@@ -46,6 +47,7 @@ async function findById(idReceta) {
     const { rows: recetaRows } = await query(
         `SELECT r.id_receta, r.nombre_receta, r.descripcion, r.instrucciones, r.tiempo_prep_min,
                 r.imagen_url, r.dificultad, r.porciones,
+                r.pasos, r.calorias, r.proteina_g, r.carbos_g, r.grasa_g,
                 cr.nombre_categoria AS categoria_receta,
                 tc.nombre_tipo AS tipo_cocina,
                 COALESCE(
