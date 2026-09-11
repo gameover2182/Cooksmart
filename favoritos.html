@@ -12,9 +12,6 @@
     
     <!-- Íconos de FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     
     <style>
         /* =========================================
@@ -619,7 +616,7 @@
     </footer>
 
     <!-- CÓDIGO JAVASCRIPT -->
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
     <script>
         // Referencias DOM
         const menuIcon = document.querySelector('.menu-icon');
@@ -818,6 +815,6 @@
         updateNavBadge();
         
     </script>
-    <script src="firebase-sync.js"></script>
+    <script src="auth-sync.js"></script>
 </body>
 </html>
