@@ -16,7 +16,7 @@
    cambio manual que hay que hacer en cada página (ver guía abajo).
    ============================================= */
 
-const COOKSMART_API_BASE = window.COOKSMART_API_BASE || 'http://localhost:3000/api';
+const _RECETAS_API_BASE = window.COOKSMART_API_BASE || 'http://localhost:3000/api';
 
 window.RECETAS_DB = [];
 window.recetasDBListo = false;
@@ -33,9 +33,14 @@ function _adaptarReceta(receta) {
         tiempo: receta.tiempo_prep_min,
         descripcion: receta.descripcion,
         instrucciones: receta.instrucciones,
+        pasos: receta.pasos || [],
         imagen: receta.imagen_url,
         dificultad: receta.dificultad,
         porciones: receta.porciones,
+        calorias: receta.calorias,
+        proteina: receta.proteina_g,
+        carbos: receta.carbos_g,
+        grasa: receta.grasa_g,
         etiquetas: receta.etiquetas || [],
         restricciones: receta.restricciones || [],
         ingredientes: (receta.ingredientes || []).map(i => i.nombre_ingrediente),
@@ -45,7 +50,7 @@ function _adaptarReceta(receta) {
 
 async function _cargarRecetasDesdeAPI() {
     try {
-        const resp = await fetch(`${COOKSMART_API_BASE}/recetas`);
+        const resp = await fetch(`${_RECETAS_API_BASE}/recetas`);
         if (!resp.ok) throw new Error(`API respondió ${resp.status}`);
         const recetas = await resp.json();
 
@@ -62,26 +67,3 @@ async function _cargarRecetasDesdeAPI() {
 
 _cargarRecetasDesdeAPI();
 
-/*
-  CÓMO ADAPTAR CADA PÁGINA (patrón a repetir en las 12 páginas):
-
-  Antes (asumía datos ya cargados):
-      const recomendadas = RECETAS_DB.filter(r => ...);
-      renderizarTarjetas(recomendadas);
-
-  Después (espera a que terminen de cargar):
-      function iniciar() {
-          const recomendadas = RECETAS_DB.filter(r => ...);
-          renderizarTarjetas(recomendadas);
-      }
-
-      if (window.recetasDBListo) {
-          iniciar();
-      } else {
-          window.addEventListener('recetasDBReady', iniciar);
-      }
-
-  Es decir: todo el código que hoy lee RECETAS_DB directamente al cargar
-  la página hay que envolverlo en una función y llamarla solo cuando el
-  evento 'recetasDBReady' ya se disparó (o ya se disparó antes).
-*/

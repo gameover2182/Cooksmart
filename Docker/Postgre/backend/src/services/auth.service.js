@@ -70,4 +70,54 @@ async function obtenerPerfil(idUsuario) {
     return usuario;
 }
 
-module.exports = { registrar, login, obtenerPerfil };
+async function actualizarNombre(idUsuario, nombre) {
+    if (!nombre || !nombre.trim()) {
+        const error = new Error('El nombre no puede estar vacío');
+        error.status = 400;
+        throw error;
+    }
+    return usuariosRepo.updateNombre(idUsuario, nombre.trim());
+}
+
+async function actualizarPreferencias(idUsuario, { gustos, restricciones }) {
+    return usuariosRepo.updatePreferencias(idUsuario, { gustos, restricciones });
+}
+
+async function cambiarContrasena(idUsuario, { actual, nueva }) {
+    if (!actual || !nueva) {
+        const error = new Error('Debes indicar la contraseña actual y la nueva');
+        error.status = 400;
+        throw error;
+    }
+    if (nueva.length < 8) {
+        const error = new Error('La nueva contraseña debe tener al menos 8 caracteres');
+        error.status = 400;
+        throw error;
+    }
+
+    const usuario = await usuariosRepo.findByIdConHash(idUsuario);
+    if (!usuario || !usuario.contrasena_hash) {
+        const error = new Error('No se pudo verificar la contraseña actual');
+        error.status = 400;
+        throw error;
+    }
+
+    const coincide = await bcrypt.compare(actual, usuario.contrasena_hash);
+    if (!coincide) {
+        const error = new Error('La contraseña actual no es correcta');
+        error.status = 401;
+        throw error;
+    }
+
+    const nuevoHash = await bcrypt.hash(nueva, COSTO_HASH);
+    await usuariosRepo.updateContrasenaHash(idUsuario, nuevoHash);
+}
+
+module.exports = {
+    registrar,
+    login,
+    obtenerPerfil,
+    actualizarNombre,
+    actualizarPreferencias,
+    cambiarContrasena,
+};
