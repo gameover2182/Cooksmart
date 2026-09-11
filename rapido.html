@@ -10,9 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <style>
         :root {
             --primary: #FF6B00;
@@ -658,7 +655,7 @@
         </div>
     </footer>
 
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
     <script>
         const CATEGORIA = "rapido";
 
@@ -690,9 +687,7 @@
             });
         }
 
-        let recetasCategoria = filtrarPorRestricciones(
-            RECETAS_DB.filter(r => r.categoria === CATEGORIA || (r.tiempo && r.tiempo <= 30))
-        );
+        let recetasCategoria = [];
         let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
 
         // Menu mobile
@@ -816,10 +811,20 @@
         updateNavBadge();
         window.addEventListener('storage', e => { if (e.key === 'cooksmart_favoritos') updateNavBadge(); });
 
-        // Init
-        renderRecetas(recetasCategoria);
+        function iniciar() {
+            recetasCategoria = filtrarPorRestricciones(
+                RECETAS_DB.filter(r => r.categoria === CATEGORIA || (r.tiempo && r.tiempo <= 30))
+            );
+            renderRecetas(recetasCategoria);
+        }
+
+        if (window.recetasDBListo) {
+            iniciar();
+        } else {
+            window.addEventListener('recetasDBReady', iniciar);
+        }
     </script>
-    <script src="firebase-sync.js"></script>
+    <script src="auth-sync.js"></script>
 </body>
 
 </html>
