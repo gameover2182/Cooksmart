@@ -8,31 +8,19 @@ async function findByCorreo(correo) {
     return rows[0] || null;
 }
 
-async function findByFirebaseUid(firebaseUid) {
+async function findById(idUsuario) {
     const { rows } = await query(
-        'SELECT id_usuario, nombre, correo, firebase_uid FROM usuario WHERE firebase_uid = $1',
-        [firebaseUid]
+        'SELECT id_usuario, nombre, correo, fecha_registro, preferencias FROM usuario WHERE id_usuario = $1',
+        [idUsuario]
     );
     return rows[0] || null;
 }
 
-async function createFromFirebase({ firebaseUid, nombre, correo }) {
-    // ON CONFLICT en correo: cubre el caso de que el correo ya exista
-    // (ej. una cuenta de QA sembrada con ese mismo correo) vinculándolo
-    // en vez de fallar con un error de duplicado.
+// Variante que sí incluye el hash, solo para verificar la contraseña
+// actual antes de cambiarla -- nunca se debe exponer en una respuesta HTTP.
+async function findByIdConHash(idUsuario) {
     const { rows } = await query(
-        `INSERT INTO usuario (firebase_uid, nombre, correo)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (correo) DO UPDATE SET firebase_uid = EXCLUDED.firebase_uid
-         RETURNING id_usuario, nombre, correo, firebase_uid`,
-        [firebaseUid, nombre, correo]
-    );
-    return rows[0];
-}
-
-async function findById(idUsuario) {
-    const { rows } = await query(
-        'SELECT id_usuario, nombre, correo, fecha_registro FROM usuario WHERE id_usuario = $1',
+        'SELECT id_usuario, contrasena_hash FROM usuario WHERE id_usuario = $1',
         [idUsuario]
     );
     return rows[0] || null;
@@ -42,10 +30,40 @@ async function create({ nombre, correo, contrasenaHash }) {
     const { rows } = await query(
         `INSERT INTO usuario (nombre, correo, contrasena_hash)
          VALUES ($1, $2, $3)
-         RETURNING id_usuario, nombre, correo, fecha_registro`,
+         RETURNING id_usuario, nombre, correo, fecha_registro, preferencias`,
         [nombre, correo, contrasenaHash]
     );
     return rows[0];
 }
 
-module.exports = { findByCorreo, findByFirebaseUid, createFromFirebase, findById, create };
+async function updateNombre(idUsuario, nombre) {
+    const { rows } = await query(
+        `UPDATE usuario SET nombre = $2 WHERE id_usuario = $1
+         RETURNING id_usuario, nombre, correo, fecha_registro, preferencias`,
+        [idUsuario, nombre]
+    );
+    return rows[0] || null;
+}
+
+async function updatePreferencias(idUsuario, { gustos, restricciones }) {
+    const { rows } = await query(
+        `UPDATE usuario SET preferencias = $2::jsonb WHERE id_usuario = $1
+         RETURNING id_usuario, preferencias`,
+        [idUsuario, JSON.stringify({ gustos: gustos || [], restricciones: restricciones || [] })]
+    );
+    return rows[0] || null;
+}
+
+async function updateContrasenaHash(idUsuario, contrasenaHash) {
+    await query('UPDATE usuario SET contrasena_hash = $2 WHERE id_usuario = $1', [idUsuario, contrasenaHash]);
+}
+
+module.exports = {
+    findByCorreo,
+    findById,
+    findByIdConHash,
+    create,
+    updateNombre,
+    updatePreferencias,
+    updateContrasenaHash,
+};
