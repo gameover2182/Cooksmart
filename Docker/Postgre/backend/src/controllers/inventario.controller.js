@@ -2,7 +2,7 @@ const inventarioService = require('../services/inventario.service');
 
 // NOTA DE SEGURIDAD: idUsuario se toma del parámetro de la URL porque este
 // backend todavía no tiene su propio mecanismo de autenticación (la app
-// sigue usando Firebase Auth para login). Antes de exponer esta API fuera
+// ya no usa Firebase, autenticación 100% Postgres via JWT). Antes de exponer esta API fuera
 // de un entorno de pruebas, idUsuario debe salir de un token verificado en
 // el servidor, no del path — de lo contrario cualquier usuario autenticado
 // podría leer o modificar la nevera de otro (el mismo riesgo IDOR/BOLA que

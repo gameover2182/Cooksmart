@@ -12,9 +12,6 @@
     
     <!-- Íconos de FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     
     <style>
         /* =========================================
@@ -957,7 +954,7 @@
     </div>
 
     <!-- CÓDIGO JAVASCRIPT -->
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
     <script>
         // Leer favoritos de localStorage al iniciar
         let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
@@ -1155,7 +1152,11 @@
             renderRecetas(filtradas.slice(0, 4));
         }
 
-        cargarRecetasPopulares();
+        if (window.recetasDBListo) {
+            cargarRecetasPopulares();
+        } else {
+            window.addEventListener('recetasDBReady', cargarRecetasPopulares);
+        }
 
         // Actualizar cuando cambien los favoritos
         window.addEventListener('storage', e => {
@@ -1266,15 +1267,15 @@
             document.body.style.overflow = 'auto'; // Restaurar scroll
         }
     // RECOMENDACIONES PERSONALIZADAS
-    // Se ejecuta cuando Firebase confirma sesión
+    // Se ejecuta cuando auth-sync.js confirma sesión (login/logout/carga inicial)
     window.addEventListener('authUpdated', async () => {
-        const user = fbAuth.currentUser;
-        if (user) {
+        const usuario = CookSmartAuth.usuarioActual();
+        if (usuario) {
             // Verificar si es primera vez en esta sesión
             const yaVioWelcome = sessionStorage.getItem('welcomeShown');
             if (!yaVioWelcome) {
                 sessionStorage.setItem('welcomeShown', '1');
-                const nombre = user.displayName ? user.displayName.split(' ')[0] : 'de vuelta';
+                const nombre = usuario.nombre ? usuario.nombre.split(' ')[0] : 'de vuelta';
                 const toast = document.createElement('div');
                 toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:#1A1A1A;color:white;padding:16px 28px;border-radius:50px;font-family:Poppins,sans-serif;font-size:15px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.3);z-index:9999;transition:transform 0.4s ease;border-left:4px solid #FF6B00;`;
                 toast.innerHTML = `👋 ¡Bienvenid@ de vuelta, ${nombre}!`;
@@ -1283,7 +1284,7 @@
                 setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(100px)'; setTimeout(() => toast.remove(), 400); }, 3500);
             }
         }
-        if (!user) {
+        if (!usuario) {
             document.getElementById(
                 'recommendationsSection'
             ).style.display = 'none';
@@ -1291,19 +1292,10 @@
         }
         
         try {
-            const snap = await fbDB.ref(
-                'usuarios/' + user.uid + '/preferencias'
-            ).get();
-            
-            if (!snap.exists()) return;
-            
-            const prefs = snap.val();
+            const { usuario: perfilCompleto } = await CookSmartAuth.apiFetch('/auth/me');
+            const prefs = perfilCompleto.preferencias || { gustos: [], restricciones: [] };
             const gustos = prefs.gustos || [];
-            // Compatibilidad: leer "restricciones" (nuevo) 
-            // o "restriccion" (viejo campo singular)
-            const restricciones = 
-                prefs.restricciones || 
-                (prefs.restriccion ? [prefs.restriccion] : []);
+            const restricciones = prefs.restricciones || [];
             
             // Guardar en localStorage
             localStorage.setItem(
@@ -1436,6 +1428,6 @@
         }
     });
     </script>
-    <script src="firebase-sync.js"></script>
+    <script src="auth-sync.js"></script>
 </body>
 </html>
