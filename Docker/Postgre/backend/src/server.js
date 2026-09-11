@@ -6,7 +6,6 @@ const { pool } = require('./config/db');
 const recetasRoutes = require('./routes/recetas.routes');
 const catalogosRoutes = require('./routes/catalogos.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
-const meRoutes = require('./routes/me.routes');
 const authRoutes = require('./routes/auth.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -33,7 +32,6 @@ app.get('/health', async (req, res) => {
 app.use('/api/recetas', recetasRoutes);
 app.use('/api', catalogosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/me', meRoutes);
 app.use('/api/auth', authRoutes);
 
 // 404 para rutas no definidas
