@@ -14,9 +14,6 @@
 
     <!-- Íconos de FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
     <style>
         /* =========================================
@@ -960,246 +957,268 @@
     </div>
 
     <!-- CÓDIGO JAVASCRIPT -->
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
     <script>
-        // --- 1. Obtener receta de la DB por URL ---
-        const params = new URLSearchParams(window.location.search);
-        const recetaId = parseInt(params.get('id'));
-        const receta = recetaId
-            ? RECETAS_DB.find(r => r.id === recetaId)
-            : null;
+        function iniciar() {
+            // --- 1. Obtener receta de la DB por URL ---
+            const params = new URLSearchParams(window.location.search);
+            const recetaId = parseInt(params.get('id'));
+            const receta = recetaId
+                ? RECETAS_DB.find(r => r.id === recetaId)
+                : null;
 
-        // Si no se encuentra la receta mostrar error
-        if (!receta) {
-            document.getElementById('recipeHero')
-                .style.background = '#1A1A1A';
-            document.getElementById('heroTitle')
-                .textContent = 'Receta no encontrada';
-            document.getElementById('heroMatch')
-                .textContent = '';
-        } else {
-            // Continúa con el código normal de abajo
-
-            // --- 2. Estado ---
-            let misIngredientes = JSON.parse(localStorage.getItem('cookSmartIngredientes')) || [];
-            let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
-            let currentPorciones = receta.porciones;
-            const basePorciones = receta.porciones;
-
-            // --- 3. Rellenar Hero ---
-            document.title = `Cook Smart | ${receta.nombre}`;
-            const heroEl = document.getElementById('recipeHero');
-            let imgUrl = receta.imagen;
-
-            // Si viene en baja calidad
-            if (imgUrl && imgUrl.includes('w=400')) {
-                imgUrl = imgUrl.replace('w=400', 'w=1200');
-            }
-
-            // 🔥 SI NO HAY IMAGEN → poner una por defecto
-            if (!imgUrl) {
-                imgUrl = 'https://images.unsplash.com/photo-1490645935967-10de6ba17061';
-            }
-
-            heroEl.style.backgroundImage = `url('${imgUrl}')`;
-            heroEl.style.backgroundSize = 'cover';
-            heroEl.style.backgroundPosition = 'center';
-
-            // Fallback si la imagen no carga
-            const testImg = new Image();
-            testImg.src = imgUrl;
-            testImg.onerror = () => {
-                heroEl.style.backgroundImage =
-                    "url('https://images.unsplash.com/photo-1490645935967-10de6ba17061')";
-            };
-
-            document.getElementById('heroMatch').textContent = `${receta.match}% Match`;
-            document.getElementById('heroTitle').textContent = receta.nombre;
-            document.getElementById('heroTiempo').textContent = `${receta.tiempo} min`;
-            document.getElementById('heroDificultad').textContent = receta.dificultad;
-            document.getElementById('bbTitle').textContent = receta.nombre;
-
-            // --- 4. Rellenar Nutrición ---
-            const nutritionGrid = document.getElementById('nutritionGrid');
-            nutritionGrid.innerHTML = `
-            <div class="nut-item"><i class="fas fa-fire"></i> <span>${receta.calorias} Calorías</span></div>
-            <div class="nut-item"><i class="fas fa-drumstick-bite"></i> <span>${receta.proteina}g Proteína</span></div>
-            <div class="nut-item"><i class="fas fa-bread-slice"></i> <span>${receta.carbos}g Carbos</span></div>
-            <div class="nut-item"><i class="fas fa-tint"></i> <span>${receta.grasa}g Grasa</span></div>
-        `;
-
-            // --- 5. Generar Pasos ---
-            const stepsContainer = document.getElementById('stepsContainer');
-            stepsContainer.innerHTML = '';
-            receta.pasos.forEach((paso, i) => {
-                const titles = ['Preparar', 'Cocinar', 'Mezclar', 'Combinar', 'Finalizar', 'Servir', 'Decorar', 'Reposar'];
-                const firstWord = paso.split(' ').slice(0, 2).join(' ');
-                const card = document.createElement('div');
-                card.className = 'step-card';
-                card.innerHTML = `
-                <div class="step-header">
-                    <div class="step-number">${i + 1}</div>
-                    <div class="step-title">Paso ${i + 1}</div>
-                    <i class="fas fa-chevron-down step-icon"></i>
-                </div>
-                <div class="step-content">${paso}</div>
-            `;
-                card.querySelector('.step-header').addEventListener('click', () => {
-                    card.classList.toggle('active');
-                });
-                stepsContainer.appendChild(card);
-            });
-
-            // --- 6. Referencias DOM ---
-            const btnMinus = document.getElementById('btnMinusPorcion');
-            const btnPlus = document.getElementById('btnPlusPorcion');
-            const textPorciones = document.getElementById('textPorciones');
-            const heroPorcionesText = document.getElementById('heroPorcionesText');
-            const ingList = document.getElementById('ingList');
-            const btnAddMissing = document.getElementById('btnAddMissing');
-            const btnFavRecipe = document.getElementById('btnFavRecipe');
-            const btnStartCook = document.getElementById('btnStartCook');
-            const menuIcon = document.querySelector('.menu-icon');
-            const navLinks = document.querySelector('.nav-links');
-
-            // Menú Móvil
-            menuIcon.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-                const icon = menuIcon.querySelector('i');
-                if (navLinks.classList.contains('active')) {
-                    icon.classList.replace('fa-bars', 'fa-times');
+            // Si no se encuentra la receta mostrar error
+            if (!receta) {
+                document.getElementById('recipeHero')
+                    .style.background = '#1A1A1A';
+                document.getElementById('heroTitle')
+                    .textContent = 'Receta no encontrada';
+                document.getElementById('heroMatch')
+                    .textContent = '';
+            } else {
+                // Calcular % de coincidencia contra los ingredientes reales
+                // de la nevera del usuario (nunca se había implementado esto,
+                // solo se leía receta.match esperando que ya viniera calculado).
+                const neveraUsuario = JSON.parse(localStorage.getItem('cookSmartIngredientes')) || [];
+                const nombresNevera = neveraUsuario.map(i => (i.nombre || '').toLowerCase());
+                if (receta.ingredientes && receta.ingredientes.length > 0) {
+                    const coincidencias = receta.ingredientes.filter(ing =>
+                        nombresNevera.some(n => n.includes(ing.toLowerCase()) || ing.toLowerCase().includes(n))
+                    ).length;
+                    receta.match = Math.round((coincidencias / receta.ingredientes.length) * 100);
                 } else {
-                    icon.classList.replace('fa-times', 'fa-bars');
+                    receta.match = 0;
                 }
-            });
 
-            // --- 7. Ingredientes con porciones ---
-            function renderIngredientes() {
-                ingList.innerHTML = '';
-                receta.ingredientes.forEach(ing => {
-                    const loTiene = misIngredientes.some(mi => ing.toLowerCase().includes(mi.toLowerCase()));
-                    const li = document.createElement('li');
-                    li.className = `ing-item ${loTiene ? 'has-ing' : 'missing-ing'}`;
-                    li.innerHTML = `
-                    <div class="ing-checkbox"><i class="fas fa-check"></i></div>
-                    <span class="ing-text">${ing.charAt(0).toUpperCase() + ing.slice(1)}</span>
-                    ${!loTiene ? '<span class="badge-missing">Falta</span>' : ''}
+                // Continúa con el código normal de abajo
+
+                // --- 2. Estado ---
+                let misIngredientes = JSON.parse(localStorage.getItem('cookSmartIngredientes')) || [];
+                let favoritos = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+                let currentPorciones = receta.porciones;
+                const basePorciones = receta.porciones;
+
+                // --- 3. Rellenar Hero ---
+                document.title = `Cook Smart | ${receta.nombre}`;
+                const heroEl = document.getElementById('recipeHero');
+                let imgUrl = receta.imagen;
+
+                // Si viene en baja calidad
+                if (imgUrl && imgUrl.includes('w=400')) {
+                    imgUrl = imgUrl.replace('w=400', 'w=1200');
+                }
+
+                // 🔥 SI NO HAY IMAGEN → poner una por defecto
+                if (!imgUrl) {
+                    imgUrl = 'https://images.unsplash.com/photo-1490645935967-10de6ba17061';
+                }
+
+                heroEl.style.backgroundImage = `url('${imgUrl}')`;
+                heroEl.style.backgroundSize = 'cover';
+                heroEl.style.backgroundPosition = 'center';
+
+                // Fallback si la imagen no carga
+                const testImg = new Image();
+                testImg.src = imgUrl;
+                testImg.onerror = () => {
+                    heroEl.style.backgroundImage =
+                        "url('https://images.unsplash.com/photo-1490645935967-10de6ba17061')";
+                };
+
+                document.getElementById('heroMatch').textContent = `${receta.match}% Match`;
+                document.getElementById('heroTitle').textContent = receta.nombre;
+                document.getElementById('heroTiempo').textContent = `${receta.tiempo} min`;
+                document.getElementById('heroDificultad').textContent = receta.dificultad;
+                document.getElementById('bbTitle').textContent = receta.nombre;
+
+                // --- 4. Rellenar Nutrición ---
+                const nutritionGrid = document.getElementById('nutritionGrid');
+                nutritionGrid.innerHTML = `
+                <div class="nut-item"><i class="fas fa-fire"></i> <span>${receta.calorias} Calorías</span></div>
+                <div class="nut-item"><i class="fas fa-drumstick-bite"></i> <span>${receta.proteina}g Proteína</span></div>
+                <div class="nut-item"><i class="fas fa-bread-slice"></i> <span>${receta.carbos}g Carbos</span></div>
+                <div class="nut-item"><i class="fas fa-tint"></i> <span>${receta.grasa}g Grasa</span></div>
+            `;
+
+                // --- 5. Generar Pasos ---
+                const stepsContainer = document.getElementById('stepsContainer');
+                stepsContainer.innerHTML = '';
+                receta.pasos.forEach((paso, i) => {
+                    const titles = ['Preparar', 'Cocinar', 'Mezclar', 'Combinar', 'Finalizar', 'Servir', 'Decorar', 'Reposar'];
+                    const firstWord = paso.split(' ').slice(0, 2).join(' ');
+                    const card = document.createElement('div');
+                    card.className = 'step-card';
+                    card.innerHTML = `
+                    <div class="step-header">
+                        <div class="step-number">${i + 1}</div>
+                        <div class="step-title">Paso ${i + 1}</div>
+                        <i class="fas fa-chevron-down step-icon"></i>
+                    </div>
+                    <div class="step-content">${paso}</div>
                 `;
-                    li.addEventListener('click', () => {
-                        if (loTiene) {
-                            misIngredientes = misIngredientes.filter(i => !ing.toLowerCase().includes(i.toLowerCase()));
-                        } else {
-                            misIngredientes.push(ing);
-                        }
+                    card.querySelector('.step-header').addEventListener('click', () => {
+                        card.classList.toggle('active');
+                    });
+                    stepsContainer.appendChild(card);
+                });
+
+                // --- 6. Referencias DOM ---
+                const btnMinus = document.getElementById('btnMinusPorcion');
+                const btnPlus = document.getElementById('btnPlusPorcion');
+                const textPorciones = document.getElementById('textPorciones');
+                const heroPorcionesText = document.getElementById('heroPorcionesText');
+                const ingList = document.getElementById('ingList');
+                const btnAddMissing = document.getElementById('btnAddMissing');
+                const btnFavRecipe = document.getElementById('btnFavRecipe');
+                const btnStartCook = document.getElementById('btnStartCook');
+                const menuIcon = document.querySelector('.menu-icon');
+                const navLinks = document.querySelector('.nav-links');
+
+                // Menú Móvil
+                menuIcon.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    const icon = menuIcon.querySelector('i');
+                    if (navLinks.classList.contains('active')) {
+                        icon.classList.replace('fa-bars', 'fa-times');
+                    } else {
+                        icon.classList.replace('fa-times', 'fa-bars');
+                    }
+                });
+
+                // --- 7. Ingredientes con porciones ---
+                function renderIngredientes() {
+                    ingList.innerHTML = '';
+                    receta.ingredientes.forEach(ing => {
+                        const loTiene = misIngredientes.some(mi => ing.toLowerCase().includes(mi.toLowerCase()));
+                        const li = document.createElement('li');
+                        li.className = `ing-item ${loTiene ? 'has-ing' : 'missing-ing'}`;
+                        li.innerHTML = `
+                        <div class="ing-checkbox"><i class="fas fa-check"></i></div>
+                        <span class="ing-text">${ing.charAt(0).toUpperCase() + ing.slice(1)}</span>
+                        ${!loTiene ? '<span class="badge-missing">Falta</span>' : ''}
+                    `;
+                        li.addEventListener('click', () => {
+                            if (loTiene) {
+                                misIngredientes = misIngredientes.filter(i => !ing.toLowerCase().includes(i.toLowerCase()));
+                            } else {
+                                misIngredientes.push(ing);
+                            }
+                            localStorage.setItem('cookSmartIngredientes', JSON.stringify(misIngredientes));
+                            renderIngredientes();
+                        });
+                        ingList.appendChild(li);
+                    });
+                    textPorciones.textContent = `${currentPorciones} porcione${currentPorciones > 1 ? 's' : ''}`;
+                    heroPorcionesText.textContent = currentPorciones;
+                    btnMinus.disabled = currentPorciones <= 1;
+                }
+
+                btnMinus.addEventListener('click', () => { if (currentPorciones > 1) { currentPorciones--; renderIngredientes(); } });
+                btnPlus.addEventListener('click', () => { currentPorciones++; renderIngredientes(); });
+
+                // Agregar Faltantes
+                btnAddMissing.addEventListener('click', () => {
+                    let agregados = 0;
+                    receta.ingredientes.forEach(ing => {
+                        const loTiene = misIngredientes.some(mi => ing.toLowerCase().includes(mi.toLowerCase()));
+                        if (!loTiene) { misIngredientes.push(ing); agregados++; }
+                    });
+                    if (agregados > 0) {
                         localStorage.setItem('cookSmartIngredientes', JSON.stringify(misIngredientes));
                         renderIngredientes();
-                    });
-                    ingList.appendChild(li);
+                        const originalText = btnAddMissing.innerHTML;
+                        btnAddMissing.innerHTML = '✅ Agregados a Mi Nevera';
+                        btnAddMissing.style.background = 'var(--primary)';
+                        btnAddMissing.style.color = 'white';
+                        setTimeout(() => {
+                            btnAddMissing.innerHTML = originalText;
+                            btnAddMissing.style.background = 'transparent';
+                            btnAddMissing.style.color = 'var(--primary)';
+                        }, 2000);
+                    }
                 });
-                textPorciones.textContent = `${currentPorciones} porcione${currentPorciones > 1 ? 's' : ''}`;
-                heroPorcionesText.textContent = currentPorciones;
-                btnMinus.disabled = currentPorciones <= 1;
-            }
 
-            btnMinus.addEventListener('click', () => { if (currentPorciones > 1) { currentPorciones--; renderIngredientes(); } });
-            btnPlus.addEventListener('click', () => { currentPorciones++; renderIngredientes(); });
-
-            // Agregar Faltantes
-            btnAddMissing.addEventListener('click', () => {
-                let agregados = 0;
-                receta.ingredientes.forEach(ing => {
-                    const loTiene = misIngredientes.some(mi => ing.toLowerCase().includes(mi.toLowerCase()));
-                    if (!loTiene) { misIngredientes.push(ing); agregados++; }
-                });
-                if (agregados > 0) {
-                    localStorage.setItem('cookSmartIngredientes', JSON.stringify(misIngredientes));
-                    renderIngredientes();
-                    const originalText = btnAddMissing.innerHTML;
-                    btnAddMissing.innerHTML = '✅ Agregados a Mi Nevera';
-                    btnAddMissing.style.background = 'var(--primary)';
-                    btnAddMissing.style.color = 'white';
-                    setTimeout(() => {
-                        btnAddMissing.innerHTML = originalText;
-                        btnAddMissing.style.background = 'transparent';
-                        btnAddMissing.style.color = 'var(--primary)';
-                    }, 2000);
+                // --- 8. Favoritos ---
+                function mostrarToast() {
+                    const toast = document.getElementById('favToast');
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2000);
                 }
-            });
 
-            // --- 8. Favoritos ---
-            function mostrarToast() {
-                const toast = document.getElementById('favToast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            }
-
-            function checkFavStatus() {
-                const isFav = favoritos.some(f => f.id === receta.id);
-                const icon = btnFavRecipe.querySelector('i');
-                if (isFav) {
-                    btnFavRecipe.classList.add('active');
-                    icon.classList.replace('far', 'fas');
-                } else {
-                    btnFavRecipe.classList.remove('active');
-                    icon.classList.replace('fas', 'far');
-                }
-            }
-
-            btnFavRecipe.addEventListener('click', () => {
-                const index = favoritos.findIndex(f => f.id === receta.id);
-                const icon = btnFavRecipe.querySelector('i');
-                if (index === -1) {
-                    favoritos.push(receta);
-                    btnFavRecipe.classList.add('active', 'bounce');
-                    icon.classList.replace('far', 'fas');
-                    setTimeout(() => btnFavRecipe.classList.remove('bounce'), 400);
-                    mostrarToast();
-                } else {
-                    favoritos.splice(index, 1);
-                    btnFavRecipe.classList.remove('active');
-                    icon.classList.replace('fas', 'far');
-                }
-                localStorage.setItem('cooksmart_favoritos', JSON.stringify(favoritos));
-                updateNavBadge();
-            });
-
-            // --- 9. Nutrición accordion ---
-            document.querySelector('.nutrition-card .step-header').addEventListener('click', () => {
-                document.querySelector('.nutrition-card').classList.toggle('active');
-            });
-
-            // --- 10. Empezar a cocinar ---
-            btnStartCook.addEventListener('click', () => {
-                const primerPaso = document.querySelector('.steps-container .step-card:first-child');
-                if (primerPaso && !primerPaso.classList.contains('active')) primerPaso.classList.add('active');
-                document.getElementById('stepsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-
-            // --- 11. Inicializar ---
-            renderIngredientes();
-            checkFavStatus();
-
-            // Funcionalidad Badge Navegación
-            function updateNavBadge() {
-                const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
-                const badge = document.getElementById('navFavBadge');
-                if (badge) {
-                    if (favs.length > 0) {
-                        badge.textContent = favs.length;
-                        badge.style.display = 'inline-block';
+                function checkFavStatus() {
+                    const isFav = favoritos.some(f => f.id === receta.id);
+                    const icon = btnFavRecipe.querySelector('i');
+                    if (isFav) {
+                        btnFavRecipe.classList.add('active');
+                        icon.classList.replace('far', 'fas');
                     } else {
-                        badge.style.display = 'none';
+                        btnFavRecipe.classList.remove('active');
+                        icon.classList.replace('fas', 'far');
                     }
                 }
-            }
-            updateNavBadge();
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'cooksmart_favoritos') updateNavBadge();
-            });
 
-        } // cierre del else (receta encontrada)
+                btnFavRecipe.addEventListener('click', () => {
+                    const index = favoritos.findIndex(f => f.id === receta.id);
+                    const icon = btnFavRecipe.querySelector('i');
+                    if (index === -1) {
+                        favoritos.push(receta);
+                        btnFavRecipe.classList.add('active', 'bounce');
+                        icon.classList.replace('far', 'fas');
+                        setTimeout(() => btnFavRecipe.classList.remove('bounce'), 400);
+                        mostrarToast();
+                    } else {
+                        favoritos.splice(index, 1);
+                        btnFavRecipe.classList.remove('active');
+                        icon.classList.replace('fas', 'far');
+                    }
+                    localStorage.setItem('cooksmart_favoritos', JSON.stringify(favoritos));
+                    updateNavBadge();
+                });
+
+                // --- 9. Nutrición accordion ---
+                document.querySelector('.nutrition-card .step-header').addEventListener('click', () => {
+                    document.querySelector('.nutrition-card').classList.toggle('active');
+                });
+
+                // --- 10. Empezar a cocinar ---
+                btnStartCook.addEventListener('click', () => {
+                    const primerPaso = document.querySelector('.steps-container .step-card:first-child');
+                    if (primerPaso && !primerPaso.classList.contains('active')) primerPaso.classList.add('active');
+                    document.getElementById('stepsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+
+                // --- 11. Inicializar ---
+                renderIngredientes();
+                checkFavStatus();
+
+                // Funcionalidad Badge Navegación
+                function updateNavBadge() {
+                    const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+                    const badge = document.getElementById('navFavBadge');
+                    if (badge) {
+                        if (favs.length > 0) {
+                            badge.textContent = favs.length;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+                updateNavBadge();
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'cooksmart_favoritos') updateNavBadge();
+                });
+
+            } // cierre del else (receta encontrada)
+        }
+
+        if (window.recetasDBListo) {
+            iniciar();
+        } else {
+            window.addEventListener('recetasDBReady', iniciar);
+        }
     </script>
-    <script src="firebase-sync.js"></script>
+    <script src="auth-sync.js"></script>
 </body>
 
 </html>
