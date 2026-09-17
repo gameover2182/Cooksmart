@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const usuariosRepo = require('../repositories/usuarios.repository');
+const usuariosRepo = require('../repositories/Usuarios.repository');
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '7d';
 const COSTO_HASH = 12;
