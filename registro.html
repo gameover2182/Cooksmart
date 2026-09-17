@@ -8,9 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #FF6B00; --dark: #1A1A1A; --light: #FFFFFF; --gray: #888; --border: #E0E0E0; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
@@ -224,23 +221,9 @@
         </div>
     </section>
 
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
+    <script src="auth-sync.js"></script>
     <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyA60XhpKmHY5KV2mozo2_mzMWRTbq7Qwj4",
-            authDomain: "cook-smart-626ff.firebaseapp.com",
-            databaseURL: "https://cook-smart-626ff-default-rtdb.firebaseio.com",
-            projectId: "cook-smart-626ff",
-            storageBucket: "cook-smart-626ff.firebasestorage.app",
-            messagingSenderId: "339922416882",
-            appId: "1:339922416882:web:68891748b48ee00a2d8c6b"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-
-        // Toggle password
         function togglePassword(id, icon) {
             const input = document.getElementById(id);
             if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
@@ -251,7 +234,6 @@
             el.classList.toggle('active');
         }
 
-        // Registro email/password
         async function registrarUsuario() {
             const nombre = document.getElementById('nombre').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -260,67 +242,44 @@
 
             if (!nombre || !email || !password || !confirmar) { mostrarError("Por favor completa todos los campos"); return; }
             if (password !== confirmar) { mostrarError("Las contraseñas no coinciden"); return; }
-            if (password.length < 6) { mostrarError("La contraseña debe tener mínimo 6 caracteres"); return; }
+            // El backend exige mínimo 8 caracteres (validación real en /api/auth/registro)
+            if (password.length < 8) { mostrarError("La contraseña debe tener mínimo 8 caracteres"); return; }
 
             const btn = document.getElementById('btn-registro');
             btn.textContent = "Creando cuenta..."; btn.disabled = true;
 
             try {
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                await cred.user.updateProfile({ displayName: nombre });
-                
-                // Recoger gustos seleccionados
+                // CookSmartAuth.registrar habla con /api/auth/registro
+                // (bcrypt + JWT, 100% Postgres) y ya deja la sesión guardada.
+                await CookSmartAuth.registrar(nombre, email, password);
+
+                // Gustos/restricciones: por ahora solo quedan en localStorage
+                // -- el backend todavía no tiene un endpoint para guardar
+                // preferencias por usuario (queda pendiente, documentado).
                 const gustos = [...document.querySelectorAll(
                     '#gustosRegistro .pref-chip-reg.active:not(.restriccion-reg)'
                 )].map(c => c.dataset.val);
-
-                // Recoger restricciones seleccionadas
                 const restricciones = [...document.querySelectorAll(
                     '#restriccionesRegistro .restriccion-reg.active'
                 )].map(c => c.dataset.val);
 
-                await db.ref('usuarios/' + cred.user.uid).set({
-                    nombre, email, 
-                    fechaRegistro: new Date().toISOString(), 
-                    favoritos: {}, ingredientes: {},
-                    preferencias: { gustos, restricciones }
-                });
+                localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
+                localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
 
-                // Guardar en localStorage inmediatamente
-                localStorage.setItem(
-                    'cookSmartGustos', JSON.stringify(gustos)
-                );
-                localStorage.setItem(
-                    'cookSmartRestricciones', 
-                    JSON.stringify(restricciones)
-                );
-                
                 mostrarExito("¡Cuenta creada! Redirigiendo...");
                 setTimeout(() => { window.location.href = 'index.html'; }, 1500);
             } catch (error) {
                 btn.textContent = "Crear cuenta"; btn.disabled = false;
-                if (error.code === 'auth/email-already-in-use') mostrarError("Este correo ya está registrado");
-                else if (error.code === 'auth/invalid-email') mostrarError("El correo no es válido");
-                else if (error.code === 'auth/weak-password') mostrarError("La contraseña es muy débil");
+                if (error.status === 409) mostrarError("Este correo ya está registrado");
+                else if (error.status === 400) mostrarError(error.message || "Datos inválidos");
                 else mostrarError("Error al crear cuenta. Intenta de nuevo");
             }
         }
 
-        // Registro Google
+        // Registro con Google dependía de Firebase OAuth, ya no disponible
+        // en este sistema (autenticación 100% Postgres).
         async function registroGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                const snapshot = await db.ref('usuarios/' + user.uid).get();
-                if (!snapshot.exists()) {
-                    await db.ref('usuarios/' + user.uid).set({
-                        nombre: user.displayName, email: user.email, fechaRegistro: new Date().toISOString(), favoritos: {}, ingredientes: {},
-                        preferencias: { gustos: [], restricciones: [] }
-                    });
-                }
-                window.location.href = 'index.html';
-            } catch (error) { mostrarError("Error al registrarse con Google"); }
+            mostrarError("El registro con Google no está disponible en esta versión");
         }
 
         function mostrarError(msg) {
