@@ -8,9 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <style>
         :root{--primary:#FF6B00;--primary-light:#FF8C3A;--dark:#1A1A1A;--light:#FFFFFF;--gray:#888;--light-gray:#F7F7F9;--border:#E8E8EC;--success:#2E7D32;--danger:#D32F2F}
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
@@ -285,11 +282,15 @@
                         <div class="card-icon-wrap"><i class="fas fa-shield-alt"></i></div>
                         <h2>Seguridad</h2>
                     </div>
-                    <p class="card-subtitle">Cambia tu contraseña para mantener tu cuenta segura. Requiere mínimo 6 caracteres.</p>
+                    <p class="card-subtitle">Cambia tu contraseña para mantener tu cuenta segura. Requiere mínimo 8 caracteres.</p>
                     <div id="msgSecurity" class="msg"></div>
                     <div class="form-group">
+                        <label>Contraseña actual</label>
+                        <input type="password" id="inputCurrentPass" placeholder="Tu contraseña actual">
+                    </div>
+                    <div class="form-group">
                         <label>Nueva contraseña</label>
-                        <input type="password" id="inputNewPass" placeholder="Mínimo 6 caracteres">
+                        <input type="password" id="inputNewPass" placeholder="Mínimo 8 caracteres">
                     </div>
                     <div class="form-group">
                         <label>Confirmar nueva contraseña</label>
@@ -307,119 +308,161 @@
         <div class="footer-bottom"><p>&copy; 2026 Cook Smart. Todos los derechos reservados.</p></div>
     </footer>
 
-    <script src="recetas-db.js"></script>
+    <script src="recetas-loader.js"></script>
+    <script src="auth-sync.js"></script>
     <script>
-        const firebaseConfig={apiKey:"AIzaSyA60XhpKmHY5KV2mozo2_mzMWRTbq7Qwj4",authDomain:"cook-smart-626ff.firebaseapp.com",databaseURL:"https://cook-smart-626ff-default-rtdb.firebaseio.com",projectId:"cook-smart-626ff",storageBucket:"cook-smart-626ff.firebasestorage.app",messagingSenderId:"339922416882",appId:"1:339922416882:web:68891748b48ee00a2d8c6b"};
-        if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth=firebase.auth(), db=firebase.database();
-        let currentUser=null;
+        const usuarioSesion = CookSmartAuth.usuarioActual();
+        if (!usuarioSesion) {
+            window.location.href = 'login.html';
+        }
 
-        document.querySelector('.menu-icon').addEventListener('click',()=>{
-            const nav=document.querySelector('.nav-links');nav.classList.toggle('active');
-            const i=document.querySelector('.menu-icon i');
-            nav.classList.contains('active')?i.classList.replace('fa-bars','fa-times'):i.classList.replace('fa-times','fa-bars');
+        document.querySelector('.menu-icon')?.addEventListener('click', () => {
+            const nav = document.querySelector('.nav-links'); nav.classList.toggle('active');
+            const i = document.querySelector('.menu-icon i');
+            nav.classList.contains('active') ? i.classList.replace('fa-bars', 'fa-times') : i.classList.replace('fa-times', 'fa-bars');
         });
 
-        function updateNavBadge(){
-            const favs=JSON.parse(localStorage.getItem('cooksmart_favoritos'))||[];
-            const badge=document.getElementById('navFavBadge');
-            if(badge){badge.textContent=favs.length;badge.style.display=favs.length>0?'inline-block':'none';}
+        function updateNavBadge() {
+            const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const badge = document.getElementById('navFavBadge');
+            if (badge) { badge.textContent = favs.length; badge.style.display = favs.length > 0 ? 'inline-block' : 'none'; }
         }
         updateNavBadge();
 
-        auth.onAuthStateChanged(async user=>{
-            if(!user){window.location.href='login.html';return;}
-            currentUser=user;
-            const initial=user.displayName?user.displayName.charAt(0).toUpperCase():'?';
-            document.getElementById('avatarInitial').textContent=initial;
-            document.getElementById('profileName').textContent=user.displayName||'Usuario';
-            document.getElementById('profileEmail').textContent=user.email;
-            document.getElementById('inputNombre').value=user.displayName||'';
-            document.getElementById('inputEmail').value=user.email;
-            const btn=document.getElementById('btn-login');
-            btn.innerHTML=`👤 ${(user.displayName||'Usuario').split(' ')[0]} ▾`;btn.href='perfil.html';
-            const favs=JSON.parse(localStorage.getItem('cooksmart_favoritos'))||[];
-            const ings=JSON.parse(localStorage.getItem('cookSmartIngredientes'))||[];
-            document.getElementById('statFavs').textContent=favs.length;
-            document.getElementById('statIngs').textContent=ings.length;
-            // Contar recetas reales de la DB
-            if (typeof RECETAS_DB !== 'undefined') {
-                const totalRecetas = RECETAS_DB.filter(r => r && r.nombre).length;
-                document.getElementById('statRecetas').textContent = totalRecetas;
-            }
-            try{
-                const snap=await db.ref('usuarios/'+user.uid).get();
-                if(snap.exists()){
-                    const data=snap.val();
-                    if(data.fechaRegistro){const d=new Date(data.fechaRegistro);document.getElementById('profileDate').innerHTML=`<i class="far fa-calendar-alt"></i> Miembro desde ${d.toLocaleDateString('es-CO',{year:'numeric',month:'long'})}`;}
-                    if (data.preferencias) {
-                        const gustos = data.preferencias.gustos || [];
-                        const restricciones = data.preferencias.restricciones || (data.preferencias.restriccion ? [data.preferencias.restriccion] : []);
-                        gustos.forEach(p => { const c = document.querySelector(`.pref-chip[data-pref="${p}"]`); if (c) c.classList.add('active'); });
-                        restricciones.forEach(r => { const c = document.querySelector(`.restriccion-chip[data-restriccion="${r}"]`); if (c) c.classList.add('active'); });
-                        localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
-                        localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
-                        mostrarTagsEnPerfil(gustos, restricciones);
-                    }
-                }
-            }catch(e){console.warn(e);}
-        });
+        function iniciar() {
+            const nombre = usuarioSesion.nombre || 'Usuario';
+            document.getElementById('avatarInitial').textContent = nombre.charAt(0).toUpperCase();
+            document.getElementById('profileName').textContent = nombre;
+            document.getElementById('profileEmail').textContent = usuarioSesion.correo;
+            document.getElementById('inputNombre').value = nombre;
+            document.getElementById('inputEmail').value = usuarioSesion.correo;
 
-        function togglePref(el){el.classList.toggle('active');}
-        function toggleRestriccion(el){el.classList.toggle('active');}
+            const btn = document.getElementById('btn-login');
+            btn.innerHTML = `👤 ${nombre.split(' ')[0]} ▾`; btn.href = 'perfil.html';
+
+            const favs = JSON.parse(localStorage.getItem('cooksmart_favoritos')) || [];
+            const ings = JSON.parse(localStorage.getItem('cookSmartIngredientes')) || [];
+            document.getElementById('statFavs').textContent = favs.length;
+            document.getElementById('statIngs').textContent = ings.length;
+            if (typeof RECETAS_DB !== 'undefined') {
+                document.getElementById('statRecetas').textContent = RECETAS_DB.filter(r => r && r.nombre).length;
+            }
+
+            // La fecha de registro y las preferencias se piden aparte con
+            // /auth/me porque usuarioActual() (cacheado en localStorage al
+            // hacer login) puede no traer la versión más reciente.
+            CookSmartAuth.apiFetch('/auth/me')
+                .then(({ usuario }) => {
+                    if (usuario.fecha_registro) {
+                        const d = new Date(usuario.fecha_registro);
+                        document.getElementById('profileDate').innerHTML =
+                            `<i class="far fa-calendar-alt"></i> Miembro desde ${d.toLocaleDateString('es-CO', { year: 'numeric', month: 'long' })}`;
+                    }
+                    const prefs = usuario.preferencias || { gustos: [], restricciones: [] };
+                    const gustos = prefs.gustos || [];
+                    const restricciones = prefs.restricciones || [];
+                    gustos.forEach(p => { const c = document.querySelector(`.pref-chip[data-pref="${p}"]`); if (c) c.classList.add('active'); });
+                    restricciones.forEach(r => { const c = document.querySelector(`.restriccion-chip[data-restriccion="${r}"]`); if (c) c.classList.add('active'); });
+                    localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
+                    localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
+                    mostrarTagsEnPerfil(gustos, restricciones);
+                })
+                .catch(e => console.warn('No se pudieron cargar las preferencias:', e));
+        }
+
+        if (window.recetasDBListo) iniciar();
+        else window.addEventListener('recetasDBReady', iniciar);
+
+        function togglePref(el) { el.classList.toggle('active'); }
+        function toggleRestriccion(el) { el.classList.toggle('active'); }
 
         function mostrarTagsEnPerfil(gustos, restricciones) {
             const prefsCont = document.getElementById('prefsTagsContainer');
             const prefsTags = document.getElementById('prefsTags');
-            if (gustos && gustos.length > 0) {
-                prefsTags.innerHTML = gustos.map(g => `<span style="background:#FF6B00;color:white;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;">${g}</span>`).join('');
-                prefsCont.style.display = 'block';
-            } else { prefsCont.style.display = 'none'; }
+            if (prefsCont && prefsTags) {
+                if (gustos && gustos.length > 0) {
+                    prefsTags.innerHTML = gustos.map(g => `<span style="background:#FF6B00;color:white;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;">${g}</span>`).join('');
+                    prefsCont.style.display = 'block';
+                } else { prefsCont.style.display = 'none'; }
+            }
             const restricCont = document.getElementById('restricTagsContainer');
             const restricTags = document.getElementById('restricTags');
-            if (restricciones && restricciones.length > 0) {
-                restricTags.innerHTML = restricciones.map(r => `<span style="background:#D32F2F;color:white;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;">🚫 ${r.replace('sin-','')}</span>`).join('');
-                restricCont.style.display = 'block';
-            } else { restricCont.style.display = 'none'; }
+            if (restricCont && restricTags) {
+                if (restricciones && restricciones.length > 0) {
+                    restricTags.innerHTML = restricciones.map(r => `<span style="background:#D32F2F;color:white;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;">🚫 ${r.replace('sin-', '')}</span>`).join('');
+                    restricCont.style.display = 'block';
+                } else { restricCont.style.display = 'none'; }
+            }
         }
 
-        async function guardarDatos(){
-            const nombre=document.getElementById('inputNombre').value.trim();
-            if(!nombre){showMsg('msgDatos','Ingresa tu nombre','error');return;}
-            try{
-                await currentUser.updateProfile({displayName:nombre});
-                await db.ref('usuarios/'+currentUser.uid+'/nombre').set(nombre);
-                document.getElementById('profileName').textContent=nombre;
-                document.getElementById('avatarInitial').textContent=nombre.charAt(0).toUpperCase();
-                document.getElementById('btn-login').innerHTML=`👤 ${nombre.split(' ')[0]} ▾`;
-                showMsg('msgDatos','✅ Datos actualizados correctamente','success');
-            }catch(e){showMsg('msgDatos','Error al guardar. Intenta de nuevo.','error');}
+        async function guardarDatos() {
+            const nombre = document.getElementById('inputNombre').value.trim();
+            if (!nombre) { showMsg('msgDatos', 'Ingresa tu nombre', 'error'); return; }
+            try {
+                const { usuario } = await CookSmartAuth.apiFetch('/auth/me', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ nombre }),
+                });
+                localStorage.setItem('cooksmart_usuario', JSON.stringify(usuario));
+                document.getElementById('profileName').textContent = usuario.nombre;
+                document.getElementById('avatarInitial').textContent = usuario.nombre.charAt(0).toUpperCase();
+                document.getElementById('btn-login').innerHTML = `👤 ${usuario.nombre.split(' ')[0]} ▾`;
+                showMsg('msgDatos', '✅ Datos actualizados correctamente', 'success');
+            } catch (e) {
+                showMsg('msgDatos', 'Error al guardar. Intenta de nuevo.', 'error');
+            }
         }
 
         async function guardarPreferencias() {
             const gustos = [...document.querySelectorAll('.pref-chip:not(.restriccion-chip).active')].map(c => c.dataset.pref);
             const restricciones = [...document.querySelectorAll('.restriccion-chip.active')].map(c => c.dataset.restriccion);
             try {
-                await db.ref('usuarios/' + currentUser.uid + '/preferencias').set({ gustos, restricciones });
+                await CookSmartAuth.apiFetch('/auth/me/preferencias', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ gustos, restricciones }),
+                });
                 localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
                 localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
                 mostrarTagsEnPerfil(gustos, restricciones);
                 showMsg('msgPrefs', '✅ Preferencias guardadas correctamente', 'success');
-            } catch(e) { showMsg('msgPrefs', 'Error al guardar preferencias', 'error'); }
+            } catch (e) {
+                showMsg('msgPrefs', 'Error al guardar preferencias', 'error');
+            }
         }
 
-        async function cambiarPassword(){
-            const pass=document.getElementById('inputNewPass').value,confirm=document.getElementById('inputConfirmPass').value;
-            if(!pass||!confirm){showMsg('msgSecurity','Completa ambos campos','error');return;}
-            if(pass.length<6){showMsg('msgSecurity','Mínimo 6 caracteres','error');return;}
-            if(pass!==confirm){showMsg('msgSecurity','Las contraseñas no coinciden','error');return;}
-            try{await currentUser.updatePassword(pass);document.getElementById('inputNewPass').value='';document.getElementById('inputConfirmPass').value='';showMsg('msgSecurity','✅ Contraseña actualizada','success');}
-            catch(e){showMsg('msgSecurity',e.code==='auth/requires-recent-login'?'Por seguridad, cierra sesión y vuelve a iniciar':'Error al cambiar la contraseña','error');}
+        async function cambiarPassword() {
+            const actual = document.getElementById('inputCurrentPass')?.value;
+            const nueva = document.getElementById('inputNewPass').value;
+            const confirmar = document.getElementById('inputConfirmPass').value;
+
+            if (!actual || !nueva || !confirmar) { showMsg('msgSecurity', 'Completa los 3 campos', 'error'); return; }
+            if (nueva.length < 8) { showMsg('msgSecurity', 'Mínimo 8 caracteres', 'error'); return; }
+            if (nueva !== confirmar) { showMsg('msgSecurity', 'Las contraseñas no coinciden', 'error'); return; }
+
+            try {
+                await CookSmartAuth.apiFetch('/auth/me/password', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ actual, nueva }),
+                });
+                document.getElementById('inputNewPass').value = '';
+                document.getElementById('inputConfirmPass').value = '';
+                if (document.getElementById('inputCurrentPass')) document.getElementById('inputCurrentPass').value = '';
+                showMsg('msgSecurity', '✅ Contraseña actualizada', 'success');
+            } catch (e) {
+                showMsg('msgSecurity', e.status === 401 ? 'La contraseña actual no es correcta' : 'Error al cambiar la contraseña', 'error');
+            }
         }
 
-        function cerrarSesion(){localStorage.removeItem('cooksmart_favoritos');localStorage.removeItem('cookSmartIngredientes');auth.signOut().then(()=>{window.location.href='index.html';});}
+        function cerrarSesion() {
+            CookSmartAuth.logout();
+            window.location.href = 'index.html';
+        }
 
-        function showMsg(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className=`msg msg-${type} show`;setTimeout(()=>{el.classList.remove('show');},type==='success'?3000:5000);}
+        function showMsg(id, text, type) {
+            const el = document.getElementById(id);
+            el.textContent = text; el.className = `msg msg-${type} show`;
+            setTimeout(() => { el.classList.remove('show'); }, type === 'success' ? 3000 : 5000);
+        }
     </script>
 </body>
 </html>
