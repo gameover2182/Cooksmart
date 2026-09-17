@@ -7,15 +7,8 @@ mostrando las principales partes del sistema, sus responsabilidades,
 tecnologías y relaciones.
 
 La vista se construye a partir de la implementación actualmente disponible
-en el repositorio (commit `846dacb`, rama `main`).
-
-> **Nota de auditoría (Módulo 3):** la versión anterior de este documento
-> describía a CookSmart como una aplicación puramente estática (HTML/CSS/JS +
-> Firebase), con un catálogo `RECETAS_DB` embebido en `recetas-db.js` y sin
-> backend propio. Esa descripción corresponde al estado del repositorio antes
-> del 28 de agosto de 2026 en la tarde. Desde entonces existe una API propia
-> con PostgreSQL, documentada aquí. Ver sección 9 para el detalle de la
-> corrección y sección 10 para un hallazgo pendiente (migración incompleta).
+en el repositorio y representa el estado actual posterior a la migración
+completa hacia PostgreSQL.
 
 ## 2. Arquitectura actual
 
@@ -23,52 +16,51 @@ CookSmart está compuesto hoy por tres contenedores principales:
 
 1. **CookSmart Web**: HTML, CSS y JavaScript que se ejecutan en el navegador.
 2. **CookSmart API**: servicio Node.js/Express, organizado en capas
-   (rutas → controladores → servicios → repositorios), que expone recetas,
-   catálogos, usuarios, inventario, historial y favoritos.
+   (rutas → controladores → servicios → repositorios).
 3. **PostgreSQL**: base de datos relacional propia del proyecto.
 
-Adicionalmente, la aplicación sigue usando Firebase para:
-
-* autenticación de usuarios desde el navegador;
-* gestión del estado de sesión en el cliente;
-* persistencia y sincronización de favoritos vía Firebase Realtime Database.
-
-La **CookSmart API** también verifica el token de identidad de Firebase para
-las rutas bajo `/api/me/*`, y adicionalmente ofrece su propio mecanismo de
-autenticación por JWT (`/api/auth/registro`, `/api/auth/login`) para las
-rutas bajo `/api/usuarios/:idUsuario/*`. Es decir, conviven dos mecanismos de
-autenticación hacia el backend (ver sección 4.3).
+La autenticación y persistencia actuales se realizan mediante la API propia
+y PostgreSQL. Firebase no forma parte del flujo de ejecución actual.
 
 ## 3. Diagrama C4 de Contenedores
 
 ```text
-                                   ┌──────────────────┐
-                                   │      Usuario      │
-                                   └────────┬──────────┘
-                                            │ Navegador web
-                                            ▼
-                          ┌──────────────────────────────┐
-                          │        CookSmart Web         │
-                          │   HTML + CSS + JavaScript     │
-                          │  Interfaz y lógica de cliente │
-                          └───────┬───────────┬──────────┘
-                                  │           │
-                     recetas-loader.js /      │  firebase-sync.js
-                     fetch a la API           │  (favoritos, sesión)
-                                  │           │
-                                  ▼           ▼
-                  ┌───────────────────┐   ┌───────────────────────────┐
-                  │   CookSmart API   │   │ Firebase Authentication + │
-                  │  Node.js/Express  │──▶│    Firebase Realtime DB   │
-                  │  (JWT + verif.    │   └───────────────────────────┘
-                  │   Firebase token) │
-                  └─────────┬─────────┘
-                            │ SQL (pg)
-                            ▼
-                  ┌───────────────────┐
-                  │    PostgreSQL     │
-                  │  (docker-compose) │
-                  └───────────────────┘
+                                    ┌──────────────────┐
+                                    │      Usuario      │
+                                    └────────┬──────────┘
+                                             │ Navegador web
+                                             ▼
+                           ┌──────────────────────────────┐
+                           │        CookSmart Web         │
+                           │   HTML + CSS + JavaScript    │
+                           │  Interfaz y lógica cliente   │
+                           └──────────────┬───────────────┘
+                                          │
+                                          │ HTTP / REST
+                                          │ Bearer JWT
+                                          ▼
+                           ┌──────────────────────────────┐
+                           │        CookSmart API         │
+                           │                              │
+                           │ Node.js + Express            │
+                           │ Routes                       │
+                           │ Controllers                  │
+                           │ Services                     │
+                           │ Repositories                 │
+                           └──────────────┬───────────────┘
+                                          │
+                                          │ SQL / pg
+                                          ▼
+                           ┌──────────────────────────────┐
+                           │          PostgreSQL          │
+                           │                              │
+                           │ Usuarios                     │
+                           │ Recetas                      │
+                           │ Ingredientes                 │
+                           │ Inventario                   │
+                           │ Favoritos                    │
+                           │ Historial                    │
+                           └──────────────────────────────┘
 ```
 
 ## 4. Contenedores
@@ -86,17 +78,23 @@ autenticación.
 
 **Archivos principales:**
 
-* `index.html`, `recetas.html`, `desayunos.html`, `almuerzos.html`,
-  `cenas.html`, `vegetariano.html`, `rapido.html`, `mi-nevera.html`,
-  `favoritos.html`, `perfil.html`, `receta-detalle.html`, `login.html`,
-  `registro.html`.
+- `index.html`
+- `recetas.html`
+- `mi-nevera.html`
+- `favoritos.html`
+- `perfil.html`
+- `receta-detalle.html`
+- `login.html`
+- `registro.html`
+
+La aplicación utiliza JavaScript para comunicarse con la API mediante
+solicitudes HTTP.
 
 ---
 
 ### 4.2 CookSmart API
 
-**Tecnología:** Node.js, Express, `pg` (driver de PostgreSQL), `jsonwebtoken`,
-`bcryptjs`, `firebase-admin`.
+**Tecnología:** Node.js, Express, `pg`, `jsonwebtoken`, `bcryptjs`, `dotenv`.
 
 **Ubicación:** `Docker/Postgre/backend/src`.
 
@@ -105,183 +103,157 @@ autenticación.
 Expone los datos y operaciones de CookSmart mediante una API HTTP, organizada
 en capas:
 
-* `routes/` — definición de endpoints.
-* `controllers/` — manejo de la petición/respuesta HTTP.
-* `services/` — lógica de negocio.
-* `repositories/` — acceso a datos (consultas SQL sobre PostgreSQL).
+- `routes/` — definición de endpoints.
+- `controllers/` — manejo de la petición/respuesta HTTP.
+- `services/` — lógica de negocio.
+- `repositories/` — acceso a datos mediante consultas SQL sobre PostgreSQL.
+- `middlewares/` — autenticación, autorización y manejo de errores.
+- `config/` — configuración de acceso a PostgreSQL.
 
-**Endpoints principales identificados:**
+**Endpoints principales:**
 
-| Ruta | Archivo | Autenticación |
+| Ruta | Responsabilidad | Autenticación |
 |---|---|---|
-| `GET /api/recetas`, `GET /api/recetas/:id` | `routes/recetas.routes.js` | Ninguna |
-| `GET /api/categorias-receta`, `/tipos-cocina`, `/categorias-ingrediente`, `/ingredientes` | `routes/catalogos.routes.js` | Ninguna |
-| `POST /api/auth/registro`, `POST /api/auth/login`, `GET /api/auth/me` | `routes/auth.routes.js` | JWT propio |
-| `GET/POST/DELETE /api/usuarios/:idUsuario/inventario`, `/historial`, `/favoritos` | `routes/usuarios.routes.js` | JWT propio (`requireAuth` + `soloElMismoUsuario`) |
-| `GET/POST/DELETE /api/me/inventario`, `/historial`, `/favoritos` | `routes/me.routes.js` | Token de Firebase (`requireFirebaseAuth`) |
-| `GET /health` | `server.js` | Ninguna (verifica proceso + conexión a Postgres) |
-
-**Nota sobre autenticación:** el middleware `firebaseAuthMiddleware.js`
-aprovisiona automáticamente ("just-in-time") en PostgreSQL al usuario que se
-autenticó por primera vez con Firebase, para no duplicar el registro entre
-los dos sistemas.
-
----
+| `POST /api/auth/registro` | Registro | Ninguna |
+| `POST /api/auth/login` | Inicio de sesión | Ninguna |
+| `GET /api/auth/me` | Usuario autenticado | JWT propio |
+| `GET /api/recetas` | Consulta de recetas | Según ruta |
+| `GET /api/recetas/:id` | Consulta de receta | Según ruta |
+| `GET /api/categorias-receta` | Catálogo de categorías | Ninguna |
+| `GET /api/tipos-cocina` | Catálogo de tipos de cocina | Ninguna |
+| `GET /api/categorias-ingrediente` | Catálogo de ingredientes | Ninguna |
+| `GET /api/ingredientes` | Consulta de ingredientes | Ninguna |
+| `GET/POST/DELETE /api/usuarios/:idUsuario/inventario` | Gestión de inventario | JWT propio |
+| `GET/POST/DELETE /api/usuarios/:idUsuario/historial` | Gestión de historial | JWT propio |
+| `GET/POST/DELETE /api/usuarios/:idUsuario/favoritos` | Gestión de favoritos | JWT propio |
+| `GET /health` | Verificación del servicio y DB | Ninguna |
 
 ### 4.3 PostgreSQL
 
-**Tecnología:** PostgreSQL 16 (imagen `postgres:16-alpine`), orquestado con
-Docker Compose.
+**Tecnología:** PostgreSQL 16 (`postgres:16-alpine`), orquestado con Docker Compose.
 
-**Ubicación:** `Docker/Postgre/docker-compose.yml`,
-`Docker/Postgre/init/01_schema.sql`, `Docker/Postgre/init/02_seed.sql`.
+**Ubicación:**
 
-**Responsabilidad:**
-
-Persistir de forma relacional los datos del sistema: usuarios, recetas,
-ingredientes, categorías, inventario del usuario, historial de recetas
-preparadas y favoritos.
-
-**Tablas principales (evidencia en `01_schema.sql`):** `usuario`, `receta`,
-`ingrediente`, `categoria_receta`, `categoria_ingrediente`, `tipo_cocina`,
-`inventario_usuario`, `historial_receta`, `favorito`, `etiqueta`,
-`restriccion`, y sus tablas de relación (`receta_ingrediente`,
-`receta_etiqueta`, `receta_restriccion`).
-
----
-
-### 4.4 Firebase Authentication
-
-**Tecnología:** Firebase Authentication.
+- `Docker/Postgre/docker-compose.yml`
+- `Docker/Postgre/init/01_schema.sql`
+- `Docker/Postgre/init/02_seed.sql`
 
 **Responsabilidad:**
 
-Gestiona la autenticación de los usuarios desde el navegador: registro,
-inicio de sesión por correo/contraseña, inicio de sesión con Google,
-recuperación de contraseña, consulta del estado de autenticación y cierre de
-sesión.
+Persistir de forma relacional los datos del sistema:
 
-**Evidencia en el código:** `firebase-sync.js` (`firebase.auth()`,
-`onAuthStateChanged(...)`), y `Docker/Postgre/backend/src/middlewares/firebaseAuthMiddleware.js`
-(verifica el ID token con `admin.auth().verifyIdToken(idToken)`).
+- usuarios;
+- recetas;
+- ingredientes;
+- categorías;
+- inventario del usuario;
+- historial de recetas preparadas;
+- favoritos;
+- etiquetas;
+- restricciones y relaciones asociadas.
 
----
+**Tablas principales:**
 
-### 4.5 Firebase Realtime Database
+`usuario`, `receta`, `ingrediente`, `categoria_receta`,
+`categoria_ingrediente`, `tipo_cocina`, `inventario_usuario`,
+`historial_receta`, `favorito`, `etiqueta`, `restriccion`,
+`receta_ingrediente`, `receta_etiqueta` y `receta_restriccion`.
 
-**Tecnología:** Firebase Realtime Database.
-
-**Responsabilidad:**
-
-Proporciona persistencia remota para los favoritos del usuario, sincronizados
-desde el cliente.
-
-**Evidencia en el código:** `firebase-sync.js`
-(`fbDB.ref('usuarios/' + uid + '/favoritos')`).
-
----
+La conexión desde la API se realiza mediante el driver `pg`.
 
 ## 5. Relaciones
 
 ### Usuario → CookSmart Web
-El usuario accede a CookSmart mediante un navegador web e interactúa con las
-diferentes páginas de la aplicación.
+
+El usuario accede a CookSmart mediante un navegador web e interactúa con
+las diferentes páginas de la aplicación.
 
 ### CookSmart Web → CookSmart API
-`recetas-loader.js` consulta `GET /api/recetas` para poblar `window.RECETAS_DB`
-en tiempo de carga.
+
+El frontend realiza solicitudes HTTP/REST hacia la API propia para consultar
+y modificar información del sistema.
+
+Las operaciones autenticadas incluyen el JWT mediante:
+
+```text
+Authorization: Bearer <token>
+```
 
 ### CookSmart API → PostgreSQL
-La capa de repositorios (`src/repositories/*.js`) ejecuta consultas SQL sobre
-PostgreSQL mediante el pool definido en `src/config/db.js`.
 
-### CookSmart API → Firebase Authentication
-Las rutas bajo `/api/me/*` verifican el token de identidad de Firebase antes
-de atender la petición.
+La capa de repositorios ejecuta consultas SQL sobre PostgreSQL mediante el
+pool definido en `src/config/db.js`.
 
-### CookSmart Web → Firebase Authentication
-Las páginas de autenticación utilizan Firebase Authentication para registrar
-usuarios, iniciar sesión, iniciar sesión con Google, recuperar contraseñas y
-gestionar el estado de sesión.
+### CookSmart Web → PostgreSQL
 
-### CookSmart Web → Firebase Realtime Database
-La aplicación utiliza Firebase Realtime Database para almacenar y recuperar
-los favoritos asociados a los usuarios autenticados por Firebase.
+No existe acceso directo.
 
----
+Todas las operaciones persistentes pasan por la API.
 
 ## 6. Trazabilidad C4 ↔ código
 
 | Elemento | Código real | Evidencia |
 |---|---|---|
 | CookSmart Web | Archivos `.html`, JavaScript y CSS de la raíz | Implementación de la interfaz y lógica |
-| CookSmart API | `Docker/Postgre/backend/src/server.js`, `src/routes/*.js` | Servidor Express con endpoints de recetas, catálogos, usuarios, auth |
-| PostgreSQL | `Docker/Postgre/init/01_schema.sql`, `docker-compose.yml` | Esquema y contenedor de base de datos |
-| Consulta de recetas (nueva) | `recetas-loader.js` | `fetch(COOKSMART_API_BASE + '/recetas')`, evento `recetasDBReady` |
-| Consulta de recetas (páginas aún no migradas) | `index.html`, `recetas.html`, `desayunos.html`, `almuerzos.html`, `cenas.html`, `rapido.html`, `mi-nevera.html`, `favoritos.html`, `perfil.html`, `receta-detalle.html` | `<script src="recetas-db.js">` — **archivo eliminado del repositorio** |
-| Firebase Authentication | `firebase-sync.js`, `firebaseAuthMiddleware.js` | Autenticación y verificación de token |
-| Firebase Realtime Database | `firebase-sync.js` | Guardado y recuperación de favoritos |
+| CookSmart API | `Docker/Postgre/backend/src/server.js` | Servidor Express |
+| Rutas | `Docker/Postgre/backend/src/routes/*.js` | Endpoints HTTP |
+| Controllers | `Docker/Postgre/backend/src/controllers/*.js` | Adaptación HTTP → negocio |
+| Services | `Docker/Postgre/backend/src/services/*.js` | Lógica de negocio |
+| Repositories | `Docker/Postgre/backend/src/repositories/*.js` | Acceso a PostgreSQL |
+| Autenticación | `src/middlewares/authMiddleware.js`, `auth-sync.js` | JWT propio |
+| PostgreSQL | `Docker/Postgre/init/01_schema.sql`, `docker-compose.yml` | Esquema y contenedor |
+| Consulta de recetas | `recetas-loader.js` + `/api/recetas` | Consumo de API |
+| Infraestructura | `Docker/Postgre/docker-compose.yml` | PostgreSQL + API + Adminer |
 
 ## 7. Validación contra el código
 
-Se revisaron los `<script src="...">` de las 13 páginas HTML y se comparó
-contra los archivos JavaScript existentes en la raíz del repositorio y en
-`Docker/Postgre/backend`. La revisión permitió comprobar que:
+La revisión de la arquitectura permite comprobar:
 
 1. CookSmart Web sigue siendo HTML, CSS y JavaScript ejecutado en el navegador.
-2. Existe una API propia completa (rutas, controladores, servicios,
-   repositorios) que no estaba documentada en la versión anterior.
-3. Existe una base de datos PostgreSQL con esquema y datos semilla.
-4. Solo 3 de 13 páginas (`login.html`, `registro.html`, `vegetariano.html`)
-   cargan `recetas-loader.js`, el archivo que consume la API nueva.
-5. Las 10 páginas restantes referencian `recetas-db.js`, que **ya no existe**
-   en el repositorio (fue eliminado en el commit `f3d3931`).
+2. Existe una API propia Node.js/Express.
+3. La API está organizada por rutas, controladores, servicios y repositorios.
+4. Existe PostgreSQL como persistencia principal.
+5. La API accede a PostgreSQL mediante `pg`.
+6. La autenticación actual utiliza JWT propio.
+7. Las operaciones autenticadas se realizan mediante Bearer token.
+8. El frontend no accede directamente a PostgreSQL.
+9. Firebase no forma parte de los contenedores activos del sistema actual.
 
 ## 8. Integraciones no activas
 
-El repositorio contiene el archivo `themealdb.js`, que implementa funciones
-para consultar la API externa TheMealDB. Ninguna página HTML carga
-`themealdb.js` ni se encontró una llamada a `buscarTheMealDB()`. Se considera
-una integración preparada para una posible utilización futura, no un
-contenedor activo.
+El repositorio puede contener archivos preparados para integraciones externas,
+como `themealdb.js`, pero no se consideran contenedores activos mientras no
+exista una página o flujo de ejecución que los utilice.
 
-## 9. Corrección producida por la auditoría
+De igual manera, Redis, un motor de IA y una arquitectura de microservicios
+se mantienen fuera del modelo `as-is` porque corresponden a trabajo futuro
+o a la arquitectura inicialmente propuesta.
 
-La versión anterior de este documento (28 de agosto, madrugada) afirmaba que
-"no se consideran parte del sistema actual: API Gateway, microservicios,
-MySQL/PostgreSQL, Redis, motor de IA" y describía `recetas-db.js` como el
-catálogo activo del sistema.
+## 9. Corrección producida por la migración
 
-Al validar contra el commit actual del repositorio se encontró que, esa misma
-tarde, el equipo:
+La versión anterior describía una convivencia entre Firebase y PostgreSQL.
 
-* eliminó `recetas-db.js` (commit `f3d3931`);
-* agregó `Docker/Postgre/backend` con una API Express completa y PostgreSQL
-  vía Docker Compose (commits `28a5237`, `079ffab`, `18436a3`, `45d29b4`,
-  `a8ebbdd`).
+La arquitectura actual se corrige para representar un único flujo de persistencia:
 
-Por lo tanto, se corrige este documento para: (a) incluir **CookSmart API** y
-**PostgreSQL** como contenedores reales del sistema actual, y (b) retirar la
-afirmación de que `recetas-db.js` es evidencia vigente.
+```text
+CookSmart Web
+      ↓
+CookSmart API
+      ↓
+PostgreSQL
+```
 
-## 10. Hallazgo pendiente (no resuelto en el código)
+También se elimina del modelo la coexistencia de dos mecanismos de autenticación.
+La autenticación actual se realiza mediante JWT propio de la API.
 
-La migración del catálogo estático a la API no se completó: **10 de las 13
-páginas** siguen referenciando `recetas-db.js`, un archivo que ya no existe en
-el repositorio. Esto se documenta como un hallazgo de la auditoría y no se
-oculta ni se "corrige" en el diagrama fingiendo que ya funciona: el diagrama
-de la sección 3 representa el flujo de datos ya migrado
-(`recetas-loader.js`), pero la tabla de la sección 6 dejar explícito que la
-mayoría de páginas aún no lo usan.
-
-## 11. Audiencia y propósito
+## 10. Audiencia y propósito
 
 | Audiencia | Propósito |
 |---|---|
-| Equipo de desarrollo | Comprender la organización actual de CookSmart, incluyendo el backend nuevo |
-| Docente / evaluador | Verificar la correspondencia entre arquitectura y código, incluida la migración incompleta |
-| Integrantes del proyecto | Identificar responsabilidades y dependencias entre Web, API y base de datos |
-| Futuros desarrolladores | Comprender la estructura actual del sistema y terminar la migración pendiente |
+| Equipo de desarrollo | Comprender la organización actual de CookSmart |
+| Docente / evaluador | Verificar la correspondencia entre arquitectura y código |
+| Integrantes del proyecto | Identificar responsabilidades y dependencias entre Web, API y DB |
+| Futuros desarrolladores | Comprender el flujo completo de la aplicación |
 
 La vista de contenedores permite pasar del contexto general del sistema al
 detalle de sus principales partes y sirve como base para la vista C4 de
