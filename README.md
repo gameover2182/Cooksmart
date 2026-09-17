@@ -10,27 +10,29 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 | Miguel Ángel Santamaría Cuero | Escenarios de calidad |
 | Leonardo Juan Pablo Leon Robelto | Medición ejecutable (k6), C4, decisión de estilo arquitectónico |
 
-## Sistema base
+## Sistema base — arquitectura actual (en migración)
 
 - **Repositorio:** https://github.com/gameover2182/Cooksmart.git
-- **Commit/versión evaluada:** ver el último commit de `main` en el momento de la entrega (`git log -1`)
-- **Stack real (verificado en el repo):** HTML, CSS, JavaScript, Firebase Auth, Firebase Realtime Database. Sin backend propio, sin base de datos relacional, sin tests automatizados.
+- **Commit/versión de referencia:** el último commit de `main` (`git log -1`)
+- **Stack real (verificado en el repo):** HTML, CSS, JavaScript y Firebase Auth para autenticación. Estamos migrando la persistencia de datos (recetas, inventario, favoritos, historial) a un backend propio en Node.js/Express con PostgreSQL, levantado con Docker Compose (`Docker/Postgre/`); Firebase Realtime Database queda en desuso a medida que avanza la migración. Seguimos sin tests automatizados.
 - **Semana actual:** Semana 8 (Módulo 4 — Estilos arquitectónicos)
 
-> ⚠️ **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, y un plan de pruebas extenso. Esa arquitectura **no está implementada** en el repositorio actual. **Decisión de equipo (M1 y ratificada en M4):** esa arquitectura se documenta como Roadmap / Trabajo futuro, no como el sistema evaluado. El sistema base evaluado es el actual: estático + Firebase, organizado como monolito modular por capas (ver `Docs/08-decision-estilo-arquitectonico.md`).
+> ⚠️ **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, y un plan de pruebas extenso. Esa arquitectura **no está implementada** en el repositorio actual. **Decisión de equipo (M1 y ratificada en M4):** esa arquitectura se documenta como Roadmap / Trabajo futuro, no como el sistema base. El sistema base que documentamos es el actual: frontend estático + Firebase para autenticación, con un backend propio (Node/Express + PostgreSQL) en construcción, organizado como monolito modular por capas (ver `Docs/08-decision-estilo-arquitectonico.md`).
 
 ## Roadmap / Trabajo futuro
 
 - Arquitectura de microservicios del PDF original (Auth, Usuarios, Inventario, Recomendación, Notificaciones detrás de API Gateway).
 - Migración de parte de la lógica a Firebase Cloud Functions (evaluado y descartado del alcance actual en `Docs/08-decision-estilo-arquitectonico.md`, sección 2).
+- Completar en el backend (`Docker/Postgre/backend/`) los módulos de recetas, catálogos, usuarios y auth que `server.js` ya registra pero todavía no están implementados en esta rama.
 - Automatizar como *fitness function* las reglas de dependencia entre módulos definidas en `Docs/adr/ADR-002-limites-modulos-dependencias.md`.
 
 ## Cómo levantar el sistema
 
-El sistema no requiere instalación: los archivos `.html` se abren directamente en el navegador y funcionan contra Firebase (Auth + Realtime Database) como backend.
+El sistema tiene ahora dos partes que se levantan por separado:
+
+**1. Frontend estático** (raíz del repo):
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/gameover2182/Cooksmart.git
 # Abrir index.html directamente en el navegador
 # No requiere servidor local, build ni dependencias adicionales
@@ -38,7 +40,22 @@ git clone https://github.com/gameover2182/Cooksmart.git
 
 Las credenciales de configuración de Firebase están en `firebase-sync.js`. Para el experimento de medición (`experimentos/EXP-001-linea-base/`), la autenticación de prueba usa variables de entorno (`FIREBASE_API_KEY`, `FIREBASE_TEST_EMAIL`, `FIREBASE_TEST_PASSWORD`) en lugar de credenciales hardcodeadas en el script.
 
-## Estructura del dossier
+**2. Backend (API + PostgreSQL, en Docker)**:
+
+```bash
+cd Docker/Postgre
+cp .env.example .env
+# completar POSTGRES_PASSWORD en .env
+docker compose up --build
+```
+
+- La API queda expuesta en `http://localhost:3000` (healthcheck en `GET /health`, verifica también la conexión a Postgres).
+- Adminer (administración de la base de datos) queda expuesto en `http://localhost:5433`.
+- El esquema (`init/01_schema.sql`) y los datos semilla (`init/02_seed.sql`) se cargan automáticamente al levantar el contenedor de Postgres por primera vez.
+- Las rutas `/api/me/*` (inventario, historial, favoritos) requieren un token de Firebase válido en el header `Authorization: Bearer <token>`. Para habilitarlas hace falta configurar una cuenta de servicio de Firebase con `FIREBASE_SERVICE_ACCOUNT_JSON` o `FIREBASE_SERVICE_ACCOUNT_PATH`; sin eso, esas rutas responden 501.
+- Este backend todavía está en construcción: `server.js` ya registra las rutas de recetas, catálogos, usuarios y auth, pero esos módulos aún no están implementados en esta rama (ver Roadmap).
+
+## Estructura del dossier y del repositorio (actualizada)
 
 | Documento | Ruta real en el repo | Módulo |
 |---|---|---|
@@ -52,10 +69,11 @@ Las credenciales de configuración de Firebase están en `firebase-sync.js`. Par
 | Decisión de estilo arquitectónico | `Docs/08-decision-estilo-arquitectonico.md` | M4 |
 | ADR 1 — Estilo arquitectónico | `Docs/adr/ADR-001-estilo-arquitectonico.md` | M4 |
 | ADR 2 — Límites de módulos y dependencias | `Docs/adr/ADR-002-limites-modulos-dependencias.md` | M4 |
+| Backend propio (API + PostgreSQL, en construcción) | `Docker/Postgre/` | En migración |
 
 ## Convención de commits
 
-El equipo usa Conventional Commits para los mensajes de commit:
+Usamos Conventional Commits para los mensajes de commit:
 
 - `feat:` una nueva característica para el usuario
 - `fix:` arregla un bug que afecta al usuario
