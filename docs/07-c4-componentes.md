@@ -6,32 +6,23 @@ Esta vista representa los principales componentes lógicos identificados
 dentro de los contenedores **CookSmart Web** y **CookSmart API**.
 
 Los componentes se identifican a partir de las funciones y módulos
-actualmente implementados en el código fuente del proyecto, en el commit
-`846dacb` de la rama `main`.
+implementados en el código fuente del proyecto.
 
-> **Nota de auditoría (Módulo 3):** esta versión corrige la anterior, que
-> describía el catálogo de recetas como un archivo `recetas-db.js` con un
-> arreglo `RECETAS_DB` embebido. Ese archivo fue eliminado del repositorio el
-> 28 de agosto de 2026 (commit `f3d3931`) y reemplazado por `recetas-loader.js`,
-> que consume la nueva API propia. También se agrega, por primera vez, la
-> vista de componentes del contenedor **CookSmart API**, que no existía al
-> escribirse la primera versión de este documento. El contenido de
-> `08-validacion-c4-codigo.md` (documento que no debe entregarse por separado)
-> quedó incorporado como registro de correcciones en la sección 8.
+La vista representa la arquitectura actual después de la migración completa
+hacia PostgreSQL y la autenticación propia mediante JWT.
 
 ---
-
 ## 2. Contenedor: CookSmart Web
 
 **Tecnología:** HTML, CSS y JavaScript.
 
 **Responsabilidad:** proporcionar la interfaz web y ejecutar la lógica
-necesaria para consultar, filtrar, mostrar y gestionar recetas, favoritos y
-sesión del usuario.
+necesaria para consultar, filtrar, mostrar y gestionar recetas, favoritos,
+inventario, historial y sesión del usuario.
 
-Para esta vista se selecciona el flujo principal de recetas y favoritos,
-porque contiene funciones claramente identificables en el código y permite
-establecer trazabilidad directa entre arquitectura y código fuente.
+Para esta vista se seleccionan los flujos principales de recetas,
+autenticación y gestión de información del usuario, porque permiten establecer
+trazabilidad directa entre arquitectura y código fuente.
 
 ### 2.1 Diagrama C4 de Componentes — CookSmart Web
 
@@ -45,201 +36,197 @@ establecer trazabilidad directa entre arquitectura y código fuente.
                     │       CookSmart Web          │
                     │                              │
                     │  ┌────────────────────────┐  │
-                    │  │ Adaptador de catálogo  │  │
-                    │  │ recetas-loader.js      │  │
-                    │  │ _cargarRecetasDesdeAPI │  │
+                    │  │ Gestor autenticación   │  │
+                    │  │ auth-sync.js           │  │
                     │  └───────────┬────────────┘  │
-                    │              │ fetch          │
+                    │              │ fetch         │
                     │              ▼               │
                     │  ┌────────────────────────┐  │
+                    │  │ Adaptador de API       │  │
+                    │  │ fetch / HTTP REST      │  │
+                    │  └───────────┬────────────┘  │
+                    │              │               │
+                    │  ┌───────────▼────────────┐  │
                     │  │ Gestor de recetas      │  │
-                    │  │                        │  │
-                    │  │ renderRecetas()        │  │
-                    │  │ cargarRecetasPopulares()│ │
                     │  └───────────┬────────────┘  │
                     │              │               │
-                    │              ▼               │
-                    │  ┌────────────────────────┐  │
+                    │  ┌───────────▼────────────┐  │
                     │  │ Gestor de filtros      │  │
-                    │  │                        │  │
-                    │  │ filtrarPorRestricciones│ │
-                    │  │ aplicarFiltros()       │  │
                     │  └───────────┬────────────┘  │
                     │              │               │
-                    │              ▼               │
-                    │  ┌────────────────────────┐  │
+                    │  ┌───────────▼────────────┐  │
                     │  │ Gestor de favoritos    │  │
-                    │  │                        │  │
-                    │  │ toggleFav()            │  │
-                    │  │ updateNavBadge()       │  │
                     │  └───────────┬────────────┘  │
                     │              │               │
-                    │              ▼               │
-                    │  ┌────────────────────────┐  │
-                    │  │ Persistencia local     │  │
-                    │  │                        │  │
-                    │  │ localStorage           │  │
+                    │  ┌───────────▼────────────┐  │
+                    │  │ Gestor de inventario   │  │
                     │  └───────────┬────────────┘  │
                     │              │               │
-                    │              ▼               │
-                    │  ┌────────────────────────┐  │
-                    │  │ Sincronizador Firebase │  │
-                    │  │                        │  │
-                    │  │ syncFavoritosToFirebase│  │
-                    │  │ loadFavoritosFromFirebase││
-                    │  └───────────┬────────────┘  │
-                    └──────────────┼───────────────┘
+                    │  ┌───────────▼────────────┐  │
+                    │  │ Gestor de historial    │  │
+                    │  └────────────────────────┘  │
+                    └──────────────┬───────────────┘
                                    │
-                    ┌──────────────┴───────────────┐
-                    ▼                              ▼
-         ┌──────────────────────┐        ┌──────────────────────┐
-         │ CookSmart API         │        │ Firebase              │
-         │ GET /api/recetas      │        │ Authentication +       │
-         └──────────────────────┘        │ Realtime Database      │
-                                          └──────────────────────┘
+                                   │ HTTP / REST + JWT
+                                   ▼
+                            CookSmart API
 ```
 
 ### 2.2 Componentes identificados
 
-#### 2.2.1 Adaptador de catálogo (recetas-loader.js)
+#### 2.2.1 Gestor de autenticación (`auth-sync.js`)
 
-**Responsabilidad:** obtener el catálogo de recetas desde la API propia y
-exponerlo con la misma forma (`shape`) que usaba el antiguo `RECETAS_DB`, para
-minimizar cambios en el resto de la aplicación.
+**Responsabilidad:** registrar usuarios, iniciar y cerrar sesión, conservar
+la sesión y adjuntar el JWT a las solicitudes autenticadas.
 
-**Código:** `recetas-loader.js` — funciones `_cargarRecetasDesdeAPI()`,
-`_adaptarReceta(receta)`; variables `window.RECETAS_DB`,
-`window.recetasDBListo`; evento `recetasDBReady`.
+**Código:** `auth-sync.js`.
 
-**Trazabilidad:** hace `fetch(COOKSMART_API_BASE + '/recetas')`, transforma
-cada receta al formato plano que las páginas ya sabían leer, y llena
-`window.RECETAS_DB` de forma asíncrona (dispara `recetasDBReady` cuando
-termina). Reemplaza directamente al antiguo `recetas-db.js`.
+**Operaciones principales:**
 
-**Estado real de adopción:** solo `login.html`, `registro.html` y
-`vegetariano.html` cargan este archivo (ver sección 8).
+- `cookSmartRegistrar()`
+- `cookSmartLogin()`
+- `cookSmartLogout()`
+- `_guardarSesion()`
+- `_apiFetch()`
 
----
-
-#### 2.2.2 Gestor de recetas
-
-**Responsabilidad:** generar las tarjetas de recetas, calcular el porcentaje
-de coincidencia con los ingredientes del usuario, mostrar nombre/imagen/tiempo/
-dificultad, determinar si una receta es favorita y cargar recomendaciones.
-
-**Código:** `index.html` — `renderRecetas(recetas, gridId)`,
-`cargarRecetasPopulares()`.
-
-**Trazabilidad:** ambas funciones leen de `RECETAS_DB` (hoy poblado por
-`recetas-loader.js` en las páginas migradas, o `undefined`/inexistente en las
-páginas que aún referencian `recetas-db.js`, ver sección 8).
+**Trazabilidad:** utiliza `/api/auth/registro` y `/api/auth/login`.
+Las solicitudes posteriores incluyen `Authorization: Bearer <token>`.
 
 ---
 
-#### 2.2.3 Gestor de filtros
+#### 2.2.2 Adaptador de API
 
-**Responsabilidad:** aplicar las preferencias y restricciones del usuario
-sobre el conjunto de recetas disponibles.
+**Responsabilidad:** encapsular las solicitudes HTTP que el frontend realiza
+hacia la API y adaptar las respuestas para su utilización en la interfaz.
 
-**Código:** `index.html` — `filtrarPorRestricciones(recetas)`;
-`recetas.html` — `aplicarFiltros()`.
+**Código:** `recetas-loader.js` y funciones de acceso mediante `fetch`.
 
-**Trazabilidad:** `filtrarPorRestricciones()` lee `localStorage`
-(`cookSmartRestricciones`, `cookSmartGustos`); `aplicarFiltros()` trabaja
-sobre `RECETAS_DB` filtrando por ingredientes, tiempo, dificultad y categoría.
+Para recetas, `recetas-loader.js` consulta `/api/recetas` y adapta la respuesta
+al formato utilizado por las páginas del frontend.
 
 ---
 
-#### 2.2.4 Gestor de favoritos
+#### 2.2.3 Gestor de recetas
 
-**Responsabilidad:** agregar/eliminar una receta de favoritos, actualizar el
-estado visual del botón, guardar los favoritos localmente y actualizar el
-contador.
+**Responsabilidad:** generar las tarjetas de recetas, mostrar información
+de la receta, calcular información visual y cargar las recetas obtenidas
+desde la API.
 
-**Código:** `index.html` / `recetas.html` — `toggleFav(e, id, btnElement)`,
-`updateNavBadge()`.
+**Código:** páginas de recetas y funciones JavaScript de la interfaz.
 
-**Trazabilidad:** `toggleFav()` busca la receta en `RECETAS_DB`, modifica el
-arreglo de favoritos y lo guarda con
-`localStorage.setItem('cooksmart_favoritos', ...)`.
+**Trazabilidad:** utiliza la información entregada por el adaptador de API.
 
 ---
 
-#### 2.2.5 Persistencia local
+#### 2.2.4 Gestor de filtros
 
-**Responsabilidad:** mantener en el navegador información necesaria para el
-funcionamiento de la aplicación: `cooksmart_favoritos`,
-`cookSmartIngredientes`, `cookSmartGustos`, `cookSmartRestricciones`.
+**Responsabilidad:** aplicar preferencias y restricciones del usuario sobre
+el conjunto de recetas disponible.
 
-**Código:** operaciones `localStorage.getItem(...)` / `setItem(...)` en
-varias páginas HTML.
+**Código:** funciones de filtrado de las páginas de recetas.
 
-**Trazabilidad:** sirve como punto de integración con el sincronizador de
-Firebase (sección 2.2.6).
+**Trazabilidad:** trabaja sobre los datos recibidos desde la API y aplica
+los criterios de categoría, tipo de comida y demás filtros disponibles.
 
 ---
 
-#### 2.2.6 Sincronizador Firebase
+#### 2.2.5 Gestor de favoritos
 
-**Responsabilidad:** integrar la aplicación con Firebase y sincronizar los
-favoritos del usuario autenticado.
+**Responsabilidad:** agregar y eliminar recetas favoritas, actualizar el
+estado visual y sincronizar las operaciones con la API.
 
-**Código:** `firebase-sync.js` — `syncFavoritosToFirebase(favs)`,
-`loadFavoritosFromFirebase(uid)`, `firebase.auth()`, `firebase.database()`.
+**Trazabilidad:** utiliza los endpoints:
 
-**Trazabilidad:** guarda en `fbDB.ref('usuarios/' + uid + '/favoritos').set(...)`
-y recupera con `.get()`; escucha `fbAuth.onAuthStateChanged(...)`.
+```text
+GET    /api/usuarios/:idUsuario/favoritos
+POST   /api/usuarios/:idUsuario/favoritos
+DELETE /api/usuarios/:idUsuario/favoritos
+```
+
+Los favoritos persistentes ya no dependen de Firebase; la persistencia principal
+se realiza mediante PostgreSQL a través de la API.
 
 ---
 
-#### 2.2.7 Gestor de interfaz
+#### 2.2.6 Gestor de inventario
 
-**Responsabilidad:** controlar elementos visuales de interacción.
+**Responsabilidad:** permitir al usuario consultar, agregar y eliminar
+ingredientes de su inventario.
 
-**Código:** `index.html` — `mostrarToast()`, `abrirModal(receta)`,
-`cerrarModal()`, `scrollRecom(direccion)`.
+**Trazabilidad:** utiliza:
+
+```text
+GET    /api/usuarios/:idUsuario/inventario
+POST   /api/usuarios/:idUsuario/inventario
+DELETE /api/usuarios/:idUsuario/inventario
+```
+
+Las operaciones persistentes terminan en PostgreSQL.
+
+---
+
+#### 2.2.7 Gestor de historial
+
+**Responsabilidad:** registrar y consultar las recetas preparadas por el usuario.
+
+**Trazabilidad:** utiliza:
+
+```text
+GET  /api/usuarios/:idUsuario/historial
+POST /api/usuarios/:idUsuario/historial
+```
+
+El historial se almacena en PostgreSQL.
+
+---
+
+#### 2.2.8 Gestor de interfaz
+
+**Responsabilidad:** controlar elementos visuales de interacción como mensajes,
+modales, navegación, botones y actualización de componentes de la interfaz.
+
+**Código:** funciones JavaScript distribuidas en las páginas HTML.
 
 ---
 
 ## 3. Contenedor: CookSmart API
 
 **Tecnología:** Node.js, Express, capas `routes → controllers → services →
-repositories`.
+repositories`, `pg`, `jsonwebtoken` y `bcryptjs`.
 
-**Responsabilidad:** exponer recetas, catálogos, usuarios, inventario,
-historial y favoritos sobre PostgreSQL, con dos mecanismos de autenticación
-(JWT propio y verificación de token Firebase).
+**Responsabilidad:** exponer las operaciones del sistema, aplicar autenticación
+y autorización, ejecutar la lógica de negocio y acceder a PostgreSQL.
 
 ### 3.1 Diagrama C4 de Componentes — CookSmart API
 
 ```text
    Cliente (CookSmart Web)
-        │
-        ▼
+            │
+            ▼
  ┌────────────────────────────────────────────┐
- │  Rutas (src/routes/*.js)                    │
- │  recetas · catalogos · usuarios · me · auth │
- └───────────────┬──────────────────────────────┘
-                 ▼
+ │ Routes (src/routes/*.js)                   │
+ │ recetas · catalogos · usuarios · auth      │
+ └────────────────────┬───────────────────────┘
+                      ▼
  ┌────────────────────────────────────────────┐
- │  Middlewares                                │
- │  authMiddleware (JWT) ·                     │
- │  firebaseAuthMiddleware (token Firebase)    │
- └───────────────┬──────────────────────────────┘
-                 ▼
+ │ Middlewares                                │
+ │ JWT · autorización · manejo de errores     │
+ └────────────────────┬───────────────────────┘
+                      ▼
  ┌────────────────────────────────────────────┐
- │  Controllers (src/controllers/*.js)         │
- └───────────────┬──────────────────────────────┘
-                 ▼
+ │ Controllers (src/controllers/*.js)         │
+ └────────────────────┬───────────────────────┘
+                      ▼
  ┌────────────────────────────────────────────┐
- │  Services (src/services/*.js)               │
- └───────────────┬──────────────────────────────┘
-                 ▼
+ │ Services (src/services/*.js)               │
+ └────────────────────┬───────────────────────┘
+                      ▼
  ┌────────────────────────────────────────────┐
- │  Repositories (src/repositories/*.js)       │
- └───────────────┬──────────────────────────────┘
-                 ▼
-            PostgreSQL
+ │ Repositories (src/repositories/*.js)       │
+ └────────────────────┬───────────────────────┘
+                      │ SQL / pg
+                      ▼
+                 PostgreSQL
 ```
 
 ### 3.2 Componentes identificados
@@ -249,31 +236,80 @@ historial y favoritos sobre PostgreSQL, con dos mecanismos de autenticación
 **Responsabilidad:** definir los endpoints HTTP expuestos por la API.
 
 **Código:** `src/routes/recetas.routes.js`, `catalogos.routes.js`,
-`usuarios.routes.js`, `me.routes.js`, `auth.routes.js`.
+`usuarios.routes.js`, `me.routes.js` y `auth.routes.js`, según la
+organización vigente del backend.
 
-#### 3.2.2 Middlewares de autenticación
+Las rutas separan las operaciones por dominio funcional.
 
-**Responsabilidad:** proteger rutas verificando credenciales.
+---
 
-**Código:** `src/middlewares/authMiddleware.js` (JWT propio,
-`soloElMismoUsuario`), `src/middlewares/firebaseAuthMiddleware.js`
-(verificación de ID token de Firebase + aprovisionamiento just-in-time del
-usuario en PostgreSQL), `src/middlewares/errorHandler.js`.
+#### 3.2.2 Middleware de autenticación y autorización
 
-#### 3.2.3 Controladores, servicios y repositorios
+**Responsabilidad:** validar el JWT, identificar al usuario autenticado
+y proteger las operaciones que modifican o consultan información privada.
 
-**Responsabilidad:** controladores traducen HTTP↔dominio; servicios
-contienen la lógica de negocio; repositorios ejecutan SQL contra PostgreSQL.
+**Código:** `src/middlewares/authMiddleware.js`.
 
-**Código:** `src/controllers/{recetas,catalogos,auth,favoritos,historial,inventario}.controller.js`,
-`src/services/{recetas,catalogos,auth,favoritos,historial,inventario}.service.js`,
-`src/repositories/{recetas,catalogos,favoritos,historial,inventario,Usuarios}.repository.js`.
+El flujo actual no requiere verificación de tokens Firebase.
 
-#### 3.2.4 Configuración de acceso a datos y Firebase Admin
+---
 
-**Código:** `src/config/db.js` (pool de conexión a PostgreSQL vía `pg`),
-`src/config/firebaseAdmin.js` (inicialización del SDK de administración de
-Firebase para verificar tokens).
+#### 3.2.3 Controladores
+
+**Responsabilidad:** recibir solicitudes HTTP, extraer parámetros, invocar
+los servicios y construir las respuestas HTTP.
+
+**Código:** `src/controllers/*.controller.js`.
+
+Entre los dominios identificados se encuentran:
+
+- autenticación;
+- recetas;
+- catálogos;
+- favoritos;
+- historial;
+- inventario.
+
+---
+
+#### 3.2.4 Servicios
+
+**Responsabilidad:** contener la lógica de negocio y coordinar las operaciones
+entre controladores y repositorios.
+
+**Código:** `src/services/*.service.js`.
+
+Los servicios desacoplan la lógica de negocio de los detalles HTTP y SQL.
+
+---
+
+#### 3.2.5 Repositorios
+
+**Responsabilidad:** encapsular las consultas y operaciones de persistencia
+sobre PostgreSQL.
+
+**Código:** `src/repositories/*.repository.js`.
+
+Los repositorios utilizan la configuración de base de datos y el driver `pg`.
+
+---
+
+#### 3.2.6 Configuración de acceso a datos
+
+**Código:** `src/config/db.js`.
+
+**Responsabilidad:** establecer y administrar el pool de conexiones hacia
+PostgreSQL.
+
+---
+
+#### 3.2.7 Autenticación y generación de JWT
+
+**Responsabilidad:** validar credenciales, utilizar `bcryptjs` para las
+contraseñas y generar tokens JWT para las sesiones autenticadas.
+
+**Trazabilidad:** rutas `/api/auth/registro`, `/api/auth/login` y
+`/api/auth/me`.
 
 ---
 
@@ -281,24 +317,25 @@ Firebase para verificar tokens).
 
 | Origen | Destino | Relación |
 |---|---|---|
-| Adaptador de catálogo | CookSmart API (rutas) | `fetch` a `GET /api/recetas` |
-| Gestor de recetas | Adaptador de catálogo | Lee `window.RECETAS_DB` una vez poblado |
-| Gestor de filtros | Adaptador de catálogo | Filtra sobre `RECETAS_DB` |
-| Gestor de recetas | Gestor de favoritos | Consulta si una receta está marcada como favorita |
-| Gestor de favoritos | Persistencia local | Guarda/lee `cooksmart_favoritos` |
-| Persistencia local | Sincronizador Firebase | `firebase-sync.js` intercepta cambios y sincroniza |
-| Sincronizador Firebase | Firebase Realtime Database | `fbDB.ref('usuarios/{uid}/favoritos')` |
-| Sincronizador Firebase | Firebase Authentication | Usa el usuario autenticado para identificar los datos |
-| Rutas (API) | Middlewares | Aplican JWT o verificación Firebase antes del controlador |
-| Controllers | Services | Delegan la lógica de negocio |
-| Services | Repositories | Delegan el acceso a datos |
-| Repositories | PostgreSQL | Ejecutan SQL vía `src/config/db.js` |
+| Gestor de autenticación | CookSmart API | Registro e inicio de sesión |
+| Gestor de recetas | Adaptador de API | Obtiene recetas |
+| Gestor de favoritos | CookSmart API | CRUD de favoritos |
+| Gestor de inventario | CookSmart API | CRUD de inventario |
+| Gestor de historial | CookSmart API | CRUD de historial |
+| Adaptador de API | Routes | Solicitudes HTTP/REST |
+| Routes | Middlewares | Aplican autenticación/autorización cuando corresponde |
+| Middlewares | Controllers | Solicitud validada |
+| Controllers | Services | Delegan lógica de negocio |
+| Services | Repositories | Delegan acceso a datos |
+| Repositories | PostgreSQL | Ejecutan SQL mediante `pg` |
 
 ### 4.1 Walking Skeleton Trace
 
-El Walking Skeleton representa un recorrido funcional de extremo a extremo a través de los principales elementos arquitectónicos de CookSmart. Su propósito es demostrar cómo una solicitud del usuario atraviesa la interfaz web, la API, la lógica de negocio y la persistencia, manteniendo trazabilidad con los componentes identificados en este documento.
+El Walking Skeleton representa un recorrido funcional de extremo a extremo
+a través de los principales elementos arquitectónicos de CookSmart.
 
-Para el estado actual del proyecto se selecciona como flujo principal la **consulta del catálogo de recetas**.
+Para el estado actual del proyecto se selecciona como flujo principal la
+**consulta del catálogo de recetas**.
 
 #### Flujo E2E: Consulta del catálogo de recetas
 
@@ -311,28 +348,19 @@ Para el estado actual del proyecto se selecciona como flujo principal la **consu
            ▼
 ┌──────────────────────────────┐
 │       CookSmart Web          │
-│                              │
 │ Gestor de recetas            │
-│ renderRecetas()              │
-│ cargarRecetasPopulares()     │
 └──────────┬───────────────────┘
            │
-           │ utiliza catálogo
            ▼
 ┌──────────────────────────────┐
-│ Adaptador de catálogo        │
-│ recetas-loader.js            │
-│                              │
-│ _cargarRecetasDesdeAPI()     │
-│ _adaptarReceta()             │
+│ Adaptador de API             │
+│ recetas-loader.js / fetch    │
 └──────────┬───────────────────┘
            │
-           │ fetch
            │ GET /api/recetas
            ▼
 ┌──────────────────────────────┐
 │       CookSmart API          │
-│                              │
 │ Routes                       │
 │      ↓                       │
 │ Controllers                  │
@@ -346,31 +374,25 @@ Para el estado actual del proyecto se selecciona como flujo principal la **consu
            ▼
 ┌──────────────────────────────┐
 │         PostgreSQL           │
-│                              │
 │ Persistencia de recetas      │
 └──────────┬───────────────────┘
-           │
            │ resultado
            ▼
 ┌──────────────────────────────┐
 │       CookSmart API          │
-│ Respuesta HTTP               │
+│ Respuesta HTTP JSON          │
 └──────────┬───────────────────┘
            │
            ▼
 ┌──────────────────────────────┐
-│ Adaptador de catálogo        │
-│                              │
-│ adapta respuesta y actualiza  │
-│ window.RECETAS_DB             │
-│ emite recetasDBReady          │
+│ Adaptador de API             │
+│ Adapta respuesta             │
 └──────────┬───────────────────┘
            │
            ▼
 ┌──────────────────────────────┐
-│ Gestor de recetas            │
-│                              │
-│ renderRecetas()              │
+│       CookSmart Web          │
+│ Renderizado de recetas       │
 └──────────┬───────────────────┘
            │
            ▼
@@ -382,130 +404,115 @@ Para el estado actual del proyecto se selecciona como flujo principal la **consu
 
 #### Trazabilidad del recorrido
 
-| Paso | Elemento              | Evidencia en código                                                  | Relación                            |
-| ---- | --------------------- | -------------------------------------------------------------------- | ----------------------------------- |
-| 1    | Usuario               | Interfaz HTML de CookSmart                                           | Usuario → CookSmart Web             |
-| 2    | Gestor de recetas     | `index.html` — `renderRecetas()`, `cargarRecetasPopulares()`         | Gestor → catálogo                   |
-| 3    | Adaptador de catálogo | `recetas-loader.js` — `_cargarRecetasDesdeAPI()`, `_adaptarReceta()` | Adaptador → API                     |
-| 4    | Endpoint de recetas   | `src/routes/recetas.routes.js`                                       | Web → `GET /api/recetas`            |
-| 5    | Capa de negocio       | `src/controllers`, `src/services`                                    | Controllers → Services              |
-| 6    | Acceso a datos        | `src/repositories`                                                   | Services → Repositories             |
-| 7    | Persistencia          | `src/config/db.js`, PostgreSQL                                       | Repository → PostgreSQL             |
-| 8    | Respuesta             | `fetch()` en `recetas-loader.js`                                     | API → Adaptador                     |
-| 9    | Adaptación            | `_adaptarReceta()`                                                   | Respuesta API → `window.RECETAS_DB` |
-| 10   | Renderizado           | `renderRecetas()`                                                    | Catálogo → interfaz                 |
-| 11   | Resultado             | Interfaz web                                                         | CookSmart Web → Usuario             |
+| Paso | Elemento | Evidencia en código | Relación |
+|---|---|---|---|
+| 1 | Usuario | Interfaz HTML de CookSmart | Usuario → Web |
+| 2 | Gestor de recetas | Páginas y JS de recetas | Web → adaptador |
+| 3 | Adaptador de API | `recetas-loader.js` | Adaptador → API |
+| 4 | Endpoint | `src/routes/recetas.routes.js` | Web → `GET /api/recetas` |
+| 5 | Controller | `src/controllers` | Routes → Controllers |
+| 6 | Service | `src/services` | Controllers → Services |
+| 7 | Repository | `src/repositories` | Services → Repositories |
+| 8 | Persistencia | `src/config/db.js`, PostgreSQL | Repository → DB |
+| 9 | Respuesta | `fetch()` | API → Web |
+| 10 | Renderizado | JS de la interfaz | Datos → Usuario |
 
 #### Estado de verificación
 
-El recorrido anterior representa la arquitectura y las relaciones identificadas en el código actual. La API dispone de rutas, controladores, servicios, repositorios y conexión a PostgreSQL. Asimismo, `recetas-loader.js` implementa la consulta mediante `fetch` a la API y adapta la respuesta al formato utilizado por la interfaz.
+El recorrido representa el flujo arquitectónico actual: frontend → API →
+capas de negocio → repositorios → PostgreSQL y retorno mediante HTTP/JSON.
 
-Sin embargo, la adopción del nuevo recorrido no es todavía uniforme en todas las páginas. La auditoría identificó que únicamente `login.html`, `registro.html` y `vegetariano.html` cargan actualmente `recetas-loader.js`, mientras que otras páginas todavía contienen referencias al archivo eliminado `recetas-db.js`. Por esta razón, el Walking Skeleton se considera **arquitectónicamente trazable y parcialmente implementado**, pero no completamente integrado en todas las páginas del sistema.
-
-Esta situación se registra en la tabla de trazabilidad mediante los elementos T-07 y T-20 y se mantiene como deuda técnica conocida.
-
-#### Criterio de aceptación del Walking Skeleton
-
-Se considera que el Walking Skeleton está correctamente trazado cuando cada salto del recorrido puede relacionarse con:
-
-1. Un elemento del modelo C4.
-2. Un archivo o módulo real del repositorio.
-3. Una función, ruta, configuración o símbolo verificable.
-4. Una relación observable entre el origen y el destino.
-5. Un estado explícito de verificación o corrección.
-
-Con este criterio, el recorrido presentado mantiene trazabilidad desde el usuario hasta PostgreSQL y de regreso a la interfaz, identificando explícitamente las partes que todavía requieren completar la migración del catálogo.
+La persistencia del catálogo y de la información de usuario corresponde a
+PostgreSQL; no se utiliza Firebase como mecanismo de persistencia.
 
 ---
 
 ## 5. Tabla de trazado C4
 
-| ID | Nivel C4 | Elemento C4 | Responsabilidad | Archivo/módulo real | Clase/símbolo/configuración verificable | Relación verificada | Estado | Observación/corrección |
-|---|---|---|---|---|---|---|---|---|
-| T-01 | Nivel 1 (Contexto) | CookSmart (sistema) | Gestionar recetas e ingredientes del usuario | Repositorio completo | — | Usuario final → CookSmart | Verificado | — |
-| T-02 | Nivel 1 (Contexto) | Firebase Authentication | Autenticar usuarios | `firebase-sync.js`, `firebaseAuthMiddleware.js` | `firebase.auth()`, `verifyIdToken()` | CookSmart → Firebase Authentication | Verificado | — |
-| T-03 | Nivel 1 (Contexto) | Firebase Realtime Database | Persistir favoritos | `firebase-sync.js` | `fbDB.ref('usuarios/{uid}/favoritos')` | CookSmart → Firebase Realtime Database | Verificado | — |
-| T-04 | Nivel 2 (Contenedor) | CookSmart Web | Interfaz y lógica de cliente | Archivos `.html`, `.css`, `.js` de la raíz | — | Usuario → CookSmart Web | Verificado | — |
-| T-05 | Nivel 2 (Contenedor) | CookSmart API | Exponer recetas/catálogos/usuarios vía HTTP | `Docker/Postgre/backend/src/server.js` | `app.listen(...)`, rutas `/api/*` | CookSmart Web → CookSmart API | Verificado | Contenedor agregado en esta auditoría; no existía en la versión anterior del documento |
-| T-06 | Nivel 2 (Contenedor) | PostgreSQL | Persistencia relacional | `Docker/Postgre/init/01_schema.sql`, `docker-compose.yml` | Tablas `usuario`, `receta`, `favorito`, etc. | CookSmart API → PostgreSQL | Verificado | Contenedor agregado en esta auditoría |
-| T-07 | Nivel 2 (Contenedor) | Catálogo de recetas — `RECETAS_DB` en `recetas-db.js` | Contener el catálogo estático de recetas | `recetas-db.js` | `const RECETAS_DB = [...]` | CookSmart Web → RECETAS_DB | **Eliminado** | Archivo borrado en el commit `f3d3931` (28 ago 2026); ya no existe en el repositorio. Se documentaba como vigente en la versión anterior de este C4; se retira del modelo |
-| T-08 | Nivel 3 (Componente) | Adaptador de catálogo | Reemplazar a `RECETAS_DB` consumiendo la API | `recetas-loader.js` | `_cargarRecetasDesdeAPI()`, evento `recetasDBReady` | Adaptador → CookSmart API | Verificado | Componente nuevo; corrige/reemplaza a T-07 |
-| T-09 | Nivel 3 (Componente) | Gestor de recetas | Renderizar y recomendar recetas | `index.html` | `renderRecetas()`, `cargarRecetasPopulares()` | Gestor de recetas → Adaptador de catálogo | Verificado | — |
-| T-10 | Nivel 3 (Componente) | Gestor de filtros | Aplicar restricciones/preferencias | `index.html`, `recetas.html` | `filtrarPorRestricciones()`, `aplicarFiltros()` | Gestor de filtros → Adaptador de catálogo | Verificado | — |
-| T-11 | Nivel 3 (Componente) | Gestor de favoritos | Agregar/eliminar favoritos | `index.html`, `recetas.html` | `toggleFav()`, `updateNavBadge()` | Gestor de favoritos → Persistencia local | Verificado | — |
-| T-12 | Nivel 3 (Componente) | Persistencia local | Guardar preferencias/favoritos en el navegador | HTML/JS varios | `localStorage.getItem/setItem` | Persistencia local → Sincronizador Firebase | Verificado | — |
-| T-13 | Nivel 3 (Componente) | Sincronizador Firebase | Sincronizar favoritos con Firebase | `firebase-sync.js` | `syncFavoritosToFirebase()`, `loadFavoritosFromFirebase()` | Sincronizador → Firebase Realtime Database | Verificado | — |
-| T-14 | Nivel 3 (Componente) | Gestor de interfaz | Mensajes y modales de la UI | `index.html` | `mostrarToast()`, `abrirModal()`, `cerrarModal()`, `scrollRecom()` | — | Verificado | — |
-| T-15 | Nivel 3 (Componente) | Integración TheMealDB | Consultar API pública externa | `themealdb.js` | `buscarTheMealDB()` | Ninguna (no se carga desde ninguna página) | Verificado (como inactivo) | No es un componente activo; ninguna página lo carga |
-| T-16 | Nivel 3 (Componente) | Capa de rutas (API) | Definir endpoints HTTP | `src/routes/*.js` | `router.get/post/delete(...)` | Rutas → Middlewares | Verificado | Componente nuevo del contenedor CookSmart API |
-| T-17 | Nivel 3 (Componente) | Middleware JWT propio | Autenticar con JWT emitido por la API | `src/middlewares/authMiddleware.js` | `requireAuth`, `soloElMismoUsuario` | Middleware → Controllers | Verificado | Coexiste con T-18 (dos mecanismos de auth) |
-| T-18 | Nivel 3 (Componente) | Middleware de verificación Firebase | Validar ID token de Firebase y aprovisionar usuario en Postgres | `src/middlewares/firebaseAuthMiddleware.js` | `requireFirebaseAuth`, `verifyIdToken`, `usuariosRepo.createFromFirebase` | Middleware → Firebase Authentication; Middleware → PostgreSQL | Verificado | Patrón de aprovisionamiento just-in-time |
-| T-19 | Nivel 3 (Componente) | Controllers/Services/Repositories | Lógica de negocio y acceso a datos de la API | `src/controllers`, `src/services`, `src/repositories` | p. ej. `recetas.controller.js` → `recetas.service.js` → `recetas.repository.js` | Controllers → Services → Repositories → PostgreSQL | Verificado | — |
-| T-20 | Nivel 3 (Componente) | Páginas no migradas al nuevo catálogo | Consultar recetas | `index.html`, `recetas.html`, `desayunos.html`, `almuerzos.html`, `cenas.html`, `rapido.html`, `mi-nevera.html`, `favoritos.html`, `perfil.html`, `receta-detalle.html` | `<script src="recetas-db.js">` | Página → archivo inexistente | **Corregido (documentado, código pendiente)** | El script referenciado ya no existe en el repositorio (ver T-07). Queda como hallazgo de la auditoría; se recomienda actualizar el `<script src>` a `recetas-loader.js` en estas 10 páginas |
+| ID | Nivel C4 | Elemento C4 | Responsabilidad | Archivo/módulo real | Relación verificada | Estado |
+|---|---|---|---|---|---|---|
+| T-01 | Nivel 1 | CookSmart | Gestionar recetas e ingredientes del usuario | Repositorio completo | Usuario → CookSmart | Verificado |
+| T-02 | Nivel 2 | CookSmart Web | Interfaz y lógica cliente | HTML/JS/CSS de raíz | Usuario → Web | Verificado |
+| T-03 | Nivel 2 | CookSmart API | Exponer operaciones HTTP | `backend/src/server.js` | Web → API | Verificado |
+| T-04 | Nivel 2 | PostgreSQL | Persistencia relacional | `01_schema.sql`, `docker-compose.yml` | API → DB | Verificado |
+| T-05 | Nivel 3 | Gestor autenticación | Registro/login/sesión | `auth-sync.js` | Web → Auth API | Verificado |
+| T-06 | Nivel 3 | Adaptador API | Consumir API | `recetas-loader.js` / `fetch` | Web → Routes | Verificado |
+| T-07 | Nivel 3 | Gestor recetas | Mostrar recetas | HTML/JS | Web → Adaptador | Verificado |
+| T-08 | Nivel 3 | Gestor filtros | Filtrar recetas | HTML/JS | UI → datos recetas | Verificado |
+| T-09 | Nivel 3 | Gestor favoritos | CRUD favoritos | HTML/JS + API | Web → API | Verificado |
+| T-10 | Nivel 3 | Gestor inventario | CRUD inventario | HTML/JS + API | Web → API | Verificado |
+| T-11 | Nivel 3 | Gestor historial | CRUD historial | HTML/JS + API | Web → API | Verificado |
+| T-12 | Nivel 3 | Routes | Definir endpoints | `src/routes/*.js` | Routes → Controllers | Verificado |
+| T-13 | Nivel 3 | Middleware JWT | Autenticar/autorización | `src/middlewares/authMiddleware.js` | Middleware → Controllers | Verificado |
+| T-14 | Nivel 3 | Controllers | Adaptar HTTP a negocio | `src/controllers/*.js` | Controllers → Services | Verificado |
+| T-15 | Nivel 3 | Services | Lógica de negocio | `src/services/*.js` | Services → Repositories | Verificado |
+| T-16 | Nivel 3 | Repositories | Persistencia | `src/repositories/*.js` | Repositories → PostgreSQL | Verificado |
+| T-17 | Nivel 3 | DB config | Pool PostgreSQL | `src/config/db.js` | API → PostgreSQL | Verificado |
+| T-18 | Nivel 3 | TheMealDB | Integración externa preparada | `themealdb.js` | Ninguna activa | No activo |
 
 ---
 
 ## 6. Validación de la arquitectura
 
-La identificación de los componentes se realizó revisando el código existente
-del repositorio en el commit `846dacb`. Se verificó que:
+La identificación de los componentes se realizó contrastando la estructura
+actual del frontend y del backend.
 
-1. `recetas-db.js` **no existe** en el repositorio actual (fue eliminado).
-2. `recetas-loader.js` reemplaza su función, consumiendo `GET /api/recetas`.
-3. Solo `login.html`, `registro.html` y `vegetariano.html` cargan
-   `recetas-loader.js`; las demás páginas referencian el script eliminado.
-4. `index.html` implementa funciones de renderizado, filtrado y favoritos que
-   siguen operando sobre `window.RECETAS_DB`, sin que importe si esa variable
-   la llenó el script viejo o el nuevo — pero hoy solo el nuevo existe.
-5. `firebase-sync.js` sincroniza los favoritos con Firebase Realtime Database.
-6. Existe una API propia completa (`Docker/Postgre/backend`) con rutas,
-   controladores, servicios y repositorios, respaldada por PostgreSQL.
-7. La API implementa dos mecanismos de autenticación (JWT propio y
-   verificación de token de Firebase) que conviven en rutas distintas.
+Se verifica que:
+
+1. CookSmart Web continúa siendo HTML, CSS y JavaScript.
+2. Existe una API propia Node.js/Express.
+3. La API se organiza en rutas, middlewares, controllers, services y repositories.
+4. PostgreSQL constituye la persistencia principal.
+5. Los repositorios ejecutan SQL mediante `pg`.
+6. La autenticación actual utiliza JWT propio.
+7. Las contraseñas son gestionadas mediante `bcryptjs`.
+8. El frontend no accede directamente a PostgreSQL.
+9. Firebase no forma parte de los componentes activos del sistema actual.
+10. Integraciones no utilizadas, como TheMealDB, no se consideran componentes
+    activos del `as-is`.
 
 ## 7. Limitaciones
 
 Esta vista no representa como componentes activos funcionalidades que no se
-pudieron comprobar en el código revisado. `themealdb.js` no se incluye como
-componente activo porque ninguna página lo carga (T-15).
+pueden comprobar como parte del flujo actual del sistema.
 
-## 8. Registro de correcciones y eliminaciones (auditoría Módulo 3)
+`themealdb.js` puede permanecer en el repositorio como integración preparada,
+pero no se considera un componente activo si ninguna página o flujo lo utiliza.
 
-Este documento reemplaza además al archivo `08-validacion-c4-codigo.md`
-existente en el repositorio, cuyo contenido de validación por componente se
-incorpora aquí. **Ese archivo debe eliminarse del repositorio (o dejarse
-fuera de la entrega en AVATA)**, ya que el enunciado exige exactamente tres
-artefactos (`05-c4-contexto.md`, `06-c4-contenedores.md`,
-`07-c4-componentes.md`).
+Redis, el motor de IA, un API Gateway y microservicios independientes se
+mantienen fuera del modelo actual porque pertenecen a arquitectura futura
+o a la propuesta inicial.
 
-Correcciones realizadas frente al modelo documentado el 28 de agosto de 2026
-(mañana):
+## 8. Registro de correcciones y eliminaciones
 
-1. **Eliminado del modelo:** el contenedor/componente "Catálogo de recetas —
-   `RECETAS_DB` en `recetas-db.js`" (T-07). Evidencia: el archivo fue borrado
-   en el commit `f3d3931` ("agregada base PostgreSQL en docker, modificación
-   en implementación existente de Firebase Auth y generación de seed").
-2. **Agregado al modelo:** el contenedor CookSmart API y sus componentes
-   internos (rutas, middlewares, controllers/services/repositories), y el
-   contenedor PostgreSQL (T-05, T-06, T-08, T-16 a T-19). Evidencia: commits
-   `28a5237`, `079ffab`, `18436a3`, `45d29b4`, `a8ebbdd`, todos del 28 de
-   agosto de 2026 en horario posterior a la primera versión de este documento.
-3. **Documentado como hallazgo, sin corregir en el código:** 10 de 13 páginas
-   HTML referencian un script (`recetas-db.js`) que ya no existe (T-20). No se
-   modificó el código como parte de esta auditoría documental; se deja
-   registrado para que el equipo decida si lo corrige antes de la entrega o
-   lo asume como deuda técnica conocida.
+Esta versión actualiza el modelo C4 anterior para reflejar la migración completa
+hacia PostgreSQL.
+
+Correcciones principales:
+
+1. **Eliminado del modelo activo:** Firebase Authentication.
+2. **Eliminado del modelo activo:** Firebase Realtime Database.
+3. **Eliminado del modelo activo:** sincronizador Firebase.
+4. **Eliminada la dependencia de Firebase para favoritos.**
+5. **Consolidado:** JWT propio como mecanismo de autenticación.
+6. **Consolidado:** PostgreSQL como persistencia principal.
+7. **Complementado:** componentes internos de la API:
+   routes → middlewares → controllers → services → repositories.
+8. **Complementado:** trazabilidad de inventario, favoritos e historial hacia
+   la API y PostgreSQL.
+9. **Mantenido:** `localStorage` únicamente como mecanismo auxiliar de estado
+   del cliente cuando corresponda; no se considera la base de datos del sistema.
+10. **Mantenido como no activo:** integraciones externas sin flujo ejecutable.
 
 ## 9. Audiencia y propósito
 
 | Audiencia | Propósito |
 |---|---|
 | Equipo de desarrollo | Comprender la organización interna de CookSmart Web y CookSmart API |
-| Docente | Verificar la correspondencia entre componentes y código, incluyendo lo corregido/eliminado |
-| Integrantes del proyecto | Identificar responsabilidades y dependencias, y el estado real de la migración al backend |
-| Futuros desarrolladores | Terminar la migración pendiente (T-20) y evolucionar el sistema |
+| Docente / evaluador | Verificar la correspondencia entre arquitectura y código |
+| Integrantes del proyecto | Identificar responsabilidades y dependencias |
+| Futuros desarrolladores | Comprender el flujo actual y los límites de cada componente |
 
-Esta vista permite relacionar directamente cada componente arquitectónico con
-las funciones y archivos que implementan su responsabilidad, y deja
-constancia auditable de qué cambió entre la primera versión del modelo y el
-estado real del código.
+La vista de componentes permite pasar del nivel de contenedores al detalle
+interno de la aplicación y establece la trazabilidad desde la interfaz,
+pasando por la API y las capas de negocio, hasta PostgreSQL.
