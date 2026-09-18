@@ -1,0 +1,45 @@
+name: Seguridad CookSmart
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  # Corre también una vez por semana para pescar vulnerabilidades nuevas
+  # aunque nadie haga push (paquetes que se vuelven vulnerables con el tiempo)
+  schedule:
+    - cron: "0 9 * * 1"
+
+jobs:
+  npm-audit:
+    name: Auditar dependencias del backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: Docker/Postgre/backend
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Docker/Postgre/backend/package-lock.json
+
+      - name: Instalar dependencias exactas del lockfile
+        run: npm ci
+
+      - name: Ejecutar npm audit
+        # Falla el job si hay vulnerabilidades de severidad alta o crítica
+        run: npm audit --audit-level=high
+
+      - name: Generar reporte legible si algo falla
+        if: failure()
+        # No falla el job de nuevo, solo imprime el detalle en el log
+        run: npm audit || true
