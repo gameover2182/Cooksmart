@@ -1,0 +1,85 @@
+name: Docker Build CookSmart
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-build:
+    name: Compilar imágenes Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compilar imagen del backend
+        # Solo build, sin push a ningún registry
+        uses: docker/build-push-action@v5
+        with:
+          context: Docker/Postgre/backend
+          push: false
+          tags: cooksmart-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Crear .env temporal para validar el compose
+        # docker-compose.yml usa env_file: .env, sin este archivo no arranca
+        working-directory: Docker/Postgre
+        run: |
+          echo "POSTGRES_USER=admin" > .env
+          echo "POSTGRES_PASSWORD=Cooksmart2024" >> .env
+          echo "POSTGRES_DB=cooksmart" >> .env
+
+      - name: Validar sintaxis de docker-compose.yml
+        # Verifica que el archivo compone bien, sin levantar contenedores
+        working-directory: Docker/Postgre
+        run: docker compose config
+
+      - name: Levantar el stack completo con docker compose
+        working-directory: Docker/Postgre
+        run: docker compose up -d --build
+
+      - name: Esperar a que la base quede healthy
+        working-directory: Docker/Postgre
+        run: |
+          for i in $(seq 1 15); do
+            estado=$(docker inspect --format='{{.State.Health.Status}}' cooksmart)
+            if [ "$estado" = "healthy" ]; then
+              echo "Postgres healthy"
+              exit 0
+            fi
+            echo "Esperando Postgres... intento $i ($estado)"
+            sleep 3
+          done
+          echo "Postgres nunca quedo healthy"
+          docker compose logs db
+          exit 1
+
+      - name: Verificar que la API responde dentro del stack
+        working-directory: Docker/Postgre
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/health; then
+              echo "API lista dentro de Docker"
+              exit 0
+            fi
+            echo "Esperando API... intento $i"
+            sleep 2
+          done
+          echo "La API nunca respondio dentro del contenedor"
+          docker compose logs api
+          exit 1
+
+      - name: Apagar el stack
+        if: always()
+        # Limpia contenedores y volúmenes aunque el job haya fallado
+        working-directory: Docker/Postgre
+        run: docker compose down -v
