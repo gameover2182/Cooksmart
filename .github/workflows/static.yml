@@ -57,3 +57,92 @@ jobs:
 
       - name: CI completada
         run: echo "Todas las validaciones de CookSmart fueron superadas."
+
+  api-postgres:
+    name: Probar API + PostgreSQL
+    runs-on: ubuntu-latest
+
+    # Levanta un contenedor real de Postgres para todo el job
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: Cooksmart2024
+          POSTGRES_DB: cooksmart
+        ports:
+          - 5432:5432
+        # Espera a que Postgres acepte conexiones antes de seguir
+        options: >-
+          --health-cmd "pg_isready -U admin -d cooksmart"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: Docker/Postgre/backend
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Docker/Postgre/backend/package-lock.json
+
+      - name: Instalar cliente de PostgreSQL
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Cargar schema en la base de datos
+        # Aplica el schema contra el Postgres que levantó el job
+        run: PGPASSWORD=Cooksmart2024 psql -h localhost -U admin -d cooksmart -f ../init/01_schema.sql
+
+      - name: Cargar datos semilla
+        # Inserta los datos de prueba usados por los endpoints
+        run: PGPASSWORD=Cooksmart2024 psql -h localhost -U admin -d cooksmart -f ../init/02_seed.sql
+
+      - name: Instalar dependencias del backend
+        run: npm ci
+
+      - name: Levantar la API en segundo plano
+        env:
+          DATABASE_URL: postgresql://admin:Cooksmart2024@localhost:5432/cooksmart
+          PORT: 3000
+          JWT_SECRET: ci-test-secret
+        # Corre el servidor sin bloquear el resto del job
+        run: nohup node src/server.js > server.log 2>&1 &
+
+      - name: Esperar a que la API responda
+        # Reintenta /health hasta que la API y la DB estén listas
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/health; then
+              echo "API lista"
+              exit 0
+            fi
+            echo "Esperando API... intento $i"
+            sleep 2
+          done
+          echo "La API nunca respondió"
+          cat server.log
+          exit 1
+
+      - name: Verificar /health reporta DB conectada
+        # Falla el job si Postgres no está alcanzable desde la API
+        run: curl -sf http://localhost:3000/health | grep -q '"db":"connected"'
+
+      - name: Probar endpoints de catálogos
+        # Golpea rutas reales que dependen de datos en Postgres
+        run: |
+          curl -sf http://localhost:3000/api/categorias-receta > /dev/null
+          curl -sf http://localhost:3000/api/tipos-cocina > /dev/null
+          curl -sf http://localhost:3000/api/categorias-ingrediente > /dev/null
+          curl -sf http://localhost:3000/api/ingredientes > /dev/null
+
+      - name: Mostrar logs si algo falla
+        if: failure()
+        run: cat server.log || true
