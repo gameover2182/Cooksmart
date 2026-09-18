@@ -73,11 +73,19 @@ jobs:
           cat Docker/Postgre/backend/server.log
           exit 1
 
+      - name: Instalar k6
+        # Se instala el binario directo en el runner, en vez de la action Docker,
+        # para que k6 comparta el mismo "localhost" donde ya escucha la API
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6ACFD8
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
       - name: Correr k6 contra /api/recetas
         # diagnostico.js no necesita login, por eso se usa en CI en vez de load-test.js
-        uses: grafana/k6-action@v0.3.1
-        with:
-          filename: k6-demo/diagnostico.js
+        run: k6 run k6-demo/diagnostico.js
 
       - name: Mostrar logs de la API si algo falla
         if: failure()
