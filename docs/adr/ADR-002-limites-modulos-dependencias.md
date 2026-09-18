@@ -427,3 +427,22 @@ La regla principal es:
 > **La persistencia se concentra en repositories y el frontend nunca accede directamente a PostgreSQL.**
 
 Esta decisión mantiene explícito el límite de comunicación **API ↔ DB**, que constituye una prioridad para el equipo y un punto importante para el análisis de rendimiento.
+
+---
+
+# 13. Veredicto del mini-comité 1
+
+**Estado:** Pendiente de sesión de mini-comité.
+
+Esta sección se completa después de la defensa de la semana 8, en la que otro equipo actúa como comité técnico (CTO, seguridad o finanzas) y evalúa los límites de módulos y las reglas de dependencia definidas en este ADR.
+
+| Campo | Valor |
+|---|---|
+| Equipo evaluador (comité) | Por registrar |
+| Fecha de la sesión | Por registrar |
+| Rol representado por el comité | Por registrar (CTO / Seguridad / Finanzas) |
+| **Veredicto** | Por registrar: **Confirmada** / **Ajustada** / **Reconsiderada** |
+| Observaciones del comité | Por registrar |
+| Cambios aplicados tras el veredicto (si aplica) | Por registrar |
+
+> Este ADR permanece con estado **Aceptado** a nivel de equipo mientras no se registre el veredicto del comité. El veredicto no debe anticiparse ni completarse antes de que la sesión de mini-comité ocurra realmente, para no invalidar la evidencia de revisión por pares que exige la rúbrica.
