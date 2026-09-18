@@ -1,68 +1,448 @@
-# ADR 2: Límites de módulos y reglas de dependencia
+# ADR-002 - Límites de módulos y dependencias
 
-**Estado:** Propuesto — pendiente de veredicto del mini-comité (Semana 8)
+- **Estado:** Aceptado
+- **Fecha:** 2026-09-17
+- **Decisión:** Centralizar el acceso a PostgreSQL en repositories y mantener dependencias dirigidas por capas
+- **Sistema:** CookSmart
 
-## Contexto
+---
 
-Una vez adoptado el monolito modular por capas (`ADR-001-estilo-arquitectonico.md`), es necesario definir reglas concretas y verificables de qué módulo puede depender de cuál, para que la separación de capas no quede solo como intención documental. Sin estas reglas explícitas, cualquier integrante puede volver a mezclar responsabilidades — por ejemplo, llamando a Firebase directamente desde una página HTML — sin que eso se detecte como una desviación de la arquitectura.
+# 1. Contexto
 
-## Decisión
+La API Node.js/Express es el punto de comunicación entre el frontend y PostgreSQL.
 
-Se establecen las siguientes reglas de dependencia, obligatorias para todo código nuevo y objetivo de refactor para el código existente:
+El equipo definió como prioridad arquitectónica que la comunicación con la base de datos tenga un límite explícito:
 
-| # | Regla |
+```text
+CookSmart API
+      │
+      ▼
+PostgreSQL
+```
+
+La API se organiza en:
+
+```text
+Routes
+Controllers
+Services
+Repositories
+DB Config
+Middleware
+```
+
+El frontend queda fuera de la frontera de persistencia:
+
+```text
+Frontend → API → PostgreSQL
+
+Frontend -X-> PostgreSQL
+```
+
+---
+
+# 2. Problema
+
+Sin límites explícitos podrían aparecer dependencias como:
+
+```text
+Controller → SQL
+Service → PostgreSQL
+Frontend → PostgreSQL
+Repository → Controller
+```
+
+Esto aumentaría el acoplamiento y dificultaría:
+
+- cambiar consultas;
+- controlar la persistencia;
+- probar cada capa;
+- analizar rendimiento;
+- mantener la API.
+
+Por esta razón, la comunicación **API → PostgreSQL** se define como un límite arquitectónico central.
+
+---
+
+# 3. Decisión
+
+Las dependencias permitidas siguen esta dirección:
+
+```text
+┌──────────────┐
+│    Routes    │
+└──────┬───────┘
+       ▼
+┌──────────────┐
+│ Controllers  │
+└──────┬───────┘
+       ▼
+┌──────────────┐
+│   Services   │
+└──────┬───────┘
+       ▼
+┌──────────────┐
+│ Repositories │
+└──────┬───────┘
+       │ SQL / pg
+       ▼
+┌──────────────┐
+│  PostgreSQL  │
+└──────────────┘
+```
+
+La regla fundamental es:
+
+> **Solo la capa de repositories accede directamente a la persistencia.**
+
+---
+
+# 4. Límites de los módulos
+
+## 4.1 Routes
+
+**Responsabilidad**
+
+Definir los endpoints HTTP.
+
+**Puede depender de:**
+
+- Controllers.
+- Middleware.
+
+**No debe acceder directamente a:**
+
+- PostgreSQL.
+- Consultas SQL.
+
+---
+
+## 4.2 Controllers
+
+**Responsabilidad**
+
+Adaptar solicitudes HTTP a operaciones de negocio y construir respuestas HTTP.
+
+**Puede depender de:**
+
+- Services.
+
+**No debe acceder directamente a:**
+
+- PostgreSQL.
+- SQL.
+
+---
+
+## 4.3 Services
+
+**Responsabilidad**
+
+Implementar y coordinar la lógica de negocio.
+
+**Puede depender de:**
+
+- Repositories.
+
+**No debe acceder directamente a:**
+
+- SQL de persistencia.
+
+---
+
+## 4.4 Repositories
+
+**Responsabilidad**
+
+Encapsular las operaciones de persistencia.
+
+**Puede depender de:**
+
+- Configuración de base de datos.
+- Pool PostgreSQL.
+- Driver `pg`.
+
+**No debe depender de:**
+
+- Routes.
+- Controllers.
+- Presentación.
+
+---
+
+## 4.5 DB Config
+
+**Responsabilidad**
+
+Crear y administrar el pool de conexiones PostgreSQL.
+
+**Puede depender de:**
+
+```text
+pg
+Configuración del entorno
+```
+
+**No debe depender de:**
+
+- HTTP.
+- Controllers.
+- lógica de presentación.
+
+---
+
+## 4.6 Middleware JWT
+
+**Responsabilidad**
+
+Validar la identidad y proteger las operaciones que requieren autenticación.
+
+El middleware se ejecuta antes de las operaciones protegidas.
+
+---
+
+# 5. Módulos funcionales
+
+La API expone operaciones agrupadas alrededor de:
+
+| Módulo | Operaciones representativas |
 |---|---|
-| 1 | Ningún archivo `.html` ni script embebido en una página puede importar o llamar directamente a `firebase-sync.js`. Debe pasar por una función expuesta en la capa de dominio (`recetas-db.js` o `script.js`). |
-| 2 | `firebase-sync.js` es el **único** módulo autorizado para leer o escribir en Firebase Realtime Database y para invocar Firebase Authentication. |
-| 3 | `themealdb.js` es el único módulo autorizado para llamar a la API externa de TheMealDB. No puede ser invocado desde la capa de presentación. |
-| 4 | La capa de dominio (`script.js`, `recetas-db.js`) no manipula el DOM directamente; esa responsabilidad es exclusiva de la capa de presentación. |
-| 5 | Ningún módulo de acceso a datos (`firebase-sync.js`, `themealdb.js`) puede depender de la capa de dominio ni de la de presentación — la dependencia es de arriba hacia abajo únicamente. |
+| **Auth** | Registro, login y consulta de sesión |
+| **Perfil** | Consulta de información del usuario |
+| **Recetas** | Listado y detalle de recetas |
+| **Categorías** | Consulta de categorías de recetas |
+| **Tipos de cocina** | Consulta de tipos de cocina |
+| **Ingredientes** | Consulta de ingredientes |
+| **Favoritos** | Consulta, creación y eliminación |
+| **Inventario** | Consulta, creación y eliminación |
+| **Historial** | Consulta y registro de historial |
 
-## Implicaciones de seguridad
-## Módulos de dominio dentro de la capa de dominio
+---
 
-La capa de Dominio no es un bloque único: se organiza en submódulos funcionales, cada uno responsable de una parte del comportamiento de CookSmart.
+# 6. Dependencias permitidas
 
-| Submódulo de dominio | Responsabilidad | Implementado en |
+| Módulo origen | Dependencia permitida | Motivo |
 |---|---|---|
-| Recetas | Catálogo y presentación de recetas | `recetas-db.js` |
-| Filtros | Filtrado por categoría (rápido, vegetariano, desayunos, almuerzos, cenas) | `script.js` |
-| Favoritos | Guardar y consultar recetas marcadas por el usuario | `script.js` + `firebase-sync.js` (persistencia) |
-| Mi Nevera | Registro y eliminación de ingredientes disponibles | `script.js` |
-| Autenticación | Registro, inicio y cierre de sesión | `firebase-sync.js` (delegando en Firebase Auth) |
-| Persistencia | Sincronización de datos del usuario con Firebase Realtime Database | `firebase-sync.js` |
+| Routes | Controllers | Entregar solicitudes HTTP a la capa de aplicación |
+| Routes | Middleware | Proteger endpoints |
+| Controllers | Services | Ejecutar operaciones de negocio |
+| Services | Repositories | Solicitar operaciones de persistencia |
+| Repositories | DB Config | Obtener conexiones del pool |
+| DB Config | PostgreSQL | Mantener la comunicación con la base de datos |
+| Middleware | Servicios de autenticación o configuración correspondiente | Validar acceso protegido |
 
-Estos submódulos siguen las mismas reglas de dependencia definidas arriba: ninguno accede a Firebase o a la API externa directamente, todos pasan por `firebase-sync.js` o `themealdb.js`.
-Concentrar el acceso a Firebase en un único módulo (`firebase-sync.js`) tiene un impacto directo sobre el driver de Seguridad (prioridad 1) y sobre los riesgos ya documentados:
+La dirección general es:
 
-- **Mitiga R-03 parcialmente:** aunque la administración de las reglas de seguridad de Firebase sigue dependiendo de una sola cuenta, tener un único punto de código que las consume facilita que cualquier integrante audite o modifique ese acceso sin tener que rastrear llamadas a Firebase dispersas por todo el proyecto.
-- **Reduce la superficie de error:** si las credenciales o la configuración de Firebase cambian, solo un archivo necesita actualizarse, en lugar de buscar referencias repetidas en múltiples páginas HTML.
-- **Facilita la trazabilidad de auditoría:** ante un incidente de seguridad, revisar `firebase-sync.js` permite reconstruir qué operaciones de lectura/escritura pudo haber ejecutado el cliente, sin depender de revisar todo el código fuente.
-- **No resuelve por sí sola R-04** (dependencia total de Firebase como proveedor externo): esa es una decisión de disponibilidad, no de organización del código, y queda fuera del alcance de este ADR.
+```text
+Routes
+   ↓
+Controllers
+   ↓
+Services
+   ↓
+Repositories
+   ↓
+DB Config
+   ↓
+PostgreSQL
+```
 
-## Alternativas consideradas
+---
 
-| Alternativa | Por qué se descartó |
+# 7. Dependencias que deben evitarse
+
+```text
+Frontend -X-> PostgreSQL
+
+Routes -X-> SQL directo
+
+Controllers -X-> PostgreSQL
+
+Services -X-> SQL directo
+
+Repositories -X-> Controllers
+
+Repositories -X-> Routes
+
+DB Config -X-> HTTP / Presentación
+```
+
+Estas restricciones mantienen la frontera de persistencia en repositories y evitan dependencias circulares.
+
+---
+
+# 8. Límite API → PostgreSQL
+
+```text
+                    COOKSMART API
+┌────────────────────────────────────────────┐
+│                                            │
+│ Routes                                     │
+│    ↓                                       │
+│ Controllers                                │
+│    ↓                                       │
+│ Services                                   │
+│    ↓                                       │
+│ Repositories                               │
+│                                            │
+└────────────────────┬───────────────────────┘
+                     │
+                     │ SQL / pool
+                     ▼
+            ┌──────────────────┐
+            │    PostgreSQL    │
+            └──────────────────┘
+```
+
+Este límite es importante para el análisis de rendimiento porque permite seguir la ruta:
+
+```text
+Solicitud HTTP
+   ↓
+Route
+   ↓
+Controller
+   ↓
+Service
+   ↓
+Repository
+   ↓
+Pool / SQL
+   ↓
+PostgreSQL
+```
+
+---
+
+# 9. Relación con k6
+
+Los resultados actuales de k6 hacen útil conservar esta separación para investigar dónde se produce la latencia.
+
+## Diagnóstico
+
+| Métrica | Resultado |
+|---|---:|
+| VUs | **50** |
+| Solicitudes | **6.349** |
+| Errores | **0,00%** |
+| P95 HTTP | **232,94 ms** |
+| P95 recetas | **234 ms** |
+
+## Recorrido completo
+
+| Métrica | Resultado |
+|---|---:|
+| VUs | **50** |
+| Iteraciones | **50** |
+| Solicitudes | **500** |
+| Errores | **0,00%** |
+| Checks | **100%** |
+| P95 global | **9,72 s** |
+| P95 login | **17,93 s** |
+| P95 inventario | **300,75 ms** |
+
+La diferencia entre ambos experimentos demuestra que el comportamiento de la API depende del flujo ejecutado y no únicamente de un endpoint aislado.
+
+> Los resultados no identifican por sí solos a PostgreSQL como causa única. El límite por capas permite investigar cada tramo de la solicitud.
+
+---
+
+# 10. Trazabilidad con C4
+
+Los límites definidos aquí se reflejan en el modelo C4 de componentes:
+
+```text
+Frontend
+   │
+   ▼
+API / Routes
+   │
+   ▼
+Controllers
+   │
+   ▼
+Services
+   │
+   ▼
+Repositories
+   │
+   ▼
+DB Config
+   │
+   ▼
+PostgreSQL
+```
+
+El límite más relevante es:
+
+```text
+CookSmart API
+      │
+      │ persistencia
+      ▼
+PostgreSQL
+```
+
+---
+
+# 11. Consecuencias
+
+## Positivas
+
+- Centraliza la persistencia.
+- Evita que el frontend dependa de la base de datos.
+- Reduce el acoplamiento entre negocio y SQL.
+- Facilita pruebas unitarias por capa.
+- Permite analizar el rendimiento por tramo.
+- Hace explícita la dependencia API → PostgreSQL.
+
+## Costos
+
+- Añade una capa de abstracción entre servicios y base de datos.
+- Requiere mantener los repositories.
+- Una operación puede atravesar varias capas antes de llegar a PostgreSQL.
+
+---
+
+# 12. Resumen de la decisión
+
+La arquitectura actual mantiene una dirección de dependencias:
+
+```text
+Routes
+   ↓
+Controllers
+   ↓
+Services
+   ↓
+Repositories
+   ↓
+DB Config
+   ↓
+PostgreSQL
+```
+
+La regla principal es:
+
+> **La persistencia se concentra en repositories y el frontend nunca accede directamente a PostgreSQL.**
+
+Esta decisión mantiene explícito el límite de comunicación **API ↔ DB**, que constituye una prioridad para el equipo y un punto importante para el análisis de rendimiento.
+
+---
+
+# 13. Veredicto del mini-comité 1
+
+**Estado:** Pendiente de sesión de mini-comité.
+
+Esta sección se completa después de la defensa de la semana 8, en la que otro equipo actúa como comité técnico (CTO, seguridad o finanzas) y evalúa los límites de módulos y las reglas de dependencia definidas en este ADR.
+
+| Campo | Valor |
 |---|---|
-| Permitir llamadas directas a Firebase desde cualquier capa (estado actual) | Es la causa raíz del problema que este ADR resuelve: sin un punto único, no hay forma de auditar ni controlar el acceso a datos. |
-| Definir las reglas de dependencia mediante una herramienta automática de *fitness functions* (lint de arquitectura) | Valioso, pero corresponde al Módulo 6 según el roadmap del curso (mencionado como nivel avanzado del M4); en esta etapa las reglas se documentan y se verifican manualmente en revisión de PR. |
+| Equipo evaluador (comité) | Por registrar |
+| Fecha de la sesión | Por registrar |
+| Rol representado por el comité | Por registrar (CTO / Seguridad / Finanzas) |
+| **Veredicto** | Por registrar: **Confirmada** / **Ajustada** / **Reconsiderada** |
+| Observaciones del comité | Por registrar |
+| Cambios aplicados tras el veredicto (si aplica) | Por registrar |
 
-## Consecuencias
-
-**Se gana:** un contrato claro y verificable de qué módulo puede llamar a cuál, y una mitigación parcial y documentada de R-03.
-
-**Se sacrifica:** verificación manual por ahora (no automatizada), lo que depende de la disciplina del equipo en revisión de PR hasta que exista una fitness function.
-
-**Queda pendiente:** automatizar la verificación de estas reglas como fitness function en el Módulo 6, tal como se sugiere en el nivel avanzado de este módulo.
-
-## Relacionado con
-
-- `ADR-001-estilo-arquitectonico.md`
-- Driver: Seguridad (prioridad 1) — `01-contexto-y-drivers.md`
-- Riesgos: R-03, R-04 — `01-contexto-y-drivers.md`
-
-## Veredicto del mini-comité (completar en Semana 8)
-
-- **Rol que evaluó:** _pendiente_
-- **Veredicto:** _pendiente — Confirmada / Ajustada / Reconsiderada_
-- **Observaciones del comité:** _pendiente_
+> Este ADR permanece con estado **Aceptado** a nivel de equipo mientras no se registre el veredicto del comité. El veredicto no debe anticiparse ni completarse antes de que la sesión de mini-comité ocurra realmente, para no invalidar la evidencia de revisión por pares que exige la rúbrica.
