@@ -245,3 +245,22 @@ PostgreSQL
 CookSmart se documenta actualmente como un **monolito modular por capas**, con PostgreSQL como persistencia y una API Node.js/Express como punto de comunicación entre el frontend y la base de datos.
 
 La comunicación **API → PostgreSQL** constituye un límite arquitectónico central y debe conservarse explícitamente en la evolución del sistema.
+
+---
+
+# 11. Veredicto del mini-comité 1
+
+**Estado:** Pendiente de sesión de mini-comité.
+
+Esta sección se completa después de la defensa de la semana 8, en la que otro equipo actúa como comité técnico (CTO, seguridad o finanzas) y evalúa esta decisión de estilo arquitectónico.
+
+| Campo | Valor |
+|---|---|
+| Equipo evaluador (comité) | Por registrar |
+| Fecha de la sesión | Por registrar |
+| Rol representado por el comité | Por registrar (CTO / Seguridad / Finanzas) |
+| **Veredicto** | Por registrar: **Confirmada** / **Ajustada** / **Reconsiderada** |
+| Observaciones del comité | Por registrar |
+| Cambios aplicados tras el veredicto (si aplica) | Por registrar |
+
+> Este ADR permanece con estado **Aceptado** a nivel de equipo mientras no se registre el veredicto del comité. El veredicto no debe anticiparse ni completarse antes de que la sesión de mini-comité ocurra realmente, para no invalidar la evidencia de revisión por pares que exige la rúbrica.
