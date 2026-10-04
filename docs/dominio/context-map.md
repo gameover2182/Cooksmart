@@ -53,7 +53,7 @@ Leyenda: línea continua = integración a través de una interfaz (HTTP, token, 
 | E1 | BC1 | BC3, BC5 | **Open Host Service / Published Language** | `id_usuario` (claim `sub`) | JWT firmado HS256; verificación **local** con `JWT_SECRET` (no hay llamada a BC1) | `authMiddleware.js` `requireAuth` + `soloElMismoUsuario` | Confirmada |
 | E2 | BC2 | BC4 | **Customer/Supplier** (el cliente se adapta: casi **Conformist**) | Catálogo completo | `GET /api/recetas` síncrono al cargar la página; adaptación en `_adaptarReceta` | `recetas-loader.js` líneas 19–66 | Confirmada — **con brecha de contrato**: la lista no trae `ingredientes` |
 | E3 | BC1 | BC4 | Customer/Supplier | `preferencias.gustos/restricciones` | `GET /api/auth/me` síncrono | `index.html` ≈ 1295, `perfil.html` ≈ 354 | Confirmada |
-| E4 | BC3 (cliente) | BC4 | **Shared Kernel** (en el navegador) | Lista de nombres de ingredientes, bandera "modo urgente" | Claves de `localStorage` compartidas (`cookSmartIngredientes`, `cookSmartModoUrgente`) | `mi-nevera.html` ≈ 1199, 1572; `recetas.html` ≈ 971, 1072 | Confirmada |
+| E4 | BC3 (cliente) | BC4 | **Shared Kernel** (en el navegador) — *clasificación en revisión, ver §6* | Lista de nombres de ingredientes, bandera "modo urgente" | Claves de `localStorage` compartidas (`cookSmartIngredientes`, `cookSmartModoUrgente`) | `mi-nevera.html` ≈ 1199, 1572; `recetas.html` ≈ 971, 1072 | Confirmada |
 | E5 | Navegador (UI) | BC5 | Cliente de API, **asíncrono sin garantía** | Alta/baja de favorito | `localStorage.setItem` interceptado → `POST`/`DELETE` sin `await` en el llamador; errores en `console.warn` | `auth-sync.js` `_sincronizarFavoritosConAPI` | Confirmada |
 | E6 | BC2 | BC5 | **Base de datos compartida** | `nombre_receta`, `tiempo_prep_min` | `JOIN receta` dentro del repositorio de BC5 + FK `ON DELETE CASCADE` | `favoritos.repository.js`, `historial.repository.js`, `01_schema.sql` líneas 107–118 | Confirmada |
 | E7 | BC2 | BC3 | **Base de datos compartida** | `nombre_ingrediente` | `JOIN ingrediente` + FK | `inventario.repository.js`, `01_schema.sql` línea 62 | Confirmada |
@@ -89,3 +89,36 @@ Verificación rápida reproducible de la última afirmación:
 grep -rn "require('../services" Docker/Postgre/backend/src/services   # → sin resultados
 grep -rn "JOIN receta\|JOIN ingrediente" Docker/Postgre/backend/src/repositories
 ```
+
+---
+
+## 6. Revisión de la clasificación de E4 (BC3 → BC4 en el navegador)
+
+> Pregunta de la revisión del tutor: E4 está clasificada como **Shared Kernel**, pero esa frontera vive en `localStorage`. ¿La clasificación es correcta? Esta sección reúne la evidencia; **la clasificación final es una decisión del equipo** (ver §6.3).
+
+### 6.1 Evidencia: quién escribe y quién lee cada clave
+
+| Clave de `localStorage` | Escriben | Leen | Contexto dueño del dato |
+|---|---|---|---|
+| `cookSmartNevera` (ítems con fecha de vencimiento) | `mi-nevera.html` (línea 1587) | `mi-nevera.html` | BC3, único escritor |
+| `cookSmartIngredientes` (solo nombres) | `mi-nevera.html` (1200, 1573) · `recetas.html` (954, desde la URL) · `receta-detalle.html` (1106 "lo tengo / no lo tengo", 1127 "agregar faltantes") | `recetas.html`, `receta-detalle.html`, `index.html`, `perfil.html`, `rapido.html`, `desayunos/almuerzos/cenas/vegetariano.html` | **Sin dueño único**: escriben BC3 y BC4 |
+| `cookSmartModoUrgente` | `mi-nevera.html` (1577) | `recetas.html` (971, y la borra en 975) | BC3 → BC4 (un escritor, un lector) |
+| `cookSmartGustos`, `cookSmartRestricciones` | `perfil.html`, `registro.html`, `index.html` (copia de `/auth/me`), `recetas.html` (1405–1406) | 9 páginas | Copia en el cliente de un dato de **BC1** (`usuario.preferencias`) |
+
+Comando para reproducir: `grep -n "'cookSmartIngredientes'" *.html *.js` (ídem para cada clave).
+
+### 6.2 Defecto verificado que revela esta revisión
+
+`receta-detalle.html` agrega o quita ingredientes en `cookSmartIngredientes` (líneas 1106 y 1127) **sin tocar `cookSmartNevera`**. Por lo tanto existen dos versiones de "lo que tengo" que pueden divergir: lo que el usuario marca en el detalle de una receta no aparece en "Mi nevera", y la próxima vez que "Mi nevera" reescribe `cookSmartIngredientes` (línea 1200) lo marcado en el detalle se sobrescribe. **No se corrige en M5** (fuera del alcance de la decisión de integración); se registra como deuda.
+
+### 6.3 Clasificaciones posibles — DECISIÓN DEL EQUIPO (pendiente)
+
+| Opción | Qué afirma | A favor (evidencia) | En contra (evidencia) |
+|---|---|---|---|
+| **A. Shared Kernel** (clasificación actual) | BC3 y BC4 comparten un subconjunto del modelo (la lista de nombres) y lo co-administran | Hay escritores de ambos contextos sobre la misma clave (6.1) | Un Shared Kernel implica un acuerdo explícito y disciplina compartida (cambios coordinados, pruebas comunes); aquí no hay esquema, ni pruebas, ni dueño, y el defecto de 6.2 muestra que el acuerdo no existe |
+| **B. Customer/Supplier con BC3 como proveedor** (lenguaje publicado vía `cookSmartIngredientes`) | BC3 publica "lo que tengo" y BC4 lo consume | Es lo que **pretende** el diseño: `mi-nevera.html` comenta "Guardar en localStorage para que recetas.html lo lea" (línea 1198) | BC4 también escribe en la clave (1106, 1127, 954): el consumidor modifica el dato del proveedor |
+| **C. Sin frontera real en el cliente** (BC3-cliente y BC4 son hoy un mismo módulo acoplado por estado global) | La separación BC3/BC4 existe en el **modelo de dominio**, pero no en la implementación del navegador | Scripts embebidos por página, estado global compartido, escritores cruzados, sin interfaz entre ambos | Ocultaría en el mapa una frontera conceptual que el equipo sí considera importante (BC3 es núcleo) |
+
+**Pregunta que debe responder el equipo:** ¿el Context Map describe la frontera **como está implementada hoy** (lo que favorece C o A) o **como debería ser** (lo que favorece B con la deuda de 6.2 registrada)? Cualquiera de las tres es defendible si se explica con esta evidencia. Lo que no es defendible es presentar A sin mencionar que no hay un acuerdo explícito.
+
+**Decisión del equipo:** _por registrar (opción elegida, fecha y motivo)._

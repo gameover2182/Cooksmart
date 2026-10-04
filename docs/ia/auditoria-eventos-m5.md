@@ -70,5 +70,5 @@ No decidas cuáles debo implementar.
 - El comportamiento del spike con un broker real (RabbitMQ/Redis): **no se implementó** a propósito (fuera del alcance pre-registrado); la variante en memoria es el mejor caso para la hipótesis asíncrona.
 - Resultados en otra máquina o en CI: todas las corridas se hicieron en un solo equipo local (ver `01-condiciones.md`).
 - Significancia estadística del Δ de latencia: n = 3 por modo y los rangos de P95 se solapan.
-- Pérdida de mensajes de la cola en memoria ante un reinicio de la API.
+- ~~Pérdida de mensajes de la cola en memoria ante un reinicio de la API.~~ Verificado después: `experimentos/spike-01-integracion/verificacion-reinicio/README.md`.
 - Que los patrones DDD asignados en el Context Map coincidan con la interpretación del docente.

@@ -38,7 +38,7 @@
 | Alternativa | Descripción | Costo | Evidencia |
 |---|---|---|---|
 | **A. Síncrona (elegida)** | REST `201` tras escribir en PostgreSQL; llamadas en proceso entre módulos | Latencia del `INSERT` dentro del `POST` (≈ 87 ms de P95 bajo 50 VUs según el spike) | Spike 1: 100 % de lecturas consistentes, más iteraciones completadas |
-| **B. Asíncrona en proceso** | Encolar en memoria, responder `202`, escribir desde un consumidor | 45 % de lecturas inconsistentes; carreras alta/baja; `GET`/`DELETE` más lentos; pérdida de pendientes si la API reinicia; **cambio incompatible de contrato** (`201` → `202`, `docs/integracion/09-…` §4.3) | Medida directamente en el Spike 1 |
+| **B. Asíncrona en proceso** | Encolar en memoria, responder `202`, escribir desde un consumidor | 45 % de lecturas inconsistentes; carreras alta/baja; `GET`/`DELETE` más lentos; pérdida de altas ya confirmadas si la API cae (**medido después del veredicto**: 66 de 1000 en 1 de 3 corridas con SIGKILL; 0 con escritura síncrona — `experimentos/spike-01-integracion/verificacion-reinicio/`); **cambio incompatible de contrato** (`201` → `202`, `docs/integracion/09-…` §4.3) | Medida directamente en el Spike 1 |
 | **C. Eventos con broker** (RabbitMQ/Kafka/Redis Streams) | Publicar eventos de dominio y consumirlos en otros contextos/procesos | Todo lo de B + un contenedor más que operar, durabilidad, reintentos, DLQ, monitoreo; contradice Escalabilidad/Observabilidad = Baja | No medida: B es su **mejor caso** (sin red ni serialización); si B no cumple la consistencia, C tampoco la mejora. Sin consumidores reales (0/12 eventos) |
 
 ## 3. Decisión
