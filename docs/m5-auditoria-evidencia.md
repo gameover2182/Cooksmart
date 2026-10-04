@@ -71,9 +71,18 @@ El login sigue siendo el **problema de rendimiento más grande medido**, y por e
 | "P95 global 9,72 s" podía leerse como latencia de la API | Nota de interpretación en el README y §3 de este documento |
 | Rutas de ADR en el README (`docs/ADR-00x…`) | Corregidas a `docs/adr/ADR-00x…` |
 
-## 7. Lo que sigue pendiente (declarado, no oculto)
+## 7. Puntos de defensa señalados por el tutor
+
+| Punto | Qué se hizo | Dónde |
+|---|---|---|
+| "¿Qué pasa si reinicio la API con mensajes pendientes?" | **Medido** (post hoc, no altera el veredicto): con SIGKILL la cola en memoria perdió 66/1000 altas confirmadas en 1 de 3 corridas; síncrono 0/6000. Apagado ordenado: 0 pérdidas en ambos modos | `experimentos/spike-01-integracion/verificacion-reinicio/` |
+| "¿E4 es realmente un Shared Kernel si vive en `localStorage`?" | Evidencia de escritores/lectores por clave, defecto de divergencia `cookSmartIngredientes` vs `cookSmartNevera`, y 3 clasificaciones posibles con pros y contras | `docs/dominio/context-map.md` §6 — **decisión del equipo pendiente** |
+| "La IA redactó decisiones importantes" | El equipo revisa cada decisión y registra si la mantiene, la modifica o la rechaza | `docs/ia/auditoria-eventos-m5.md` §3 — **pendiente** |
+
+## 8. Lo que sigue pendiente (declarado, no oculto)
 
 - Resultados de la carga progresiva a 500 VUs (`a57e7d9`): el script existe, pero no hay corridas registradas con protocolo.
 - `docs/01`, `docs/02`, `docs/04` y los ADR-001/002 siguen citando "P95 global 9,72 s" sin la aclaración del §3; la aclaración está centralizada en el README y en este documento.
 - Spike 2 (login) no ejecutado.
+- Clasificación final de E4 en el Context Map (§6.3) y revisión de las decisiones redactadas con IA.
 - Los veredictos del mini-comité en ADR-001/002 siguen "por registrar".

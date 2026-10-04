@@ -81,7 +81,7 @@ En palabras del equipo: la asincronía **sí mejora** la métrica que el usuario
 ## 9. Qué NO se alcanzó a verificar
 
 - Comportamiento con broker real (RabbitMQ/Redis): no se implementó a propósito; la variante en memoria era el mejor caso.
-- Pérdida de mensajes ante reinicio de la API con la cola llena.
+- Pérdida de mensajes ante reinicio de la API con la cola llena. → **Verificado después del veredicto** en [`verificacion-reinicio/`](verificacion-reinicio/README.md): con SIGKILL, la cola en memoria perdió 66 de 1000 altas ya confirmadas en 1 de 3 corridas; la escritura síncrona no perdió ninguna (0 de 6000). No modifica el veredicto.
 - Repetibilidad en otra máquina o con k6 en un equipo distinto al de la API (k6 y la API compartieron CPU).
 - Significancia estadística (n = 3 por modo, rangos solapados).
 - Efecto con más recetas o más usuarios que los de la base de pruebas (20 recetas, 50 usuarios).
