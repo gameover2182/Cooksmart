@@ -46,7 +46,7 @@ FAVORITOS_MODO=async docker compose up -d api
 
 ## 4. Commit medido
 
-`f5d2506` — `feat(spike-01): escritura asincrona de favoritos detras de FAVORITOS_MODO`. La imagen de la API se reconstruyó sobre ese commit (`docker compose up -d --build api`) el 2026-10-04, antes de la primera corrida. Ambas series usan **la misma imagen**; solo cambia `FAVORITOS_MODO`.
+`87728bf` — `feat(spike-01): escritura asincrona de favoritos detras de FAVORITOS_MODO`. La imagen de la API se reconstruyó sobre ese commit (`docker compose up -d --build api`) el 2026-10-04, antes de la primera corrida. Ambas series usan **la misma imagen**; solo cambia `FAVORITOS_MODO`.
 
 ## 5. Ejecución real
 

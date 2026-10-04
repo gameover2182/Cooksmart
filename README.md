@@ -29,8 +29,8 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 | Trabajo | Evidencia |
 |---|---|
 | Medición por endpoint con k6 sobre la API propia (`GET /api/recetas`, 50 VUs × 20 s) | `k6-demo/diagnostico.js`, sección "Medición ejecutable" |
-| Recorrido completo autenticado con métricas por operación (50 VUs × 20 s) | Versión de `k6-demo/load-test.js` del commit `3383ef7` (ver nota de trazabilidad abajo) |
-| Carga progresiva hasta 500 VUs | `k6-demo/load-test.js` actual (commit `7d8d95a`); **resultados aún no registrados** en el dossier |
+| Recorrido completo autenticado con métricas por operación (50 VUs × 20 s) | Versión de `k6-demo/load-test.js` del commit `3da63ea` (ver nota de trazabilidad abajo) |
+| Carga progresiva hasta 500 VUs | `k6-demo/load-test.js` actual (commit `a57e7d9`); **resultados aún no registrados** en el dossier |
 | Módulo 5: dominio, Context Map, contrato API, Spike 1, ADR-003, análisis CQRS/eventos | Ver `docs/m5-auditoria-evidencia.md` |
 
 ### Pendiente / Roadmap
@@ -161,7 +161,7 @@ Resultados registrados:
 
 > **Cómo leer el "P95 HTTP global = 9,72 s":** es el percentil 95 de **todas** las solicitudes HTTP del recorrido mezcladas (login + 9 consultas), **no** el tiempo de respuesta de un endpoint ni de la API en general. En esa versión del script cada iteración hacía su propio login, así que los logins eran el 10 % de las 500 solicitudes; como el P95 mira el 5 % más lento, ese valor cae dentro de la distribución del login (P95 ≈ 17,93 s). Las demás operaciones tuvieron P95 entre 0,30 s y 1,59 s.
 
-> **Trazabilidad de estos números:** la tabla anterior se obtuvo con la versión de `k6-demo/load-test.js` del commit `3383ef7` (`vus: 50`, `duration: '20s'`, login en cada iteración). El script **actual** (commit `7d8d95a`) es distinto: hace el login **una sola vez** en `setup()` y aplica carga progresiva hasta 500 VUs. Por eso **no reproduce** estos números y sus resultados no deben compararse directamente con ellos. Para reproducir la tabla: `git show 3383ef7:k6-demo/load-test.js > /tmp/load-test-50vu.js && k6 run /tmp/load-test-50vu.js`.
+> **Trazabilidad de estos números:** la tabla anterior se obtuvo con la versión de `k6-demo/load-test.js` del commit `3da63ea` (`vus: 50`, `duration: '20s'`, login en cada iteración). El script **actual** (commit `a57e7d9`) es distinto: hace el login **una sola vez** en `setup()` y aplica carga progresiva hasta 500 VUs. Por eso **no reproduce** estos números y sus resultados no deben compararse directamente con ellos. Para reproducir la tabla: `git show 3da63ea:k6-demo/load-test.js > /tmp/load-test-50vu.js && k6 run /tmp/load-test-50vu.js`.
 
 ## Estado de calidad
 
@@ -180,13 +180,13 @@ El orden de los commits demuestra que la hipótesis se registró **antes** de im
 
 | Paso | Commit | Comando para mostrarlo |
 |---|---|---|
-| 1. Pre-registro (hipótesis, criterio, alcance, instrumento k6) | `912fd90` | `git show --stat 912fd90` |
-| 2. Cambio experimental (escritura asíncrona detrás de `FAVORITOS_MODO`) | `f5d2506` | `git show f5d2506` |
-| 3. Ejecución (calentamiento + 3 corridas por modo) y datos crudos | `e4135e9` | `git show --stat e4135e9` |
-| 4. Veredicto (AJUSTADA), ADR-003, análisis CQRS/eventos | `2e98a4f` | `git show --stat 2e98a4f` |
-| 5. Reversión del código experimental | `a7f35c7` | `git show a7f35c7` |
+| 1. Pre-registro (hipótesis, criterio, alcance, instrumento k6) | `914a9ab` | `git show --stat 914a9ab` |
+| 2. Cambio experimental (escritura asíncrona detrás de `FAVORITOS_MODO`) | `87728bf` | `git show 87728bf` |
+| 3. Ejecución (calentamiento + 3 corridas por modo) y datos crudos | `3f3455f` | `git show --stat 3f3455f` |
+| 4. Veredicto (AJUSTADA), ADR-003, análisis CQRS/eventos | `8777b67` | `git show --stat 8777b67` |
+| 5. Reversión del código experimental | `95de6b7` | `git show 95de6b7` |
 
-Vista completa con fecha y hora: `git log --date=iso --format="%h %ad %s" 912fd90^..a7f35c7`
+Vista completa con fecha y hora: `git log --date=iso --format="%h %ad %s" 914a9ab^..95de6b7`
 
 ## Convención de commits
 
