@@ -46,4 +46,16 @@ FAVORITOS_MODO=async docker compose up -d api
 
 ## 4. Commit medido
 
-*(se completa al ejecutar: hash del commit de implementación con el que se construyó la imagen)*
+`f5d2506` — `feat(spike-01): escritura asincrona de favoritos detras de FAVORITOS_MODO`. La imagen de la API se reconstruyó sobre ese commit (`docker compose up -d --build api`) el 2026-10-04, antes de la primera corrida. Ambas series usan **la misma imagen**; solo cambia `FAVORITOS_MODO`.
+
+## 5. Ejecución real
+
+| Serie | Inicio del calentamiento | Comando |
+|---|---|---|
+| sync | 2026-10-04 12:44:23 −05:00 | `bash experimentos/spike-01-integracion/scripts/ejecutar-modo.sh sync` |
+| async | 2026-10-04 12:48:22 −05:00 | `bash experimentos/spike-01-integracion/scripts/ejecutar-modo.sh async` |
+
+- Antes de cada corrida: `preparar-usuarios.sql` (0 favoritos para los usuarios del spike).
+- Al pasar a async la API se **recreó** con `FAVORITOS_MODO=async` (verificado con `docker exec cooksmart-api printenv FAVORITOS_MODO`; además el `setup()` de k6 aborta si el `POST` no devuelve el código esperado: 201 en sync, 202 en async).
+- Al terminar: 0 filas huérfanas en `favorito` para los usuarios del spike; 0 líneas `Cola de favoritos: no se pudo aplicar el alta` en `docker logs cooksmart-api`.
+- Los JSON de `02-resultados/` son el `--summary-export` de k6 **sin** la clave `setup_data` (se eliminó porque contenía los JWT de los usuarios de prueba). Los resúmenes completos de consola están en `logs/`.

@@ -1,0 +1,35 @@
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 2162    37.30374/s
+    checks_succeeded...: 100.00% 2162 out of 2162
+    checks_failed......: 0.00%   0 out of 2162
+
+    ✓ POST 201/202
+
+    CUSTOM
+    delete_antes_de_alta...........: 9.85%  213 out of 2162
+    favorito_delete_duration.......: avg=66.44ms  min=4.11ms  med=51.97ms  p(90)=129.98ms p(95)=161.5ms  p(99)=264.73ms max=426.48ms
+    favorito_get_duration..........: avg=62.36ms  min=2.79ms  med=49.87ms  p(90)=125.06ms p(95)=149.45ms p(99)=246.68ms max=426.69ms
+    favorito_post_duration.........: avg=44.44ms  min=3.15ms  med=32.88ms  p(90)=87.87ms  p(95)=115.45ms p(99)=253.14ms max=408.33ms
+    lectura_consistente............: 54.67% 1182 out of 2162
+
+    HTTP
+    http_req_duration..............: avg=60.69ms  min=2.79ms  med=44.61ms  p(90)=120.08ms p(95)=152.3ms  p(99)=363.83ms max=815.52ms
+      { expected_response:true }...: avg=60.69ms  min=2.79ms  med=44.61ms  p(90)=120.08ms p(95)=152.3ms  p(99)=363.83ms max=815.52ms
+    http_req_failed................: 0.00%  0 out of 6751
+    http_reqs......................: 6751   116.483602/s
+
+    EXECUTION
+    iteration_duration.............: avg=698.83ms min=514.6ms med=655.76ms p(90)=900.51ms p(95)=978.23ms p(99)=1.2s     max=1.4s    
+    iterations.....................: 2162   37.30374/s
+    vus............................: 0      min=0            max=50
+    vus_max........................: 50     min=50           max=50
+
+    NETWORK
+    data_received..................: 1.9 MB 32 kB/s
+    data_sent......................: 2.3 MB 39 kB/s
+
+
+
