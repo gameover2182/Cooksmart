@@ -2,7 +2,7 @@
 
 ## 1. Hipótesis pre-registrada
 
-`00-preregistro.md`, commit **`912fd90`** (anterior a la implementación `f5d2506` y a la ejecución `e4135e9`; verificable con `git log --oneline -- experimentos/spike-01-integracion`).
+`00-preregistro.md`, commit **`914a9ab`** (anterior a la implementación `87728bf` y a la ejecución `3f3455f`; verificable con `git log --oneline -- experimentos/spike-01-integracion`).
 
 - **H1:** async reduce la mediana de los P95 de `POST /favoritos` en **≥ 30 %**.
 - **H2:** con async, `lectura_consistente` **≥ 99 %**.
@@ -10,12 +10,12 @@
 
 ## 2. Qué se modificó / qué no
 
-- **Modificado** (`f5d2506`, 4 archivos, +42/−1): `favoritos.service.js` (bifurcación por `FAVORITOS_MODO`), `favoritos.controller.js` (`202` si quedó encolado), `favoritos.cola.js` (nuevo: cola en memoria, concurrencia 5), `docker-compose.yml` (variable con defecto `sync`).
+- **Modificado** (`87728bf`, 4 archivos, +42/−1): `favoritos.service.js` (bifurcación por `FAVORITOS_MODO`), `favoritos.controller.js` (`202` si quedó encolado), `favoritos.cola.js` (nuevo: cola en memoria, concurrencia 5), `docker-compose.yml` (variable con defecto `sync`).
 - **No modificado:** repositorios, esquema, pool, autenticación, `GET`/`DELETE` de favoritos, instrumento k6, criterios. Sin broker.
 
 ## 3. Condiciones
 
-Ver `01-condiciones.md`: 50 VUs constantes × 30 s, recorrido `POST → GET → DELETE → sleep 0,5 s`, 50 usuarios, misma imagen (commit `f5d2506`) para ambos modos, misma máquina, calentamiento descartado + 3 corridas oficiales por modo, estado inicial restaurado antes de cada corrida.
+Ver `01-condiciones.md`: 50 VUs constantes × 30 s, recorrido `POST → GET → DELETE → sleep 0,5 s`, 50 usuarios, misma imagen (commit `87728bf`) para ambos modos, misma máquina, calentamiento descartado + 3 corridas oficiales por modo, estado inicial restaurado antes de cada corrida.
 
 ## 4. Corridas (datos de `02-resultados/*.json`)
 
@@ -75,7 +75,7 @@ En palabras del equipo: la asincronía **sí mejora** la métrica que el usuario
 | I1 pendiente de decisión (`docs/integracion/09-…` §6) | **Síncrono en la API** (contrato `201` se mantiene; no hay cambio incompatible) → ADR-003 |
 | Postura: "el `INSERT` no pesa" | Corregida: pesa ≈ 87 ms de P95 bajo 50 VUs, pero moverlo no reduce trabajo total |
 | Eventos/broker como opción abierta | Descartados para I1 con evidencia propia; reabrir solo con un consumidor real (H1 del Context Map) |
-| Código del spike en la rama | **Revertido** en un commit propio (`git revert f5d2506`); reproducible con `git checkout e4135e9` |
+| Código del spike en la rama | **Revertido** en un commit propio (`git revert 87728bf`); reproducible con `git checkout 3f3455f` |
 | Sincronización de favoritos del cliente "fire-and-forget" | Registrada como deuda: el cliente debería serializar alta/baja por receta y reintentar (no se implementa en M5) |
 
 ## 9. Qué NO se alcanzó a verificar

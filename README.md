@@ -22,15 +22,24 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 > **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, además de un plan de pruebas extenso. Esa arquitectura **no está implementada** en el sistema actual. Para la versión actual, se documenta como antecedente arquitectónico y no como parte del sistema base. El sistema base que documentamos es el actual: frontend estático + API propia (Node/Express) + PostgreSQL, organizada como monolito modular por capas (ver `docs/adr/ADR-001-estilo-arquitectonico.md`).
 
-## Roadmap / Trabajo futuro
+## Estado del trabajo: ejecutado vs. pendiente
 
-- Fortalecer las pruebas automatizadas y ampliar la cobertura de pruebas funcionales y de seguridad.
+### Ya ejecutado
 
-- Ampliar los experimentos de rendimiento con k6 a escenarios de mayor duración, distintas cargas y medición por endpoint.
+| Trabajo | Evidencia |
+|---|---|
+| Medición por endpoint con k6 sobre la API propia (`GET /api/recetas`, 50 VUs × 20 s) | `k6-demo/diagnostico.js`, sección "Medición ejecutable" |
+| Recorrido completo autenticado con métricas por operación (50 VUs × 20 s) | Versión de `k6-demo/load-test.js` del commit `3da63ea` (ver nota de trazabilidad abajo) |
+| Carga progresiva hasta 500 VUs | `k6-demo/load-test.js` actual (commit `a57e7d9`); **resultados aún no registrados** en el dossier |
+| Módulo 5: dominio, Context Map, contrato API, Spike 1, ADR-003, análisis CQRS/eventos | Ver `docs/m5-auditoria-evidencia.md` |
 
-- Automatizar como *fitness function* las reglas de dependencia entre módulos definidas en `docs/adr/ADR-002-limites-modulos-dependencias.md`.
+### Pendiente / Roadmap
 
-- Continuar con la optimización y diagnóstico del recorrido completo de la API, especialmente en la comunicación API → PostgreSQL, autenticación y acceso a datos.
+- Pruebas automatizadas funcionales y de seguridad (PSeg01–PSeg04 siguen sin prueba específica).
+- Registrar resultados de la carga progresiva hasta 500 VUs con su propio protocolo (condiciones + ≥ 3 corridas).
+- Diagnóstico por capa del login (bcrypt vs. consulta vs. pool), riesgo R-02. Candidato a Spike 2 (opcional).
+- Automatizar como *fitness function* las reglas de dependencia de `docs/adr/ADR-002-limites-modulos-dependencias.md` y la verificación del contrato `docs/integracion/openapi-v1.yaml`.
+- Corregir el contrato de `GET /api/recetas` para incluir `ingredientes` (cambio compatible v1.1, `docs/integracion/09-api-eventos-integracion.md` §4.4).
 
 ## Cómo levantar el sistema
 
@@ -88,6 +97,7 @@ docker compose up --build
 | Auditoría de eventos propuestos por IA | `docs/ia/auditoria-eventos-m5.md` | M5 |
 | Spike 1 — integración síncrona vs asíncrona | `experimentos/spike-01-integracion/` | M5 |
 | ADR 3 — Integración entre contextos | `docs/adr/ADR-003-integracion-entre-contextos.md` | M5 |
+| Auditoría de evidencia de M5 (índice, medición vs. spike, trazabilidad Git) | `docs/m5-auditoria-evidencia.md` | M5 |
 | Backend propio (API + PostgreSQL) | `Docker/Postgre/` | Sistema actual |
 
 ## Medición ejecutable (k6)
@@ -149,6 +159,10 @@ Resultados registrados:
 
 > El recorrido completo incluye pausas entre operaciones. Por ello, 50 VUs no equivalen a 50 solicitudes por segundo.
 
+> **Cómo leer el "P95 HTTP global = 9,72 s":** es el percentil 95 de **todas** las solicitudes HTTP del recorrido mezcladas (login + 9 consultas), **no** el tiempo de respuesta de un endpoint ni de la API en general. En esa versión del script cada iteración hacía su propio login, así que los logins eran el 10 % de las 500 solicitudes; como el P95 mira el 5 % más lento, ese valor cae dentro de la distribución del login (P95 ≈ 17,93 s). Las demás operaciones tuvieron P95 entre 0,30 s y 1,59 s.
+
+> **Trazabilidad de estos números:** la tabla anterior se obtuvo con la versión de `k6-demo/load-test.js` del commit `3da63ea` (`vus: 50`, `duration: '20s'`, login en cada iteración). El script **actual** (commit `a57e7d9`) es distinto: hace el login **una sola vez** en `setup()` y aplica carga progresiva hasta 500 VUs. Por eso **no reproduce** estos números y sus resultados no deben compararse directamente con ellos. Para reproducir la tabla: `git show 3da63ea:k6-demo/load-test.js > /tmp/load-test-50vu.js && k6 run /tmp/load-test-50vu.js`.
+
 ## Estado de calidad
 
 | Atributo | Evidencia actual | Estado |
@@ -159,6 +173,20 @@ Resultados registrados:
 | Mantenibilidad | Arquitectura organizada por capas y reglas explícitas de dependencia | Implementado |
 
 El RNF04 establece máximo 3 segundos para las consultas de recetas y la visualización de ingredientes. En el recorrido registrado, sus P95 fueron **1,20 s** y **1,14 s**, respectivamente.
+
+## Trazabilidad del Spike 1 (Módulo 5)
+
+El orden de los commits demuestra que la hipótesis se registró **antes** de implementar y medir:
+
+| Paso | Commit | Comando para mostrarlo |
+|---|---|---|
+| 1. Pre-registro (hipótesis, criterio, alcance, instrumento k6) | `914a9ab` | `git show --stat 914a9ab` |
+| 2. Cambio experimental (escritura asíncrona detrás de `FAVORITOS_MODO`) | `87728bf` | `git show 87728bf` |
+| 3. Ejecución (calentamiento + 3 corridas por modo) y datos crudos | `3f3455f` | `git show --stat 3f3455f` |
+| 4. Veredicto (AJUSTADA), ADR-003, análisis CQRS/eventos | `8777b67` | `git show --stat 8777b67` |
+| 5. Reversión del código experimental | `95de6b7` | `git show 95de6b7` |
+
+Vista completa con fecha y hora: `git log --date=iso --format="%h %ad %s" 914a9ab^..95de6b7`
 
 ## Convención de commits
 

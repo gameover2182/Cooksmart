@@ -21,7 +21,7 @@
 
 **Pregunta que había que responder con evidencia propia:** si la integración asíncrona de una escritura (I1) mejoraba la latencia lo suficiente como para justificar la consistencia eventual.
 
-**Resultado del Spike 1** (pre-registrado en `912fd90`, medido en `f5d2506`, resultados en `e4135e9`; 50 VUs × 30 s, 3 corridas por modo, misma máquina e imagen):
+**Resultado del Spike 1** (pre-registrado en `914a9ab`, medido en `87728bf`, resultados en `3f3455f`; 50 VUs × 30 s, 3 corridas por modo, misma máquina e imagen):
 
 | Métrica (medianas) | Síncrono | Asíncrono (cola en memoria) |
 |---|---:|---:|
@@ -47,7 +47,7 @@
 2. **I2 (catálogo → recomendación)**: REST síncrono. Su problema real es de **contenido** del contrato (falta `ingredientes` en `GET /recetas`), que se corrige con un cambio compatible (v1.1), no con eventos.
 3. **I3 (identidad)**: se mantiene el token autocontenido (sin llamada en runtime a Identidad).
 4. **No** se introduce bus de eventos, broker, CQRS ni Event Sourcing (`docs/integracion/aplicabilidad-cqrs-eventos.md`).
-5. El código del spike se **revierte**; queda reproducible en el commit `e4135e9`.
+5. El código del spike se **revierte**; queda reproducible en el commit `3f3455f`.
 
 ## 4. Consecuencias
 
@@ -64,7 +64,7 @@
 
 ## 5. Reversibilidad
 
-**Alta.** La variante asíncrona ya existe en la historia (`f5d2506`) detrás de un flag y puede reaplicarse con `git revert` del commit de reversión. El costo real de revertir esta decisión no es el código sino el **contrato**: pasar a `202` exige `/api/v2` y adaptar `auth-sync.js` (ver política de versiones, `docs/integracion/09-…` §4.3).
+**Alta.** La variante asíncrona ya existe en la historia (`87728bf`) detrás de un flag y puede reaplicarse con `git revert` del commit de reversión. El costo real de revertir esta decisión no es el código sino el **contrato**: pasar a `202` exige `/api/v2` y adaptar `auth-sync.js` (ver política de versiones, `docs/integracion/09-…` §4.3).
 
 ## 6. Supuestos y condiciones de revisión
 
@@ -81,8 +81,8 @@
 | Elemento | Ubicación |
 |---|---|
 | Interacciones analizadas (I1–I4) | `docs/integracion/09-api-eventos-integracion.md` §1–3 |
-| Pre-registro (antes de medir) | `experimentos/spike-01-integracion/00-preregistro.md` — commit `912fd90` |
-| Código medido | commit `f5d2506` |
-| Datos crudos | `experimentos/spike-01-integracion/02-resultados/` — commit `e4135e9` |
+| Pre-registro (antes de medir) | `experimentos/spike-01-integracion/00-preregistro.md` — commit `914a9ab` |
+| Código medido | commit `87728bf` |
+| Datos crudos | `experimentos/spike-01-integracion/02-resultados/` — commit `3f3455f` |
 | Veredicto | `experimentos/spike-01-integracion/03-veredicto.md` |
 | Filtro de eventos de IA | `docs/ia/auditoria-eventos-m5.md` |

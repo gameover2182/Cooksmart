@@ -6,19 +6,19 @@
 
 | Archivo | Contenido | Commit |
 |---|---|---|
-| `00-preregistro.md` | Hipótesis H1/H2/H0, regla de veredicto, alcance, qué no se modifica | `912fd90` (antes de implementar y medir) |
-| `scripts/spike-favoritos.js` | Instrumento k6 (fijado en el pre-registro) | `912fd90` |
-| `scripts/preparar-usuarios.sql` | 50 usuarios de prueba + estado inicial | `912fd90` |
-| *(código del spike)* | `FAVORITOS_MODO`, cola en memoria, `202` | `f5d2506` (revertido después del veredicto) |
-| `01-condiciones.md` | Máquina, datos, procedimiento, commit medido | `912fd90` + `e4135e9` |
-| `scripts/ejecutar-modo.sh` | Automatiza calentamiento + 3 corridas por modo | `e4135e9` |
-| `02-resultados/*.json`, `logs/*.log` | Datos crudos de k6 | `e4135e9` |
+| `00-preregistro.md` | Hipótesis H1/H2/H0, regla de veredicto, alcance, qué no se modifica | `914a9ab` (antes de implementar y medir) |
+| `scripts/spike-favoritos.js` | Instrumento k6 (fijado en el pre-registro) | `914a9ab` |
+| `scripts/preparar-usuarios.sql` | 50 usuarios de prueba + estado inicial | `914a9ab` |
+| *(código del spike)* | `FAVORITOS_MODO`, cola en memoria, `202` | `87728bf` (revertido después del veredicto) |
+| `01-condiciones.md` | Máquina, datos, procedimiento, commit medido | `914a9ab` + `3f3455f` |
+| `scripts/ejecutar-modo.sh` | Automatiza calentamiento + 3 corridas por modo | `3f3455f` |
+| `02-resultados/*.json`, `logs/*.log` | Datos crudos de k6 | `3f3455f` |
 | `03-veredicto.md` | Tabla de corridas, medianas, veredicto, qué cambia, qué no se verificó | commit de veredicto |
 
 ## Reproducir
 
 ```bash
-git checkout e4135e9                       # commit con el código del spike y el instrumento
+git checkout 3f3455f                       # commit con el código del spike y el instrumento
 cd Docker/Postgre && docker compose up -d --build && cd ../..
 bash experimentos/spike-01-integracion/scripts/ejecutar-modo.sh sync
 bash experimentos/spike-01-integracion/scripts/ejecutar-modo.sh async
