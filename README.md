@@ -41,6 +41,25 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 - Automatizar como *fitness function* las reglas de dependencia de `docs/adr/ADR-002-limites-modulos-dependencias.md` y la verificación del contrato `docs/integracion/openapi-v1.yaml`.
 - Corregir el contrato de `GET /api/recetas` para incluir `ingredientes` (cambio compatible v1.1, `docs/integracion/09-api-eventos-integracion.md` §4.4).
 
+## Evidencia del Módulo 5 — dónde auditarla
+
+Todo está en la rama `main` (PR #33 y #34). Enlaces directos:
+
+| # | Evidencia que pide M5 | Archivo |
+|---|---|---|
+| 1 | Mapa de dominio: subdominios y contextos acotados | [docs/dominio/mapa-dominio.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/dominio/mapa-dominio.md) |
+| 1 | Context Map con relaciones justificadas en el código | [docs/dominio/context-map.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/dominio/context-map.md) |
+| 2 | Contrato API + decisión síncrono/asíncrono + catálogo de eventos filtrado | [docs/integracion/09-api-eventos-integracion.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/integracion/09-api-eventos-integracion.md) |
+| 2 | Contrato OpenAPI 3.0.3 versionado (nivel avanzado) | [docs/integracion/openapi-v1.yaml](https://github.com/gameover2182/Cooksmart/blob/main/docs/integracion/openapi-v1.yaml) |
+| 2 | Auditoría de eventos propuestos por IA (reales / redundantes / inventados) | [docs/ia/auditoria-eventos-m5.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/ia/auditoria-eventos-m5.md) |
+| 3 | Spike 1: pre-registro, condiciones, resultados crudos, veredicto | [experimentos/spike-01-integracion/](https://github.com/gameover2182/Cooksmart/tree/main/experimentos/spike-01-integracion) |
+| 3 | Veredicto del Spike 1 (AJUSTADA) | [03-veredicto.md](https://github.com/gameover2182/Cooksmart/blob/main/experimentos/spike-01-integracion/03-veredicto.md) |
+| 4 | ADR-003 con referencia explícita al spike | [docs/adr/ADR-003-integracion-entre-contextos.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/adr/ADR-003-integracion-entre-contextos.md) |
+| 5 | Aplicabilidad de CQRS, Event Sourcing, eventos y consistencia eventual | [docs/integracion/aplicabilidad-cqrs-eventos.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/integracion/aplicabilidad-cqrs-eventos.md) |
+| — | Auditoría de evidencia (medición vs. spike, trazabilidad Git, preguntas de defensa) | [docs/m5-auditoria-evidencia.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/m5-auditoria-evidencia.md) |
+
+Cadena del Spike 1: **hipótesis pre-registrada** (`914a9ab`) → **cambio experimental** (`87728bf`) → **ejecución, 3 corridas por modo** (`3f3455f`) → **veredicto + ADR-003** (`8777b67`) → **reversión del código** (`95de6b7`). Ver la sección "Trazabilidad del Spike 1" más abajo.
+
 ## Cómo levantar el sistema
 
 El sistema tiene ahora dos partes que se levantan por separado:
