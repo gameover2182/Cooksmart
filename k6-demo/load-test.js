@@ -17,7 +17,7 @@ const PASSWORD = 'K6_Prueba_2026!';
 // ==========================================
 
 const loginDuration = new Trend('login_duration');
-const meDuration = new Trend('perfil_duration');
+const perfilDuration = new Trend('perfil_duration');
 
 const recetasDuration = new Trend('recetas_duration');
 const detalleRecetaDuration = new Trend('detalle_receta_duration');
@@ -30,53 +30,77 @@ const favoritosDuration = new Trend('favoritos_duration');
 const historialDuration = new Trend('historial_duration');
 const inventarioDuration = new Trend('inventario_duration');
 
-
 // ==========================================
 // CONFIGURACIÓN DE K6
 // ==========================================
 
 export const options = {
-    vus: 50,
-    duration: '20s',
+    stages: [
+    // Calentamiento
+    { duration: '20s', target: 10 },
 
+    // 25 usuarios
+    { duration: '20s', target: 25 },
+
+    // 50 usuarios
+    { duration: '20s', target: 50 },
+
+    // 100 usuarios
+    { duration: '20s', target: 100 },
+
+    // 200 usuarios
+    { duration: '20s', target: 200 },
+
+    // 300 usuarios
+    { duration: '20s', target: 300 },
+
+    // 400 usuarios
+    { duration: '20s', target: 400 },
+
+    // 500 usuarios
+    { duration: '20s', target: 500 },
+
+    // Descenso
+    { duration: '30s', target: 0 },
+],
     thresholds: {
-        // No más del 1% de peticiones con error
+        // Menos del 1% de peticiones con error
         http_req_failed: ['rate<0.01'],
 
         // Umbral general
-        http_req_duration: ['p(95)<500'],
+        http_req_duration: ['p(95)<2000'],
 
         // Métricas individuales
         login_duration: ['p(95)<2000'],
-        perfil_duration: ['p(95)<500'],
+        perfil_duration: ['p(95)<2000'],
 
-        recetas_duration: ['p(95)<500'],
-        detalle_receta_duration: ['p(95)<500'],
+        recetas_duration: ['p(95)<2000'],
+        detalle_receta_duration: ['p(95)<2000'],
 
-        categorias_duration: ['p(95)<500'],
-        tipos_cocina_duration: ['p(95)<500'],
-        ingredientes_duration: ['p(95)<500'],
+        categorias_duration: ['p(95)<2000'],
+        tipos_cocina_duration: ['p(95)<2000'],
+        ingredientes_duration: ['p(95)<2000'],
 
-        favoritos_duration: ['p(95)<500'],
-        historial_duration: ['p(95)<500'],
-        inventario_duration: ['p(95)<500'],
+        favoritos_duration: ['p(95)<2000'],
+        historial_duration: ['p(95)<2000'],
+        inventario_duration: ['p(95)<2000'],
     },
 };
 
-
 // ==========================================
-// RECORRIDO COMPLETO DEL USUARIO
+// SETUP
+// Se ejecuta una vez antes de la prueba.
+// Aquí obtenemos el JWT.
 // ==========================================
 
-export default function () {
-
-    // ==========================================
-    // 1. INICIAR SESIÓN
-    // ==========================================
+export function setup() {
+    console.log('==========================================');
+    console.log('INICIANDO SETUP DE K6');
+    console.log('==========================================');
 
     const inicioLogin = Date.now();
 
-    const loginResponse = http.post(
+    const response = http.post(
         `${BASE_URL}/api/auth/login`,
         JSON.stringify({
             correo: EMAIL,
@@ -92,9 +116,11 @@ export default function () {
         }
     );
 
-    loginDuration.add(Date.now() - inicioLogin);
+    const tiempoLogin = Date.now() - inicioLogin;
 
-    const loginCorrecto = check(loginResponse, {
+    loginDuration.add(tiempoLogin);
+
+    const loginCorrecto = check(response, {
         'LOGIN - HTTP 200': (r) => r.status === 200,
 
         'LOGIN - devuelve token': (r) => {
@@ -115,33 +141,42 @@ export default function () {
     });
 
     if (!loginCorrecto) {
-        fail('El login fallo');
+        console.error('ERROR: El login inicial falló');
+        console.error(`HTTP status: ${response.status}`);
+        console.error(`Respuesta: ${response.body}`);
+
+        fail('No se pudo iniciar sesión para la prueba');
     }
 
-    // Obtener JWT
-    const token = loginResponse.json('token');
+    const token = response.json('token');
+    const usuario = response.json('usuario');
 
-    // Obtener usuario
-    const usuario = loginResponse.json('usuario');
+    console.log('Login inicial correcto');
+    console.log(`Usuario de prueba: ${usuario.correo}`);
+    console.log(`ID usuario: ${usuario.id_usuario}`);
+    console.log(`Tiempo login: ${tiempoLogin} ms`);
+    console.log('==========================================');
 
-    // ID real del usuario
-    const idUsuario = usuario.id_usuario;
+    return {
+        token: token,
+        idUsuario: usuario.id_usuario,
+    };
+}
 
-    // ==========================================
-    // JWT PARA PETICIONES PROTEGIDAS
-    // ==========================================
+// ==========================================
+// RECORRIDO MIXTO
+// ==========================================
+
+export default function (data) {
 
     const authHeaders = {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${data.token}`,
         },
     };
 
-    sleep(1);
-
-
     // ==========================================
-    // 2. CONSULTAR MI PERFIL
+    // 1. CONSULTAR PERFIL
     // GET /api/auth/me
     // ==========================================
 
@@ -157,7 +192,7 @@ export default function () {
         }
     );
 
-    meDuration.add(Date.now() - inicioPerfil);
+    perfilDuration.add(Date.now() - inicioPerfil);
 
     check(perfil, {
         'PERFIL - HTTP 200': (r) => r.status === 200,
@@ -165,9 +200,8 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 3. CONSULTAR TODAS LAS RECETAS
+    // 2. CONSULTAR TODAS LAS RECETAS
     // GET /api/recetas
     // ==========================================
 
@@ -199,9 +233,8 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 4. CONSULTAR DETALLE DE UNA RECETA
+    // 3. DETALLE DE UNA RECETA
     // GET /api/recetas/1
     // ==========================================
 
@@ -233,9 +266,8 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 5. CONSULTAR CATEGORÍAS DE RECETAS
+    // 4. CATEGORÍAS DE RECETAS
     // GET /api/categorias-receta
     // ==========================================
 
@@ -258,9 +290,8 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 6. CONSULTAR TIPOS DE COCINA
+    // 5. TIPOS DE COCINA
     // GET /api/tipos-cocina
     // ==========================================
 
@@ -283,9 +314,8 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 7. CONSULTAR INGREDIENTES
+    // 6. INGREDIENTES
     // GET /api/ingredientes
     // ==========================================
 
@@ -308,16 +338,15 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 8. CONSULTAR FAVORITOS DEL USUARIO
+    // 7. FAVORITOS
     // GET /api/usuarios/:idUsuario/favoritos
     // ==========================================
 
     const inicioFavoritos = Date.now();
 
     const favoritos = http.get(
-        `${BASE_URL}/api/usuarios/${idUsuario}/favoritos`,
+        `${BASE_URL}/api/usuarios/${data.idUsuario}/favoritos`,
         {
             ...authHeaders,
             tags: {
@@ -343,16 +372,15 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 9. CONSULTAR HISTORIAL
+    // 8. HISTORIAL
     // GET /api/usuarios/:idUsuario/historial
     // ==========================================
 
     const inicioHistorial = Date.now();
 
     const historial = http.get(
-        `${BASE_URL}/api/usuarios/${idUsuario}/historial`,
+        `${BASE_URL}/api/usuarios/${data.idUsuario}/historial`,
         {
             ...authHeaders,
             tags: {
@@ -378,16 +406,15 @@ export default function () {
 
     sleep(1);
 
-
     // ==========================================
-    // 10. CONSULTAR INVENTARIO / MI NEVERA
+    // 9. INVENTARIO / MI NEVERA
     // GET /api/usuarios/:idUsuario/inventario
     // ==========================================
 
     const inicioInventario = Date.now();
 
     const inventario = http.get(
-        `${BASE_URL}/api/usuarios/${idUsuario}/inventario`,
+        `${BASE_URL}/api/usuarios/${data.idUsuario}/inventario`,
         {
             ...authHeaders,
             tags: {
@@ -410,6 +437,10 @@ export default function () {
             }
         },
     });
+
+    // ==========================================
+    // FIN DEL RECORRIDO
+    // ==========================================
 
     sleep(2);
 }

@@ -1,0 +1,377 @@
+openapi: 3.0.3
+info:
+  title: CookSmart API
+  version: 1.0.0
+  description: |
+    Contrato de la API de CookSmart tal como está implementada en
+    Docker/Postgre/backend/src (rama leo, Módulo 5). Documenta el sistema as-is,
+    incluidas sus inconsistencias conocidas (ver docs/integracion/09-api-eventos-integracion.md §4).
+    Política de versiones: §4.3 del mismo documento.
+servers:
+  - url: http://localhost:3000/api
+tags:
+  - name: Identidad
+    description: BC1 · Identidad y Cuenta
+  - name: Catalogo
+    description: BC2 · Catálogo de Recetas
+  - name: Nevera
+    description: BC3 · Nevera (sin consumidores en el frontend actual)
+  - name: Actividad
+    description: BC5 · Favoritos e historial
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    idUsuario:
+      name: idUsuario
+      in: path
+      required: true
+      description: Debe coincidir con el claim `sub` del JWT; si no, 403.
+      schema: { type: integer }
+  responses:
+    Error400: { description: Validación fallida, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error401: { description: 'Falta el token, token inválido/expirado o credenciales incorrectas', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error403: { description: El recurso pertenece a otro usuario, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error404: { description: No encontrado, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+    Usuario:
+      type: object
+      properties:
+        id_usuario: { type: integer }
+        nombre: { type: string }
+        correo: { type: string, format: email }
+        fecha_registro: { type: string, format: date-time }
+        preferencias: { $ref: '#/components/schemas/Preferencias' }
+    Preferencias:
+      type: object
+      properties:
+        gustos: { type: array, items: { type: string } }
+        restricciones: { type: array, items: { type: string } }
+    Sesion:
+      type: object
+      required: [usuario, token]
+      properties:
+        usuario: { $ref: '#/components/schemas/Usuario' }
+        token: { type: string, description: 'JWT HS256, sub = id_usuario, expira en 7 días' }
+    RecetaResumen:
+      type: object
+      description: Elemento de GET /recetas. NO incluye `ingredientes` ni `instrucciones` (brecha conocida, ver §4.4).
+      properties:
+        id_receta: { type: integer }
+        nombre_receta: { type: string }
+        descripcion: { type: string, nullable: true }
+        tiempo_prep_min: { type: integer, nullable: true }
+        imagen_url: { type: string, nullable: true }
+        dificultad: { type: string, nullable: true }
+        porciones: { type: integer, nullable: true }
+        pasos: { type: array, items: { type: string }, nullable: true }
+        calorias: { type: number, nullable: true }
+        proteina_g: { type: number, nullable: true }
+        carbos_g: { type: number, nullable: true }
+        grasa_g: { type: number, nullable: true }
+        categoria_receta: { type: string }
+        tipo_cocina: { type: string }
+        etiquetas: { type: array, items: { type: string } }
+        restricciones: { type: array, items: { type: string } }
+    RecetaDetalle:
+      allOf:
+        - $ref: '#/components/schemas/RecetaResumen'
+        - type: object
+          properties:
+            instrucciones: { type: string, nullable: true }
+            ingredientes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_ingrediente: { type: integer }
+                  nombre_ingrediente: { type: string }
+                  cantidad: { type: number, nullable: true }
+                  unidad: { type: string, nullable: true }
+    ItemInventario:
+      type: object
+      properties:
+        id_inventario: { type: integer }
+        id_ingrediente: { type: integer }
+        nombre_ingrediente: { type: string }
+        cantidad: { type: number }
+        unidad: { type: string }
+        fecha_compra: { type: string, format: date }
+        fecha_vencimiento: { type: string, format: date, nullable: true }
+        activo: { type: boolean }
+    Favorito:
+      type: object
+      properties:
+        id_receta: { type: integer }
+        fecha_agregado: { type: string, format: date-time }
+        nombre_receta: { type: string }
+        tiempo_prep_min: { type: integer, nullable: true }
+    RegistroHistorial:
+      type: object
+      properties:
+        id_historial: { type: integer }
+        id_receta: { type: integer }
+        nombre_receta: { type: string }
+        fecha_preparacion: { type: string, format: date-time }
+
+paths:
+  /auth/registro:
+    post:
+      operationId: registrar
+      summary: Crear cuenta
+      security: []
+      tags: [Identidad]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, correo, contrasena]
+              properties:
+                nombre: { type: string }
+                correo: { type: string, format: email }
+                contrasena: { type: string, minLength: 8 }
+      responses:
+        '201': { description: Cuenta creada, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '409': { description: Ya existe una cuenta con ese correo, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /auth/login:
+    post:
+      operationId: login
+      summary: Iniciar sesión
+      security: []
+      tags: [Identidad]
+      description: Mensaje de error genérico para no revelar si falló el correo o la contraseña.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, contrasena]
+              properties:
+                correo: { type: string }
+                contrasena: { type: string }
+      responses:
+        '200': { description: Sesión iniciada, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+  /auth/me:
+    get:
+      operationId: obtenerPerfil
+      summary: Perfil del usuario autenticado
+      tags: [Identidad]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Perfil, content: { application/json: { schema: { type: object, properties: { usuario: { $ref: '#/components/schemas/Usuario' } } } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+    patch:
+      operationId: actualizarNombre
+      summary: Cambiar nombre
+      tags: [Identidad]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [nombre], properties: { nombre: { type: string } } } } }
+      responses:
+        '200': { description: Nombre actualizado, content: { application/json: { schema: { type: object, properties: { usuario: { $ref: '#/components/schemas/Usuario' } } } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+  /auth/me/preferencias:
+    patch:
+      operationId: actualizarPreferencias
+      summary: Guardar preferencias alimentarias
+      tags: [Identidad]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Preferencias' } } }
+      responses:
+        '200': { description: Preferencias guardadas, content: { application/json: { schema: { type: object, properties: { id_usuario: { type: integer }, preferencias: { $ref: '#/components/schemas/Preferencias' } } } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+  /auth/me/password:
+    patch:
+      operationId: cambiarContrasena
+      summary: Cambiar contraseña
+      tags: [Identidad]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [actual, nueva], properties: { actual: { type: string }, nueva: { type: string, minLength: 8 } } } } }
+      responses:
+        '204': { description: Contraseña cambiada }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+
+  /recetas:
+    get:
+      operationId: listarRecetas
+      summary: Listar recetas (resumen)
+      security: []
+      tags: [Catalogo]
+      parameters:
+        - { name: categoria, in: query, required: false, schema: { type: integer }, description: id_categoria_rec }
+        - { name: tipoCocina, in: query, required: false, schema: { type: integer }, description: id_tipo_cocina }
+      responses:
+        '200': { description: Todas las recetas que cumplen el filtro, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RecetaResumen' } } } } }
+  /recetas/{id}:
+    get:
+      operationId: obtenerReceta
+      summary: Detalle de receta con ingredientes
+      security: []
+      tags: [Catalogo]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Detalle, content: { application/json: { schema: { $ref: '#/components/schemas/RecetaDetalle' } } } }
+        '404': { $ref: '#/components/responses/Error404' }
+  /categorias-receta:
+    get:
+      operationId: listarCategoriasReceta
+      summary: Categorías de receta
+      security: []
+      tags: [Catalogo]
+      responses: { '200': { description: Lista, content: { application/json: { schema: { type: array, items: { type: object, properties: { id_categoria_rec: { type: integer }, nombre_categoria: { type: string } } } } } } } }
+  /tipos-cocina:
+    get:
+      operationId: listarTiposCocina
+      summary: Tipos de cocina
+      security: []
+      tags: [Catalogo]
+      responses: { '200': { description: Lista, content: { application/json: { schema: { type: array, items: { type: object, properties: { id_tipo_cocina: { type: integer }, nombre_tipo: { type: string } } } } } } } }
+  /categorias-ingrediente:
+    get:
+      operationId: listarCategoriasIngrediente
+      summary: Categorías de ingrediente
+      security: []
+      tags: [Catalogo]
+      responses: { '200': { description: Lista, content: { application/json: { schema: { type: array, items: { type: object, properties: { id_categoria_ing: { type: integer }, nombre_categoria: { type: string } } } } } } } }
+  /ingredientes:
+    get:
+      operationId: listarIngredientes
+      summary: Ingredientes maestros
+      security: []
+      tags: [Catalogo]
+      responses: { '200': { description: Lista, content: { application/json: { schema: { type: array, items: { type: object, properties: { id_ingrediente: { type: integer }, nombre_ingrediente: { type: string }, unidad_base: { type: string }, categoria: { type: string } } } } } } } }
+
+  /usuarios/{idUsuario}/inventario:
+    parameters: [{ $ref: '#/components/parameters/idUsuario' }]
+    get:
+      operationId: listarInventario
+      summary: Listar nevera
+      tags: [Nevera]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Ítems ordenados por vencimiento, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ItemInventario' } } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+        '403': { $ref: '#/components/responses/Error403' }
+    post:
+      operationId: agregarItemInventario
+      summary: Agregar ítem a la nevera
+      tags: [Nevera]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idIngrediente, cantidad, unidad]
+              properties:
+                idIngrediente: { type: integer }
+                cantidad: { type: number, exclusiveMinimum: true, minimum: 0 }
+                unidad: { type: string }
+                fechaCompra: { type: string, format: date }
+                fechaVencimiento: { type: string, format: date }
+      responses:
+        '201': { description: Ítem creado, content: { application/json: { schema: { $ref: '#/components/schemas/ItemInventario' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '403': { $ref: '#/components/responses/Error403' }
+  /usuarios/{idUsuario}/inventario/{idInventario}:
+    parameters:
+      - { $ref: '#/components/parameters/idUsuario' }
+      - { name: idInventario, in: path, required: true, schema: { type: integer } }
+    delete:
+      operationId: eliminarItemInventario
+      summary: Eliminar ítem de la nevera
+      tags: [Nevera]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Eliminado }
+        '404': { description: No existe o pertenece a otro usuario (no se distingue a propósito), content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+  /usuarios/{idUsuario}/favoritos:
+    parameters: [{ $ref: '#/components/parameters/idUsuario' }]
+    get:
+      operationId: listarFavoritos
+      summary: Listar favoritos
+      tags: [Actividad]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Favoritos más recientes primero, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Favorito' } } } } }
+        '403': { $ref: '#/components/responses/Error403' }
+    post:
+      operationId: agregarFavorito
+      summary: Agregar favorito
+      tags: [Actividad]
+      security: [{ bearerAuth: [] }]
+      description: Idempotente. Escritura síncrona (ver ADR-003 y Spike 1).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [idReceta], properties: { idReceta: { type: integer } } } } }
+      responses:
+        '201':
+          description: Favorito registrado (o ya existía)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_usuario: { type: integer }
+                  id_receta: { type: integer }
+                  fecha_agregado: { type: string, format: date-time }
+                  yaExistia: { type: boolean, description: 'Solo presente si ya era favorito' }
+        '400': { $ref: '#/components/responses/Error400' }
+        '403': { $ref: '#/components/responses/Error403' }
+  /usuarios/{idUsuario}/favoritos/{idReceta}:
+    parameters:
+      - { $ref: '#/components/parameters/idUsuario' }
+      - { name: idReceta, in: path, required: true, schema: { type: integer } }
+    delete:
+      operationId: quitarFavorito
+      summary: Quitar favorito
+      tags: [Actividad]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Quitado }
+        '404': { $ref: '#/components/responses/Error404' }
+  /usuarios/{idUsuario}/historial:
+    parameters: [{ $ref: '#/components/parameters/idUsuario' }]
+    get:
+      operationId: listarHistorial
+      summary: Listar historial
+      tags: [Actividad]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Preparaciones más recientes primero, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RegistroHistorial' } } } } }
+    post:
+      operationId: registrarPreparacion
+      summary: Registrar preparación
+      tags: [Actividad]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [idReceta], properties: { idReceta: { type: integer } } } } }
+      responses:
+        '201': { description: Preparación registrada }
+        '400': { $ref: '#/components/responses/Error400' }
