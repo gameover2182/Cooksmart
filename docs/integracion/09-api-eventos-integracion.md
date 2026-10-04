@@ -143,3 +143,11 @@ Se pidió a la IA un catálogo de eventos candidatos y se filtró contra el domi
 | I4 · Preparar → nevera | No se diseña (requisito inexistente) | No; condición de revisión en ADR-003 |
 
 La decisión final de I1 y la decisión general de integración se registran en [`docs/adr/ADR-003-integracion-entre-contextos.md`](../adr/ADR-003-integracion-entre-contextos.md) **después** del veredicto del spike.
+
+---
+
+## 7. Actualización posterior al Spike 1
+
+> Agregada **después** de ejecutar el spike; las secciones 1–6 quedaron como estaban en el commit de pre-registro (`912fd90`).
+
+Spike 1 → veredicto **AJUSTADA**: con escritura asíncrona el P95 del `POST` bajó 41,5 % (209,22 → 122,29 ms), pero solo el 54,67 % de las lecturas inmediatas vio el favorito. **I1 queda síncrona** y el contrato v1 conserva `201`. Decisión formal: [ADR-003](../adr/ADR-003-integracion-entre-contextos.md). Detalle: [`03-veredicto.md`](../../experimentos/spike-01-integracion/03-veredicto.md).
