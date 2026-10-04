@@ -11,7 +11,7 @@ async function listar(req, res, next) {
 async function agregar(req, res, next) {
     try {
         const item = await favoritosService.agregar(Number(req.params.idUsuario), req.body.idReceta);
-        res.status(201).json(item);
+        res.status(item.pendiente ? 202 : 201).json(item);
     } catch (err) {
         next(err);
     }
