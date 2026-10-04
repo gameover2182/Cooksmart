@@ -18,9 +18,9 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 - **Stack real (verificado en la documentación y evidencia disponible del proyecto):** HTML, CSS, JavaScript y un backend propio en Node.js/Express con PostgreSQL como persistencia. La base de datos está levantada con Docker Compose (`Docker/Postgre/`). La arquitectura actual se organiza como un monolito modular por capas: routes, controllers, services y repositories, con PostgreSQL como límite de persistencia. La autenticación del backend utiliza JWT y bcrypt.
 
-- **Semana actual:** Semana 8 (Módulo 4 — Estilos arquitectónicos)
+- **Semana actual:** Semana 10 (Módulo 5 — Dominio, APIs, eventos e integración)
 
-> **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, además de un plan de pruebas extenso. Esa arquitectura **no está implementada** en el sistema actual. Para la versión actual, se documenta como antecedente arquitectónico y no como parte del sistema base. El sistema base que documentamos es el actual: frontend estático + API propia (Node/Express) + PostgreSQL, organizada como monolito modular por capas (ver `docs/ADR-001-estilo-arquitectonico.md`).
+> **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, además de un plan de pruebas extenso. Esa arquitectura **no está implementada** en el sistema actual. Para la versión actual, se documenta como antecedente arquitectónico y no como parte del sistema base. El sistema base que documentamos es el actual: frontend estático + API propia (Node/Express) + PostgreSQL, organizada como monolito modular por capas (ver `docs/adr/ADR-001-estilo-arquitectonico.md`).
 
 ## Roadmap / Trabajo futuro
 
@@ -28,7 +28,7 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 - Ampliar los experimentos de rendimiento con k6 a escenarios de mayor duración, distintas cargas y medición por endpoint.
 
-- Automatizar como *fitness function* las reglas de dependencia entre módulos definidas en `docs/ADR-002-limites-modulos-dependencias.md`.
+- Automatizar como *fitness function* las reglas de dependencia entre módulos definidas en `docs/adr/ADR-002-limites-modulos-dependencias.md`.
 
 - Continuar con la optimización y diagnóstico del recorrido completo de la API, especialmente en la comunicación API → PostgreSQL, autenticación y acceso a datos.
 
@@ -78,8 +78,16 @@ docker compose up --build
 | C4 — Contenedores | `docs/06-c4-contenedores.md` | M3 |
 | C4 — Componentes | `docs/07-c4-componentes.md` | M3 |
 | Validación C4 vs. código | `docs/08-validacion-c4-codigo.md` | M3 |
-| ADR 1 — Estilo arquitectónico | `docs/ADR-001-estilo-arquitectonico.md` | M4 |
-| ADR 2 — Límites de módulos y dependencias | `docs/ADR-002-limites-modulos-dependencias.md` | M4 |
+| ADR 1 — Estilo arquitectónico | `docs/adr/ADR-001-estilo-arquitectonico.md` | M4 |
+| ADR 2 — Límites de módulos y dependencias | `docs/adr/ADR-002-limites-modulos-dependencias.md` | M4 |
+| Mapa de dominio (subdominios y contextos acotados) | `docs/dominio/mapa-dominio.md` | M5 |
+| Context Map | `docs/dominio/context-map.md` | M5 |
+| API, eventos e integración (sync vs async, contrato) | `docs/integracion/09-api-eventos-integracion.md` | M5 |
+| Contrato OpenAPI v1 | `docs/integracion/openapi-v1.yaml` | M5 |
+| Aplicabilidad de CQRS / eventos / Event Sourcing | `docs/integracion/aplicabilidad-cqrs-eventos.md` | M5 |
+| Auditoría de eventos propuestos por IA | `docs/ia/auditoria-eventos-m5.md` | M5 |
+| Spike 1 — integración síncrona vs asíncrona | `experimentos/spike-01-integracion/` | M5 |
+| ADR 3 — Integración entre contextos | `docs/adr/ADR-003-integracion-entre-contextos.md` | M5 |
 | Backend propio (API + PostgreSQL) | `Docker/Postgre/` | Sistema actual |
 
 ## Medición ejecutable (k6)
