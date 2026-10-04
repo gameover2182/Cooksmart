@@ -1,3 +1,16 @@
+# Experimentos de CookSmart — índice
+
+| Experimento | Tipo | Módulo | Sistema medido | Estado | Carpeta |
+|---|---|---|---|---|---|
+| **EXP-001 — Línea base** | Medición (sin hipótesis ni cambio experimental) | M2 | **Histórico: Firebase Realtime Database** (ya no es la arquitectura actual) | Cerrado | este archivo + `condiciones.md` + `EXP-001-linea-base/` |
+| **Spike 1 — Integración síncrona vs asíncrona (favoritos)** | **Spike** (hipótesis pre-registrada + cambio experimental + 3 corridas por modo + veredicto) | **M5** | API Node/Express + PostgreSQL actual | **Veredicto: AJUSTADA** → ADR-003 | [`spike-01-integracion/`](spike-01-integracion/README.md) |
+
+Mediciones de k6 sobre la API actual que **no** son experimentos formales (sin pre-registro ni ≥ 3 corridas): `k6-demo/diagnostico.js` y `k6-demo/load-test.js` (ver README principal, sección "Medición ejecutable").
+
+> El resto de este archivo documenta **EXP-001** (contenido original de M2).
+
+---
+
 # EXP-001 — Línea base de Cook Smart
 
 ## 1. Objetivo
