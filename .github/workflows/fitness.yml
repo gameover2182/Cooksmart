@@ -1,0 +1,39 @@
+name: Fitness functions CookSmart
+
+# Funciones de aptitud arquitectónica (Módulo 6). Ver docs/m6/fitness-functions.md.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  reglas-de-capas:
+    name: FF-1 Reglas de dependencia entre capas (ADR-002)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verificar que ninguna capa importe una capa no permitida
+        # Umbral: 0 violaciones. Cualquier violación termina con exit 1 y rompe el PR.
+        run: node fitness/reglas-capas.js Docker/Postgre/backend/src
+
+      - name: Autoprueba de la regla (debe detectar una violación inyectada)
+        # Evita que la fitness function "pase siempre" por un error en el propio script.
+        run: |
+          cp -r Docker/Postgre/backend/src /tmp/src-con-violacion
+          echo "const pg = require('pg');" >> /tmp/src-con-violacion/controllers/recetas.controller.js
+          if node fitness/reglas-capas.js /tmp/src-con-violacion; then
+            echo "La fitness function no detectó la violación inyectada"
+            exit 1
+          fi
+          echo "Autoprueba OK: la violación inyectada fue detectada"
