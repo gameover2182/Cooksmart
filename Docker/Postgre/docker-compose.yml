@@ -30,6 +30,9 @@ services:
       DATABASE_URL: postgresql://admin:Cooksmart2024@db:5432/cooksmart
       PORT: 3000
       JWT_SECRET: v1Gj3Yd7rL1fi9fo
+      # Tácticas de resiliencia de EXP-003 (apagadas por defecto)
+      LOGIN_BULKHEAD: ${LOGIN_BULKHEAD:-off}
+      CACHE_CATALOGO: ${CACHE_CATALOGO:-off}
     ports:
       - "3000:3000"
     depends_on:
