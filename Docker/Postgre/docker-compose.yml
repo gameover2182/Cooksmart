@@ -33,6 +33,8 @@ services:
       # Tácticas de resiliencia de EXP-003 (apagadas por defecto)
       LOGIN_BULKHEAD: ${LOGIN_BULKHEAD:-off}
       CACHE_CATALOGO: ${CACHE_CATALOGO:-off}
+      # EXP-004: procesos de la API en el mismo host (1 = comportamiento original)
+      API_WORKERS: ${API_WORKERS:-1}
     ports:
       - "3000:3000"
     depends_on:
