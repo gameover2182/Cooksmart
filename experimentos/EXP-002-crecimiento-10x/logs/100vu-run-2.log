@@ -1,0 +1,67 @@
+time="2026-10-23T18:34:44-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:34:44-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:34:44-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:34:44-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:34:44-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:34:44-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 1326   17.791222/s
+    checks_succeeded...: 99.54% 1320 out of 1326
+    checks_failed......: 0.45%  6 out of 1326
+
+    ✗ login 200
+      ↳  95% — ✓ 132 / ✗ 6
+    ✓ perfil 200
+    ✓ recetas 200
+    ✓ detalle 200
+    ✓ categorias 200
+    ✓ tipos_cocina 200
+    ✓ ingredientes 200
+    ✓ favoritos 200
+    ✓ historial 200
+    ✓ inventario 200
+
+    CUSTOM
+    fallo_categorias...............: 0.00%  0 out of 132
+    fallo_detalle..................: 0.00%  0 out of 132
+    fallo_favoritos................: 0.00%  0 out of 132
+    fallo_historial................: 0.00%  0 out of 132
+    fallo_ingredientes.............: 0.00%  0 out of 132
+    fallo_inventario...............: 0.00%  0 out of 132
+    fallo_login....................: 4.34%  6 out of 138
+    fallo_perfil...................: 0.00%  0 out of 132
+    fallo_recetas..................: 0.00%  0 out of 132
+    fallo_tipos_cocina.............: 0.00%  0 out of 132
+    iteracion_completa.............: 95.65% 132 out of 138
+    op_categorias..................: avg=1.59s  med=886.3ms  p(90)=4.6s  p(95)=5.73s  p(99)=7.04s  max=7.19s 
+    op_detalle.....................: avg=3.79s  med=1.98s    p(90)=9.94s p(95)=11.52s p(99)=12.53s max=13.1s 
+    op_favoritos...................: avg=1.16s  med=17.66ms  p(90)=4.08s p(95)=5.17s  p(99)=7.04s  max=8.04s 
+    op_historial...................: avg=1.25s  med=14.08ms  p(90)=4.09s p(95)=4.77s  p(99)=7.85s  max=8.24s 
+    op_ingredientes................: avg=1.15s  med=47.66ms  p(90)=4.1s  p(95)=5.16s  p(99)=6.33s  max=7.11s 
+    op_inventario..................: avg=1.12s  med=9.61ms   p(90)=3.7s  p(95)=4.58s  p(99)=7.31s  max=7.42s 
+    op_login.......................: avg=23.21s med=16.17s   p(90)=54s   p(95)=58.78s p(99)=59.96s max=59.96s
+    op_perfil......................: avg=3.2s   med=3.08s    p(90)=6.69s p(95)=7.29s  p(99)=7.97s  max=8.24s 
+    op_recetas.....................: avg=2.83s  med=2.7s     p(90)=5.59s p(95)=6.49s  p(99)=8.04s  max=8.25s 
+    op_tipos_cocina................: avg=1.38s  med=786.57ms p(90)=4.23s p(95)=6.11s  p(99)=6.99s  max=7.42s 
+
+    HTTP
+    http_req_duration..............: avg=4.15s  med=1.28s    p(90)=8.24s p(95)=16.95s p(99)=54.16s max=59.96s
+      { expected_response:true }...: avg=3.9s   med=1.27s    p(90)=8.04s p(95)=14.37s p(99)=50.41s max=59.18s
+    http_req_failed................: 0.45%  6 out of 1326
+    http_reqs......................: 1326   17.791222/s
+
+    EXECUTION
+    iteration_duration.............: avg=50.56s med=51.65s   p(90)=1m11s p(95)=1m12s  p(99)=1m13s  max=1m13s 
+    iterations.....................: 138    1.851575/s
+    vus............................: 3      min=3          max=100
+    vus_max........................: 100    min=100        max=100
+
+    NETWORK
+    data_received..................: 3.4 MB 46 kB/s
+    data_sent......................: 234 kB 3.1 kB/s
+
+
+
