@@ -1,0 +1,202 @@
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:36:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": dial tcp 127.0.0.1:3000: connectex: No connection could be made because the target machine actively refused it."
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:36-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:37:37-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 1531   17.010728/s
+    checks_succeeded...: 90.79% 1390 out of 1531
+    checks_failed......: 9.20%  141 out of 1531
+
+    ✗ login 200
+      ↳  49% — ✓ 139 / ✗ 141
+    ✓ perfil 200
+    ✓ recetas 200
+    ✓ detalle 200
+    ✓ categorias 200
+    ✓ tipos_cocina 200
+    ✓ ingredientes 200
+    ✓ favoritos 200
+    ✓ historial 200
+    ✓ inventario 200
+
+    CUSTOM
+    fallo_categorias...............: 0.00%  0 out of 139
+    fallo_detalle..................: 0.00%  0 out of 139
+    fallo_favoritos................: 0.00%  0 out of 139
+    fallo_historial................: 0.00%  0 out of 139
+    fallo_ingredientes.............: 0.00%  0 out of 139
+    fallo_inventario...............: 0.00%  0 out of 139
+    fallo_login....................: 50.35% 141 out of 280
+    fallo_perfil...................: 0.00%  0 out of 139
+    fallo_recetas..................: 0.00%  0 out of 139
+    fallo_tipos_cocina.............: 0.00%  0 out of 139
+    iteracion_completa.............: 47.77% 129 out of 270
+    op_categorias..................: avg=2.76s  med=2.25s  p(90)=4.55s  p(95)=5.61s  p(99)=8.27s  max=8.42s 
+    op_detalle.....................: avg=5.13s  med=4.36s  p(90)=9.2s   p(95)=11.4s  p(99)=12.39s max=12.61s
+    op_favoritos...................: avg=2.52s  med=2.51s  p(90)=4.33s  p(95)=5.1s   p(99)=8.12s  max=8.42s 
+    op_historial...................: avg=2.83s  med=2.25s  p(90)=7.11s  p(95)=8.12s  p(99)=8.44s  max=8.55s 
+    op_ingredientes................: avg=2.63s  med=2.41s  p(90)=4.12s  p(95)=5.41s  p(99)=8.43s  max=8.44s 
+    op_inventario..................: avg=2.81s  med=1.89s  p(90)=6.47s  p(95)=7.66s  p(99)=8.46s  max=8.66s 
+    op_login.......................: avg=41.97s med=56.83s p(90)=59.92s p(95)=59.92s p(99)=59.99s max=1m0s  
+    op_perfil......................: avg=3.86s  med=3.24s  p(90)=7.38s  p(95)=10.41s p(99)=12.1s  max=12.89s
+    op_recetas.....................: avg=3.11s  med=2.74s  p(90)=4.9s   p(95)=5.75s  p(99)=8.39s  max=8.65s 
+    op_tipos_cocina................: avg=2.64s  med=2.35s  p(90)=4.27s  p(95)=5.38s  p(99)=8.31s  max=8.42s 
+
+    HTTP
+    http_req_duration..............: avg=10.24s med=3.14s  p(90)=46.79s p(95)=59.89s p(99)=59.92s max=1m0s  
+      { expected_response:true }...: avg=5.55s  med=2.84s  p(90)=9.23s  p(95)=23.49s p(99)=49.66s max=59.13s
+    http_req_failed................: 9.20%  141 out of 1531
+    http_reqs......................: 1531   17.010728/s
+
+    EXECUTION
+    iteration_duration.............: avg=1m3s   med=1m1s   p(90)=1m25s  p(95)=1m27s  p(99)=1m29s  max=1m29s 
+    iterations.....................: 270    2.999932/s
+    vus............................: 10     min=10          max=250
+    vus_max........................: 250    min=250         max=250
+
+    NETWORK
+    data_received..................: 3.6 MB 40 kB/s
+    data_sent......................: 272 kB 3.0 kB/s
+
+
+

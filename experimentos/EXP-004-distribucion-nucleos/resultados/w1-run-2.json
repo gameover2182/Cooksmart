@@ -1,0 +1,343 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "login 200": {
+                    "name": "login 200",
+                    "path": "::login 200",
+                    "id": "48b06dc5cde7f6ebb606ad7da726a2a5",
+                    "passes": 274,
+                    "fails": 660
+                },
+                "perfil 200": {
+                    "name": "perfil 200",
+                    "path": "::perfil 200",
+                    "id": "7e2cba1191d025b2130caf7b36c4ee42",
+                    "passes": 274,
+                    "fails": 0
+                },
+                "recetas 200": {
+                    "path": "::recetas 200",
+                    "id": "6709083ca983f0de90de70403afd2d3d",
+                    "passes": 274,
+                    "fails": 0,
+                    "name": "recetas 200"
+                },
+                "detalle 200": {
+                    "fails": 0,
+                    "name": "detalle 200",
+                    "path": "::detalle 200",
+                    "id": "b213a430f302c6ed46dcbdeb9f053b4a",
+                    "passes": 274
+                },
+                "categorias 200": {
+                    "name": "categorias 200",
+                    "path": "::categorias 200",
+                    "id": "b6508a922df41fbd17d9c21434986c7c",
+                    "passes": 274,
+                    "fails": 0
+                },
+                "tipos_cocina 200": {
+                    "name": "tipos_cocina 200",
+                    "path": "::tipos_cocina 200",
+                    "id": "3b240be7e6867932c72feba60ca4e863",
+                    "passes": 274,
+                    "fails": 0
+                },
+                "ingredientes 200": {
+                    "path": "::ingredientes 200",
+                    "id": "66b31db1e100a9d26c5ed0dca7132221",
+                    "passes": 267,
+                    "fails": 0,
+                    "name": "ingredientes 200"
+                },
+                "favoritos 200": {
+                    "name": "favoritos 200",
+                    "path": "::favoritos 200",
+                    "id": "106ccebf48b1abf82d299f35257cb8ac",
+                    "passes": 252,
+                    "fails": 0
+                },
+                "historial 200": {
+                    "id": "a53645c1e2d372bffe8caea1b0d08937",
+                    "passes": 230,
+                    "fails": 0,
+                    "name": "historial 200",
+                    "path": "::historial 200"
+                },
+                "inventario 200": {
+                    "name": "inventario 200",
+                    "path": "::inventario 200",
+                    "id": "2771fd723141eaf37a09ae2839e9821c",
+                    "passes": 210,
+                    "fails": 0
+                }
+            }
+    },
+    "metrics": {
+        "http_req_blocked": {
+            "p(90)": 0.9386000000000111,
+            "p(95)": 21.4229,
+            "p(99)": 27.81830800000003,
+            "max": 31.6977,
+            "avg": 1.6433500153233227,
+            "med": 0
+        },
+        "data_sent": {
+            "count": 518353,
+            "rate": 5759.383471073096
+        },
+        "op_inventario": {
+            "avg": 3102.1053438095228,
+            "med": 3128.78335,
+            "p(90)": 4586.75462,
+            "p(95)": 5200.592825,
+            "p(99)": 5201.568902,
+            "max": 5536.0399
+        },
+        "fallo_inventario": {
+            "passes": 0,
+            "fails": 210,
+            "value": 0
+        },
+        "op_perfil": {
+            "med": 3175.5361000000003,
+            "p(90)": 4581.21363,
+            "p(95)": 5210.350934999994,
+            "p(99)": 5542.337367,
+            "max": 5632.109,
+            "avg": 2816.553993430659
+        },
+        "op_detalle": {
+            "avg": 5812.729414963506,
+            "med": 6738.65915,
+            "p(90)": 8802.1345,
+            "p(95)": 8980.274135,
+            "p(99)": 9488.054568999993,
+            "max": 9772.0427
+        },
+        "op_categorias": {
+            "p(90)": 4579.43733,
+            "p(95)": 4995.79238,
+            "p(99)": 5622.1685609999995,
+            "max": 5623.3309,
+            "avg": 2981.805821897812,
+            "med": 3343.0962
+        },
+        "op_tipos_cocina": {
+            "avg": 3125.032462043794,
+            "med": 3568.2833,
+            "p(90)": 4576.719340000001,
+            "p(95)": 5221.1122,
+            "p(99)": 5417.91418,
+            "max": 5423.6008
+        },
+        "http_req_failed": {
+            "passes": 660,
+            "fails": 2603,
+            "value": 0.2022678516702421
+        },
+        "fallo_historial": {
+            "passes": 0,
+            "fails": 230,
+            "value": 0
+        },
+        "iteration_duration": {
+            "max": 89215.1693,
+            "avg": 34321.90946835293,
+            "med": 51054.945,
+            "p(90)": 61001.684,
+            "p(95)": 75031.32455,
+            "p(99)": 89075.226712
+        },
+        "fallo_sin_login": {
+            "passes": 0,
+            "fails": 2329,
+            "value": 0
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(99)": 50972.53922,
+            "max": 59871.5248,
+            "avg": 5342.565769573571,
+            "med": 3638.7513,
+            "p(90)": 7378.17082,
+            "p(95)": 16308.057060000001
+        },
+        "fallo_perfil": {
+            "passes": 0,
+            "fails": 274,
+            "value": 0
+        },
+        "http_reqs": {
+            "count": 3263,
+            "rate": 36.254961900696074
+        },
+        "vus_max": {
+            "value": 500,
+            "min": 500,
+            "max": 500
+        },
+        "iterations": {
+            "count": 850,
+            "rate": 9.444289799445805
+        },
+        "http_req_waiting": {
+            "med": 3602.277,
+            "p(90)": 50949.69990000003,
+            "p(95)": 59999.1829,
+            "p(99)": 60000.376,
+            "max": 60001.3268,
+            "avg": 9778.093600183895
+        },
+        "http_req_sending": {
+            "avg": 0.054339503524364056,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0.5051,
+            "p(99)": 1.1528,
+            "max": 10.809
+        },
+        "fallo_tipos_cocina": {
+            "passes": 0,
+            "fails": 274,
+            "value": 0
+        },
+        "http_req_duration": {
+            "p(90)": 50950.20500000002,
+            "p(95)": 59999.571619999995,
+            "p(99)": 60000.501,
+            "max": 60001.358,
+            "avg": 9778.19931593627,
+            "med": 3602.277
+        },
+        "http_req_connecting": {
+            "p(99)": 13.7723,
+            "max": 16.8632,
+            "avg": 0.6668566349984665,
+            "med": 0,
+            "p(90)": 0.8641200000000234,
+            "p(95)": 6.1082
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "avg": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0
+        },
+        "fallo_login": {
+            "passes": 660,
+            "fails": 274,
+            "value": 0.7066381156316917
+        },
+        "fallo_ingredientes": {
+            "passes": 0,
+            "fails": 267,
+            "value": 0
+        },
+        "login_rechazo_controlado": {
+            "passes": 0,
+            "fails": 934,
+            "value": 0
+        },
+        "op_login": {
+            "p(90)": 60000.0638,
+            "p(95)": 60000.485,
+            "p(99)": 60000.7987,
+            "max": 60001.358,
+            "avg": 25738.189008993577,
+            "med": 7519.7093
+        },
+        "op_recetas": {
+            "p(95)": 5253.832695,
+            "p(99)": 5632.544314,
+            "max": 5633.0939,
+            "avg": 3022.822529197082,
+            "med": 3267.4323000000004,
+            "p(90)": 4588.15336
+        },
+        "http_req_receiving": {
+            "avg": 0.05137624885075084,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0.5212699999999999,
+            "p(99)": 0.6026660000000001,
+            "max": 10.026
+        },
+        "fallo_detalle": {
+            "passes": 0,
+            "fails": 274,
+            "value": 0
+        },
+        "op_favoritos": {
+            "max": 5646.4876,
+            "avg": 3117.4176587301613,
+            "med": 3286.1628499999997,
+            "p(90)": 4588.09937,
+            "p(95)": 4911.06811,
+            "p(99)": 5482.799971000001
+        },
+        "iteracion_completa": {
+            "passes": 190,
+            "fails": 660,
+            "value": 0.2235294117647059
+        },
+        "op_sin_login": {
+            "avg": 3377.7569057535393,
+            "med": 3458.0932,
+            "p(90)": 5527.814060000001,
+            "p(95)": 6912.9018399999995,
+            "p(99)": 8900.315896,
+            "max": 9772.0427
+        },
+        "fallo_favoritos": {
+            "passes": 0,
+            "fails": 252,
+            "value": 0
+        },
+        "data_received": {
+            "count": 7008125,
+            "rate": 77866.7805302837
+        },
+        "op_historial": {
+            "p(99)": 5208.820855,
+            "max": 5544.0341,
+            "avg": 3145.1529143478283,
+            "med": 3206.48355,
+            "p(90)": 4587.60984,
+            "p(95)": 5201.6349900000005
+        },
+        "op_ingredientes": {
+            "p(95)": 5423.45125,
+            "p(99)": 5530.181594000001,
+            "max": 5631.9662,
+            "avg": 3147.672562921347,
+            "med": 3554.0785,
+            "p(90)": 4480.97834
+        },
+        "checks": {
+            "passes": 2603,
+            "fails": 660,
+            "value": 0.7977321483297579
+        },
+        "vus": {
+            "value": 84,
+            "min": 84,
+            "max": 500
+        },
+        "fallo_recetas": {
+            "passes": 0,
+            "fails": 274,
+            "value": 0
+        },
+        "fallo_categorias": {
+            "passes": 0,
+            "fails": 274,
+            "value": 0
+        }
+    }
+}

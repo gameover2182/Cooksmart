@@ -1,4 +1,5 @@
 require('dotenv').config();
+const cluster = require('cluster');
 const express = require('express');
 const cors = require('cors');
 
@@ -14,6 +15,21 @@ if (!process.env.JWT_SECRET) {
     process.exit(1);
 }
 
+// EXP-004 (M6): con API_WORKERS > 1 el proceso principal solo lanza N procesos
+// de la API que comparten el puerto; con 1 (por defecto) arranca como siempre.
+const WORKERS = Number(process.env.API_WORKERS) || 1;
+if (WORKERS > 1 && cluster.isPrimary) {
+    for (let i = 0; i < WORKERS; i++) cluster.fork();
+    cluster.on('exit', (worker) => {
+        console.error(`Worker ${worker.process.pid} terminó; se lanza otro`);
+        cluster.fork();
+    });
+    console.log(`CookSmart API: proceso principal con ${WORKERS} workers`);
+} else {
+    iniciarServidor();
+}
+
+function iniciarServidor() {
 const app = express();
 
 app.use(cors());
@@ -45,3 +61,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`CookSmart API escuchando en el puerto ${PORT}`);
 });
+}

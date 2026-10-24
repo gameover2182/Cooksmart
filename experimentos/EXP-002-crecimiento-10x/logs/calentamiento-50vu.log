@@ -1,0 +1,60 @@
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 1220    16.616668/s
+    checks_succeeded...: 100.00% 1220 out of 1220
+    checks_failed......: 0.00%   0 out of 1220
+
+    ✓ login 200
+    ✓ perfil 200
+    ✓ recetas 200
+    ✓ detalle 200
+    ✓ categorias 200
+    ✓ tipos_cocina 200
+    ✓ ingredientes 200
+    ✓ favoritos 200
+    ✓ historial 200
+    ✓ inventario 200
+
+    CUSTOM
+    fallo_categorias...............: 0.00%   0 out of 122
+    fallo_detalle..................: 0.00%   0 out of 122
+    fallo_favoritos................: 0.00%   0 out of 122
+    fallo_historial................: 0.00%   0 out of 122
+    fallo_ingredientes.............: 0.00%   0 out of 122
+    fallo_inventario...............: 0.00%   0 out of 122
+    fallo_login....................: 0.00%   0 out of 122
+    fallo_perfil...................: 0.00%   0 out of 122
+    fallo_recetas..................: 0.00%   0 out of 122
+    fallo_tipos_cocina.............: 0.00%   0 out of 122
+    iteracion_completa.............: 100.00% 122 out of 122
+    op_categorias..................: avg=939.71ms med=968.79ms p(90)=1.93s  p(95)=2.15s  p(99)=2.49s  max=2.66s 
+    op_detalle.....................: avg=1.4s     med=1.44s    p(90)=2.81s  p(95)=3.26s  p(99)=3.48s  max=3.55s 
+    op_favoritos...................: avg=837.15ms med=787.9ms  p(90)=1.97s  p(95)=2.23s  p(99)=2.65s  max=2.8s  
+    op_historial...................: avg=731.39ms med=596.61ms p(90)=1.77s  p(95)=2.06s  p(99)=2.2s   max=2.25s 
+    op_ingredientes................: avg=954.17ms med=1.03s    p(90)=1.94s  p(95)=2.12s  p(99)=2.31s  max=2.34s 
+    op_inventario..................: avg=756.83ms med=737.03ms p(90)=1.77s  p(95)=2.03s  p(99)=2.5s   max=2.65s 
+    op_login.......................: avg=7.69s    med=4.37s    p(90)=19.77s p(95)=22.68s p(99)=25.91s max=27.16s
+    op_perfil......................: avg=1.28s    med=1.17s    p(90)=2.13s  p(95)=2.42s  p(99)=6.6s   max=6.7s  
+    op_recetas.....................: avg=948.12ms med=1.06s    p(90)=1.86s  p(95)=2.01s  p(99)=2.5s   max=2.91s 
+    op_tipos_cocina................: avg=958.46ms med=1.06s    p(90)=1.96s  p(95)=2.12s  p(99)=2.66s  max=2.91s 
+
+    HTTP
+    http_req_duration..............: avg=1.65s    med=1.1s     p(90)=2.77s  p(95)=4.45s  p(99)=19.74s max=27.16s
+      { expected_response:true }...: avg=1.65s    med=1.1s     p(90)=2.77s  p(95)=4.45s  p(99)=19.74s max=27.16s
+    http_req_failed................: 0.00%   0 out of 1220
+    http_reqs......................: 1220    16.616668/s
+
+    EXECUTION
+    iteration_duration.............: avg=27.52s   med=26.04s   p(90)=42.54s p(95)=44.33s p(99)=46.91s max=48.54s
+    iterations.....................: 122     1.661667/s
+    vus............................: 4       min=4          max=50
+    vus_max........................: 50      min=50         max=50
+
+    NETWORK
+    data_received..................: 3.2 MB  43 kB/s
+    data_sent......................: 215 kB  2.9 kB/s
+
+
+

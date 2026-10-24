@@ -1,0 +1,71 @@
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+time="2026-10-23T18:33:18-05:00" level=warning msg="Request Failed" error="Post \"http://localhost:3000/api/auth/login\": request timeout"
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 1240   16.443106/s
+    checks_succeeded...: 99.19% 1230 out of 1240
+    checks_failed......: 0.80%  10 out of 1240
+
+    ✗ login 200
+      ↳  92% — ✓ 123 / ✗ 10
+    ✓ perfil 200
+    ✓ recetas 200
+    ✓ detalle 200
+    ✓ categorias 200
+    ✓ tipos_cocina 200
+    ✓ ingredientes 200
+    ✓ favoritos 200
+    ✓ historial 200
+    ✓ inventario 200
+
+    CUSTOM
+    fallo_categorias...............: 0.00%  0 out of 123
+    fallo_detalle..................: 0.00%  0 out of 123
+    fallo_favoritos................: 0.00%  0 out of 123
+    fallo_historial................: 0.00%  0 out of 123
+    fallo_ingredientes.............: 0.00%  0 out of 123
+    fallo_inventario...............: 0.00%  0 out of 123
+    fallo_login....................: 7.51%  10 out of 133
+    fallo_perfil...................: 0.00%  0 out of 123
+    fallo_recetas..................: 0.00%  0 out of 123
+    fallo_tipos_cocina.............: 0.00%  0 out of 123
+    iteracion_completa.............: 92.48% 123 out of 133
+    op_categorias..................: avg=1.88s  med=1.08s    p(90)=4.71s  p(95)=5.36s  p(99)=5.68s  max=5.74s 
+    op_detalle.....................: avg=4.28s  med=3.5s     p(90)=8.95s  p(95)=9.2s   p(99)=9.88s  max=10.42s
+    op_favoritos...................: avg=1.34s  med=37.32ms  p(90)=4.34s  p(95)=5.07s  p(99)=5.57s  max=5.83s 
+    op_historial...................: avg=1.19s  med=23.96ms  p(90)=4.27s  p(95)=4.63s  p(99)=5.23s  max=5.48s 
+    op_ingredientes................: avg=1.5s   med=60.99ms  p(90)=4.85s  p(95)=5.29s  p(99)=5.57s  max=5.68s 
+    op_inventario..................: avg=1.22s  med=22.61ms  p(90)=4.3s   p(95)=4.94s  p(99)=5.37s  max=5.74s 
+    op_login.......................: avg=24.57s med=17.51s   p(90)=57.01s p(95)=59.96s p(99)=59.96s max=59.96s
+    op_perfil......................: avg=3.24s  med=3.67s    p(90)=5.33s  p(95)=5.77s  p(99)=6.16s  max=6.22s 
+    op_recetas.....................: avg=2.83s  med=3.09s    p(90)=5.24s  p(95)=5.38s  p(99)=5.68s  max=5.83s 
+    op_tipos_cocina................: avg=1.61s  med=901.33ms p(90)=4.42s  p(95)=4.95s  p(99)=5.43s  max=5.91s 
+
+    HTTP
+    http_req_duration..............: avg=4.53s  med=1.76s    p(90)=7.91s  p(95)=19.6s  p(99)=57.93s max=59.96s
+      { expected_response:true }...: avg=4.08s  med=1.63s    p(90)=7.73s  p(95)=15.25s p(99)=49.62s max=59.84s
+    http_req_failed................: 0.80%  10 out of 1240
+    http_reqs......................: 1240   16.443106/s
+
+    EXECUTION
+    iteration_duration.............: avg=52.53s med=1m1s     p(90)=1m12s  p(95)=1m13s  p(99)=1m14s  max=1m14s 
+    iterations.....................: 133    1.763656/s
+    vus............................: 1      min=1          max=100
+    vus_max........................: 100    min=100        max=100
+
+    NETWORK
+    data_received..................: 3.2 MB 42 kB/s
+    data_sent......................: 219 kB 2.9 kB/s
+
+
+
