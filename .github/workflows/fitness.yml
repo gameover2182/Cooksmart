@@ -37,3 +37,28 @@ jobs:
             exit 1
           fi
           echo "Autoprueba OK: la violación inyectada fue detectada"
+
+  resiliencia-bulkhead:
+    name: FF-3 El bulkhead de login protege y no fuga cupos (EXP-003)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Docker/Postgre/backend/package-lock.json
+
+      - name: Instalar dependencias del backend
+        working-directory: Docker/Postgre/backend
+        run: npm ci
+
+      - name: Pruebas del bulkhead
+        # Umbral: 3/3 pruebas. Falla si un cliente desconectado deja el cupo ocupado
+        # (el defecto encontrado en EXP-003) o si el bulkhead deja de rechazar bajo saturación.
+        working-directory: Docker/Postgre/backend
+        run: node --test --test-timeout=20000 test/bulkheadLogin.test.js

@@ -18,7 +18,7 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 - **Stack real (verificado en la documentación y evidencia disponible del proyecto):** HTML, CSS, JavaScript y un backend propio en Node.js/Express con PostgreSQL como persistencia. La base de datos está levantada con Docker Compose (`Docker/Postgre/`). La arquitectura actual se organiza como un monolito modular por capas: routes, controllers, services y repositories, con PostgreSQL como límite de persistencia. La autenticación del backend utiliza JWT y bcrypt.
 
-- **Semana actual:** Semana 10 (Módulo 5 — Dominio, APIs, eventos e integración)
+- **Semana actual:** Semana 12 (Módulo 6 — Distribución, resiliencia, rendimiento y costo · Corte 2)
 
 > **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, además de un plan de pruebas extenso. Esa arquitectura **no está implementada** en el sistema actual. Para la versión actual, se documenta como antecedente arquitectónico y no como parte del sistema base. El sistema base que documentamos es el actual: frontend estático + API propia (Node/Express) + PostgreSQL, organizada como monolito modular por capas (ver `docs/adr/ADR-001-estilo-arquitectonico.md`).
 
@@ -30,16 +30,35 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 |---|---|
 | Medición por endpoint con k6 sobre la API propia (`GET /api/recetas`, 50 VUs × 20 s) | `k6-demo/diagnostico.js`, sección "Medición ejecutable" |
 | Recorrido completo autenticado con métricas por operación (50 VUs × 20 s) | Versión de `k6-demo/load-test.js` del commit `3da63ea` (ver nota de trazabilidad abajo) |
-| Carga progresiva hasta 500 VUs | `k6-demo/load-test.js` actual (commit `a57e7d9`); **resultados aún no registrados** en el dossier |
+| Carga progresiva hasta 500 VUs | `k6-demo/load-test.js` actual (commit `a57e7d9`); sin resultados registrados. **Reemplazado** en M6 por EXP-002 (niveles fijos 50/100/250/500 VUs con 3 corridas cada uno) |
 | Módulo 5: dominio, Context Map, contrato API, Spike 1, ADR-003, análisis CQRS/eventos | Ver `docs/m5-auditoria-evidencia.md` |
 
 ### Pendiente / Roadmap
 
 - Pruebas automatizadas funcionales y de seguridad (PSeg01–PSeg04 siguen sin prueba específica).
-- Registrar resultados de la carga progresiva hasta 500 VUs con su propio protocolo (condiciones + ≥ 3 corridas).
-- Diagnóstico por capa del login (bcrypt vs. consulta vs. pool), riesgo R-02. Candidato a Spike 2 (opcional).
+- Medir la combinación de 4 procesos + bulkhead + caché antes de activarla por defecto (condición de entrada del ADR-004).
+- Decidir con Seguridad el costo de bcrypt (12 hoy); es la palanca más fuerte sobre la capacidad de login (ADR-004 §3).
 - Automatizar como *fitness function* las reglas de dependencia de `docs/adr/ADR-002-limites-modulos-dependencias.md` y la verificación del contrato `docs/integracion/openapi-v1.yaml`.
 - Corregir el contrato de `GET /api/recetas` para incluir `ingredientes` (cambio compatible v1.1, `docs/integracion/09-api-eventos-integracion.md` §4.4).
+
+## Evidencia del Módulo 6 — dónde auditarla
+
+**Pregunta del módulo:** *"El sistema crece 10 veces. ¿Qué falla primero?"* → **La autenticación**: el login (bcrypt costo 12) satura el único núcleo que usa la API mientras PostgreSQL queda al ≈ 2 % de CPU (EXP-002).
+
+| Evidencia que pide M6 | Archivo |
+|---|---|
+| Experimento de crecimiento 10× (medición de M2 con carga aumentada) | [experimentos/EXP-002-crecimiento-10x/](https://github.com/gameover2182/Cooksmart/tree/main/experimentos/EXP-002-crecimiento-10x) · [veredicto](https://github.com/gameover2182/Cooksmart/blob/main/experimentos/EXP-002-crecimiento-10x/03-resultados-y-veredicto.md) |
+| Táctica medida antes/después (dos tácticas comparadas: bulkhead y caché) | [experimentos/EXP-003-tacticas-resiliencia/](https://github.com/gameover2182/Cooksmart/tree/main/experimentos/EXP-003-tacticas-resiliencia) · [veredicto](https://github.com/gameover2182/Cooksmart/blob/main/experimentos/EXP-003-tacticas-resiliencia/03-resultados-y-veredicto.md) |
+| Decisión de distribución medida (1 vs 4 procesos) | [experimentos/EXP-004-distribucion-nucleos/](https://github.com/gameover2182/Cooksmart/tree/main/experimentos/EXP-004-distribucion-nucleos) · [veredicto](https://github.com/gameover2182/Cooksmart/blob/main/experimentos/EXP-004-distribucion-nucleos/03-resultados-y-veredicto.md) |
+| Matriz de fallos y matriz de resiliencia | [docs/m6/matriz-fallos-resiliencia.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/m6/matriz-fallos-resiliencia.md) |
+| Costo relativo de las alternativas (órdenes de magnitud) | [docs/m6/costo-distribucion.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/m6/costo-distribucion.md) |
+| ADR 4 — Distribución y resiliencia (veredicto del mini-comité 2: por registrar) | [docs/adr/ADR-004-distribucion-y-resiliencia.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/adr/ADR-004-distribucion-y-resiliencia.md) |
+| Fitness functions en CI (FF-1 capas, FF-2 rendimiento, FF-3 bulkhead) | [docs/m6/fitness-functions.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/m6/fitness-functions.md) · [.github/workflows/fitness.yml](https://github.com/gameover2182/Cooksmart/blob/main/.github/workflows/fitness.yml) |
+| ¿La estrategia de microservicios de la IA añade complejidad innecesaria? | [docs/ia/evaluacion-microservicios-ia-m6.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/ia/evaluacion-microservicios-ia-m6.md) |
+| Guía de la defensa 2 (guion, demo en vivo, preguntas, re-decisión) | [docs/m6/guia-defensa-2.md](https://github.com/gameover2182/Cooksmart/blob/main/docs/m6/guia-defensa-2.md) |
+| Gráfica de degradación vs carga (nivel avanzado) | [degradacion-vs-carga.svg](https://github.com/gameover2182/Cooksmart/blob/main/experimentos/EXP-002-crecimiento-10x/resultados/degradacion-vs-carga.svg) |
+
+Resultados clave (500 VUs = 10×, medianas de 3 corridas): sin táctica, 73 % de logins fallidos y solo 19 % de recorridos completos · **bulkhead del login**: P95 del resto 6,8 s → 0,55 s · **caché del catálogo**: 6,8 s → 4,3 s · **4 procesos**: 4,4× logins por segundo, PostgreSQL al 8 %.
 
 ## Evidencia del Módulo 5 — dónde auditarla
 
@@ -117,6 +136,15 @@ docker compose up --build
 | Spike 1 — integración síncrona vs asíncrona | `experimentos/spike-01-integracion/` | M5 |
 | ADR 3 — Integración entre contextos | `docs/adr/ADR-003-integracion-entre-contextos.md` | M5 |
 | Auditoría de evidencia de M5 (índice, medición vs. spike, trazabilidad Git) | `docs/m5-auditoria-evidencia.md` | M5 |
+| EXP-002 — Crecimiento 10× | `experimentos/EXP-002-crecimiento-10x/` | M6 |
+| EXP-003 — Tácticas de resiliencia (bulkhead vs caché) | `experimentos/EXP-003-tacticas-resiliencia/` | M6 |
+| EXP-004 — Distribución en núcleos (1 vs 4 procesos) | `experimentos/EXP-004-distribucion-nucleos/` | M6 |
+| Matriz de fallos y de resiliencia | `docs/m6/matriz-fallos-resiliencia.md` | M6 |
+| Costo de las alternativas de distribución | `docs/m6/costo-distribucion.md` | M6 |
+| ADR 4 — Distribución y resiliencia | `docs/adr/ADR-004-distribucion-y-resiliencia.md` | M6 |
+| Fitness functions (CI) | `docs/m6/fitness-functions.md`, `fitness/`, `.github/workflows/fitness.yml` | M6 |
+| Evaluación de la propuesta de microservicios de la IA | `docs/ia/evaluacion-microservicios-ia-m6.md` | M6 |
+| Guía de la defensa 2 | `docs/m6/guia-defensa-2.md` | M6 |
 | Backend propio (API + PostgreSQL) | `Docker/Postgre/` | Sistema actual |
 
 ## Medición ejecutable (k6)
