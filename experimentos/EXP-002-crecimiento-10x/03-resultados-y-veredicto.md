@@ -72,6 +72,19 @@ En **negrita**: valores que superan el criterio de "falla" del pre-registro (P95
 - Usuarios distintos por VU: se usó un solo usuario, igual que M2.
 - Duraciones largas (*soak*), caída de PostgreSQL, latencia de red real.
 
+## 5b. Aclaración posterior (encontrada al analizar EXP-003)
+
+Al revisar los mensajes de error de k6 se vio que **no todos los logins fallidos a 5× y 10× son *timeouts***: una parte son **conexiones rechazadas** en la ráfaga inicial (500 VUs abriendo conexión a la vez). Conteo por corrida (`grep "actively refused" / "request timeout" logs/*.log`):
+
+| Nivel | Intentos de login (mediana) | Conexión rechazada | *Timeout* de 60 s |
+|---|---:|---:|---:|
+| 50 VUs | 122 | 0 | 0 |
+| 100 VUs | 136 | 0 | 5–10 |
+| 250 VUs | 350 | 8–41 | 75–133 |
+| 500 VUs | 898 | 290–374 | 324–335 |
+
+**Qué cambia:** a 10×, aproximadamente la mitad del 73 % de logins fallidos son rechazos de conexión al arrancar la prueba, no esperas por CPU. **Qué no cambia:** excluyendo esos rechazos, ≈ 57 % de los logins que sí llegaron a la API expiraron a los 60 s, y la CPU de la API seguía al 100 %; la conclusión de §2 se mantiene. El origen de los rechazos (cola de conexiones del proceso o reenvío de puertos de Docker Desktop en Windows) **no se determinó**.
+
 ## 6. Reproducir en vivo
 
 ```bash
