@@ -9,6 +9,9 @@ const catalogosRoutes = require('./routes/catalogos.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 const authRoutes = require('./routes/auth.routes');
 const errorHandler = require('./middlewares/errorHandler');
+const { cabecerasSeguridad } = require('./middlewares/cabecerasSeguridad');
+const { observabilidad, montarMetricas } = require('./middlewares/observabilidad');
+const { totalBloqueos } = require('./middlewares/limiteLoginFallidos');
 
 if (!process.env.JWT_SECRET) {
     console.error('Falta la variable de entorno JWT_SECRET. El servidor no puede arrancar sin ella.');
@@ -32,8 +35,20 @@ if (WORKERS > 1 && cluster.isPrimary) {
 function iniciarServidor() {
 const app = express();
 
+// A9 (C6): no anunciar Express en ninguna respuesta.
+app.disable('x-powered-by');
+// Detrás de un proxy/compose: confiar en la primera salto para que req.ip sea
+// la IP real del cliente (la usa el límite de intentos de login, C2).
+app.set('trust proxy', 1);
+
+// Observabilidad lo primero: así registra TODO, incluso 404 y errores.
+app.use(observabilidad);
+app.use(cabecerasSeguridad);
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100kb' })); // A8: cuerpo acotado (evita payloads enormes)
+
+// Métricas (protegidas por METRICS_TOKEN; 404 si no se configura). Ver observabilidad.js.
+montarMetricas(app, { bloqueos: totalBloqueos });
 
 // Healthcheck: verifica que el proceso responde Y que puede hablar con Postgres
 app.get('/health', async (req, res) => {

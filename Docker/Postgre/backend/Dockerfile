@@ -3,9 +3,14 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --omit=dev
+# npm ci respeta el lockfile exacto (reproducible y auditado por CI).
+RUN npm ci --omit=dev
 
 COPY src ./src
+
+# Control C4 (M7, amenaza A5): no correr como root dentro del contenedor.
+# La imagen node:20-alpine ya trae el usuario 'node' (uid 1000).
+USER node
 
 EXPOSE 3000
 
