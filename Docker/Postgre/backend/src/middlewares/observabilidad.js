@@ -14,6 +14,11 @@ const { monitorEventLoopDelay } = require('node:perf_hooks');
 const lag = monitorEventLoopDelay({ resolution: 20 });
 lag.enable();
 
+// Log por petición: activo por defecto. Apagarlo (LOG_PETICIONES=off) reduce el
+// volumen de logs sin perder las métricas ni el X-Request-Id. Se usó para medir
+// el sobrecosto de los logs (H-O3 de EXP-005).
+const LOG_PETICIONES = process.env.LOG_PETICIONES !== 'off';
+
 const contadores = {
     http_total: new Map(),       // "metodo ruta estado" -> n
     login_ok: 0,
@@ -23,9 +28,15 @@ const contadores = {
 
 // Patrón de ruta, NUNCA la URL con datos: /api/usuarios/208/inventario -> /api/usuarios/:id/inventario.
 // Así el log no filtra identificadores y las métricas no explotan en cardinalidad.
+//
+// Se usa req.originalUrl (sin query) y NO req.baseUrl + req.route.path: cuando la
+// respuesta la emite el errorHandler a nivel de app (p. ej. un 401 de login que
+// viaja por next(err)), Express ya desmontó el baseUrl del router y el patrón salía
+// inconsistente ("/login" en vez de "/api/auth/login"), con lo que el contador de
+// logins fallidos no los contaba. originalUrl es estable en todo el ciclo.
 function patronRuta(req) {
-    const base = (req.baseUrl || '') + (req.route ? req.route.path : req.path || '');
-    return base
+    const url = (req.originalUrl || req.url || '/').split('?')[0];
+    return url
         .replace(/\/\d+/g, '/:id')
         .replace(/\/+$/, '') || '/';
 }
@@ -50,6 +61,8 @@ function observabilidad(req, res, next) {
             else if (res.statusCode < 400) contadores.login_ok++;
         }
 
+        // El conteo de métricas es siempre; el log por línea es opcional (H-O3).
+        if (!LOG_PETICIONES) return;
         const linea = {
             ts: new Date().toISOString(),
             id: req.id,

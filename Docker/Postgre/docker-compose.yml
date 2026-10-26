@@ -34,6 +34,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?define JWT_SECRET en .env (rotado; fuera del repo)}
       # Observabilidad (M7): sin token, /metrics no existe (404).
       METRICS_TOKEN: ${METRICS_TOKEN:-}
+      # Log por peticion (on por defecto); off reduce volumen sin perder metricas.
+      LOG_PETICIONES: ${LOG_PETICIONES:-on}
       # Seguridad (M7): límite de intentos fallidos de login (C2), activo por defecto.
       LOGIN_RATELIMIT: ${LOGIN_RATELIMIT:-on}
       # Tácticas de resiliencia de EXP-003 (apagadas por defecto)
