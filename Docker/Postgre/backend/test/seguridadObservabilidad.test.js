@@ -18,7 +18,7 @@ const express = require('express');
 const { cabecerasSeguridad } = require('../src/middlewares/cabecerasSeguridad');
 const { cacheCatalogo, _entradas, MAX_ENTRADAS } = require('../src/middlewares/cacheCatalogo');
 const { limiteLoginFallidos } = require('../src/middlewares/limiteLoginFallidos');
-const { montarMetricas } = require('../src/middlewares/observabilidad');
+const { observabilidad, montarMetricas } = require('../src/middlewares/observabilidad');
 
 function pedir(puerto, { metodo = 'GET', ruta = '/', headers = {} } = {}) {
     return new Promise((resolve) => {
@@ -97,6 +97,32 @@ test('H-O4: /metrics exige el token correcto', async () => {
     assert.strictEqual((await pedir(port, { ruta: '/metrics', headers: { Authorization: 'Bearer malo' } })).status, 401);
     assert.strictEqual((await pedir(port, { ruta: '/metrics', headers: { Authorization: 'Bearer token-de-prueba' } })).status, 200);
     s.close();
+});
+
+test('H-O5 (regresión D-O3): un 401 de login que viaja por el errorHandler se cuenta como fallido', async () => {
+    // Reproduce el defecto: el patrón de ruta debe salir "/api/auth/login" aunque
+    // la respuesta la emita un errorHandler a nivel de app (Express ya quitó el baseUrl).
+    const app = express();
+    app.use(observabilidad);
+    app.use(express.json());
+    montarMetricas(app);
+    const authRouter = express.Router();
+    authRouter.post('/login', (req, res, next) => {
+        const err = new Error('credenciales'); err.status = 401; next(err); // 401 por next(err)
+    });
+    app.use('/api/auth', authRouter);                 // montado en un baseUrl
+    app.use((err, req, res, next) => res.status(err.status || 500).json({ error: 'x' })); // errorHandler de app
+    const s = await escuchar(app);
+    const { port } = s.address();
+
+    const antes = (await pedir(port, { ruta: '/metrics', headers: { Authorization: 'Bearer token-de-prueba' } })).body;
+    const nAntes = Number((antes.match(/login_total\{resultado="fallido"\} (\d+)/) || [])[1] || 0);
+    await pedir(port, { metodo: 'POST', ruta: '/api/auth/login', headers: { 'Content-Type': 'application/json' } });
+    const despues = (await pedir(port, { ruta: '/metrics', headers: { Authorization: 'Bearer token-de-prueba' } })).body;
+    const nDespues = Number((despues.match(/login_total\{resultado="fallido"\} (\d+)/) || [])[1] || 0);
+    s.close();
+    // Con el defecto, la ruta salía "/login" y el contador NO subía (nDespues == nAntes).
+    assert.strictEqual(nDespues, nAntes + 1, 'el 401 de login debe incrementar login_total{fallido}');
 });
 
 test('H-O4: sin METRICS_TOKEN, /metrics no existe (404)', async () => {

@@ -83,9 +83,18 @@ De `resultados/observabilidad.json` (medido):
 - **H-O2 (¿dónde / a quién?):** **100/100** respuestas traen `X-Request-Id` único, y ese id aparece en exactamente una línea de log con la ruta como patrón. La correlación funciona.
 - **H-O4 (¿es un punto de fuga?):** `/metrics` sin token → 401; con un JWT de usuario → 401; solo con `METRICS_TOKEN` → 200. Sin configurar el token, **no existe** (404).
 
-### 2.4 Costo de observar (H-O3)
+### 2.4 Costo de observar (H-O3 — medido)
 
-El log por petición escribe una línea JSON a stdout en el *finish* de la respuesta; no bloquea el manejo. La métrica del bucle de eventos usa `perf_hooks` del propio runtime (sin dependencia nueva). El sobrecosto esperado sobre la latencia es ≤ 15 % y se mantiene dentro del presupuesto de rendimiento del M2/M6 (p95 < 500 ms en lecturas). No se añadió ninguna dependencia npm, por lo que **no amplía la superficie de `npm audit`**.
+El log por petición escribe una línea JSON a stdout en el *finish* de la respuesta; no bloquea el manejo. La métrica del bucle de eventos usa `perf_hooks` del propio runtime (sin dependencia nueva).
+
+**Medición** (`k6-demo/diagnostico.js`, 50 VUs × 20 s, 1 calentamiento + 3 corridas, P95 en ms):
+
+| Config | Corridas | Mediana |
+|---|---|---|
+| Log `on` | 201 · 192 · 193 | 193 |
+| Log `off` | 236 · 257 · 210 | 236 |
+
+La mediana con el log **activado** salió *más baja* que con el log apagado: imposible como efecto real, así que la diferencia es **ruido de la máquina**. La conclusión honesta es que **el sobrecosto del log está por debajo del ruido de medición** (la variabilidad entre corridas supera cualquier efecto del log), no un porcentaje concreto. Un número limpio exigiría una máquina dedicada en reposo (misma limitación que `docs/m6/fitness-functions.md` anota para k6 aquí). Se añadió el interruptor `LOG_PETICIONES=off` por si en producción el volumen de logs pesara más que la CPU. No se añadió ninguna dependencia npm, por lo que **no amplía la superficie de `npm audit`**. Detalle en `experimentos/EXP-005-.../03-resultados-y-veredicto.md` §4.
 
 ## 3. Relación con la resiliencia del M6
 
