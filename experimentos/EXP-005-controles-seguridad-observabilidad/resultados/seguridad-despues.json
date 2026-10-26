@@ -1,0 +1,55 @@
+{
+  "fase": "despues",
+  "fecha": "2026-10-26T19:22:19.241Z",
+  "base": "http://localhost:3000",
+  "pruebas": {
+    "H-S1": {
+      "descripcion": "token forjado con secreto del repo accede a datos ajenos",
+      "status": 401,
+      "explotable": false
+    },
+    "H-S2": {
+      "intentos": [
+        401,
+        401,
+        401,
+        401,
+        401,
+        429,
+        429,
+        429,
+        429,
+        429,
+        429,
+        429,
+        429,
+        429,
+        429
+      ],
+      "total_429": 10,
+      "misma_cuenta_bloqueada": 429,
+      "otra_cuenta_misma_ip": 401
+    },
+    "H-S3": {
+      "descripcion": "uid del proceso: ver salida de docker exec cooksmart-api id",
+      "nota": "medido fuera del script"
+    },
+    "H-S5": {
+      "x_powered_by": null,
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY"
+    },
+    "H-S6": {
+      "status": 409,
+      "revela_existencia": true
+    },
+    "H-S7": {
+      "token_de_sesion_vale": true
+    },
+    "H-O4": {
+      "sin_token": 401,
+      "con_jwt_de_usuario": 401,
+      "con_metrics_token": 200
+    }
+  }
+}

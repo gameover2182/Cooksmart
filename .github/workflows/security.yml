@@ -43,3 +43,32 @@ jobs:
         if: failure()
         # No falla el job de nuevo, solo imprime el detalle en el log
         run: npm audit || true
+
+  sin-secretos:
+    name: FF-5 Ningún secreto en archivos versionados (C1 / M7)
+    runs-on: ubuntu-latest
+    # Este job no corre dentro de backend: escanea TODO el repo.
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Escanear secretos en archivos rastreados por git
+        # Umbral: 0 hallazgos. Si alguien vuelve a commitear el JWT_SECRET, falla el PR.
+        run: node fitness/sin-secretos.js
+
+      - name: Autoprueba (debe detectar un secreto inyectado)
+        # Evita que la fitness function "pase siempre" por un fallo del propio script.
+        run: |
+          cp Docker/Postgre/docker-compose.yml /tmp/compose-malo.yml
+          # Secreto generado al vuelo: no queda ningún literal en este workflow.
+          printf '\n      JWT_SECRET: %s\n' "$(openssl rand -hex 16)" >> /tmp/compose-malo.yml
+          if node fitness/sin-secretos.js /tmp/compose-malo.yml; then
+            echo "La fitness function no detectó el secreto inyectado"
+            exit 1
+          fi
+          echo "Autoprueba OK: el secreto inyectado fue detectado"

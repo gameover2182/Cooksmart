@@ -1,0 +1,19 @@
+{
+  "fecha": "2026-10-26T19:23:20.243Z",
+  "H-O2": {
+    "respuestas": 100,
+    "con_id_unico": 100
+  },
+  "H-O1": {
+    "lag_p99_reposo_ms": 21.27,
+    "lag_p99_bajo_carga_ms": 1621.1,
+    "umbral_alerta_ms": 200,
+    "logins_lanzados": 105,
+    "detecta_bloqueo_hilo": true
+  },
+  "H-O5": {
+    "fallidos_delta": 0,
+    "bloqueados_delta": 0,
+    "nota": "los logins de carga usan credencial correcta; fuerza bruta se mide en verificar-seguridad.js"
+  }
+}

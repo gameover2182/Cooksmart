@@ -37,6 +37,9 @@ jobs:
           echo "POSTGRES_USER=admin" > .env
           echo "POSTGRES_PASSWORD=Cooksmart2024" >> .env
           echo "POSTGRES_DB=cooksmart" >> .env
+          # El compose ahora exige JWT_SECRET desde .env (control C1, M7).
+          # En CI es un valor efímero de prueba, no un secreto real.
+          echo "JWT_SECRET=ci-build-secret-no-real" >> .env
 
       - name: Validar sintaxis de docker-compose.yml
         # Verifica que el archivo compone bien, sin levantar contenedores

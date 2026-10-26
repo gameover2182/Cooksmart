@@ -5,8 +5,20 @@
 // ni volver a serializar el JSON.
 const ACTIVO = process.env.CACHE_CATALOGO === 'on';
 const TTL_MS = Number(process.env.CACHE_TTL_MS) || 60000;
+// Control C3 (M7, amenaza A7): tope de entradas. La clave es req.originalUrl,
+// así que GET /api/recetas?x=1..N generaría una entrada por query distinta y
+// agotaría memoria. Con el tope, al llenarse se descarta la entrada más vieja
+// (FIFO sobre el orden de inserción del Map).
+const MAX_ENTRADAS = Number(process.env.CACHE_MAX_ENTRADAS) || 500;
 
 const entradas = new Map();
+
+function guardar(clave, valor) {
+    if (entradas.size >= MAX_ENTRADAS && !entradas.has(clave)) {
+        entradas.delete(entradas.keys().next().value); // descarta la más antigua
+    }
+    entradas.set(clave, valor);
+}
 
 function cacheCatalogo(req, res, next) {
     if (!ACTIVO || req.method !== 'GET') return next();
@@ -21,7 +33,7 @@ function cacheCatalogo(req, res, next) {
     const jsonOriginal = res.json.bind(res);
     res.json = (datos) => {
         if (res.statusCode === 200) {
-            entradas.set(clave, { cuerpo: JSON.stringify(datos), expira: Date.now() + TTL_MS });
+            guardar(clave, { cuerpo: JSON.stringify(datos), expira: Date.now() + TTL_MS });
         }
         res.set('X-Cache', 'MISS');
         return jsonOriginal(datos);
@@ -29,4 +41,4 @@ function cacheCatalogo(req, res, next) {
     next();
 }
 
-module.exports = { cacheCatalogo };
+module.exports = { cacheCatalogo, _entradas: entradas, MAX_ENTRADAS };

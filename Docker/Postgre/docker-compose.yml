@@ -8,9 +8,10 @@ services:
       - .env
     container_name: cooksmart
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: Cooksmart2024
-      POSTGRES_DB: cooksmart
+      # Credenciales desde .env (NO versionado). Compose aborta si faltan.
+      POSTGRES_USER: ${POSTGRES_USER:?define POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:?define POSTGRES_DB en .env}
 
     volumes:
       - cooksmart_pgdata:/var/lib/postgresql/data
@@ -27,12 +28,18 @@ services:
     container_name: cooksmart-api
     restart: always
     environment:
-      DATABASE_URL: postgresql://admin:Cooksmart2024@db:5432/cooksmart
+      # Credenciales y secreto desde .env (control C1/M7: ya no están en el repo).
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       PORT: 3000
-      JWT_SECRET: v1Gj3Yd7rL1fi9fo
+      JWT_SECRET: ${JWT_SECRET:?define JWT_SECRET en .env (rotado; fuera del repo)}
+      # Observabilidad (M7): sin token, /metrics no existe (404).
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      # Seguridad (M7): límite de intentos fallidos de login (C2), activo por defecto.
+      LOGIN_RATELIMIT: ${LOGIN_RATELIMIT:-on}
       # Tácticas de resiliencia de EXP-003 (apagadas por defecto)
       LOGIN_BULKHEAD: ${LOGIN_BULKHEAD:-off}
       CACHE_CATALOGO: ${CACHE_CATALOGO:-off}
+      CACHE_MAX_ENTRADAS: ${CACHE_MAX_ENTRADAS:-500}
       # EXP-004: procesos de la API en el mismo host (1 = comportamiento original)
       API_WORKERS: ${API_WORKERS:-1}
     ports:
@@ -45,8 +52,9 @@ services:
     image: adminer
     restart: always
     ports:
-      - 5433:8080
+      # Control C5 (M7, amenaza A6): consola de base de datos SOLO accesible
+      # desde la propia máquina, nunca expuesta a la red.
+      - "127.0.0.1:5433:8080"
 
 volumes:
   cooksmart_pgdata:
-

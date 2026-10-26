@@ -18,7 +18,7 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 - **Stack real (verificado en la documentación y evidencia disponible del proyecto):** HTML, CSS, JavaScript y un backend propio en Node.js/Express con PostgreSQL como persistencia. La base de datos está levantada con Docker Compose (`Docker/Postgre/`). La arquitectura actual se organiza como un monolito modular por capas: routes, controllers, services y repositories, con PostgreSQL como límite de persistencia. La autenticación del backend utiliza JWT y bcrypt.
 
-- **Semana actual:** Semana 12 (Módulo 6 — Distribución, resiliencia, rendimiento y costo · Corte 2)
+- **Semana actual:** Semanas 13–14 (Módulo 7 — Seguridad, despliegue y observabilidad · Fase IV, Operación y defensa)
 
 > **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, además de un plan de pruebas extenso. Esa arquitectura **no está implementada** en el sistema actual. Para la versión actual, se documenta como antecedente arquitectónico y no como parte del sistema base. El sistema base que documentamos es el actual: frontend estático + API propia (Node/Express) + PostgreSQL, organizada como monolito modular por capas (ver `docs/adr/ADR-001-estilo-arquitectonico.md`).
 
@@ -32,10 +32,12 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 | Recorrido completo autenticado con métricas por operación (50 VUs × 20 s) | Versión de `k6-demo/load-test.js` del commit `3da63ea` (ver nota de trazabilidad abajo) |
 | Carga progresiva hasta 500 VUs | `k6-demo/load-test.js` actual (commit `a57e7d9`); sin resultados registrados. **Reemplazado** en M6 por EXP-002 (niveles fijos 50/100/250/500 VUs con 3 corridas cada uno) |
 | Módulo 5: dominio, Context Map, contrato API, Spike 1, ADR-003, análisis CQRS/eventos | Ver `docs/m5-auditoria-evidencia.md` |
+| Módulo 6: crecimiento 10×, matrices de fallos/resiliencia, tácticas medidas, distribución, costo, ADR-004, fitness functions | Ver "Evidencia del Módulo 6" |
+| Módulo 7: modelado de amenazas, controles C1–C6 medidos, despliegue+costo, observabilidad, ADR-005, FF-5/FF-6 | Ver "Evidencia del Módulo 7" |
 
 ### Pendiente / Roadmap
 
-- Pruebas automatizadas funcionales y de seguridad (PSeg01–PSeg04 siguen sin prueba específica).
+- PSeg01–PSeg04 pasan de "pendiente" a **cubiertos** por EXP-005 + FF-5/FF-6 (ver `docs/m7/10-seguridad.md` §6).
 - Medir la combinación de 4 procesos + bulkhead + caché antes de activarla por defecto (condición de entrada del ADR-004).
 - Decidir con Seguridad el costo de bcrypt (12 hoy); es la palanca más fuerte sobre la capacidad de login (ADR-004 §3).
 - Automatizar como *fitness function* las reglas de dependencia de `docs/adr/ADR-002-limites-modulos-dependencias.md` y la verificación del contrato `docs/integracion/openapi-v1.yaml`.
@@ -59,6 +61,23 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 | Gráfica de degradación vs carga (nivel avanzado) | [degradacion-vs-carga.svg](https://github.com/gameover2182/Cooksmart/blob/main/experimentos/EXP-002-crecimiento-10x/resultados/degradacion-vs-carga.svg) |
 
 Resultados clave (500 VUs = 10×, medianas de 3 corridas): sin táctica, 73 % de logins fallidos y solo 19 % de recorridos completos · **bulkhead del login**: P95 del resto 6,8 s → 0,55 s · **caché del catálogo**: 6,8 s → 4,3 s · **4 procesos**: 4,4× logins por segundo, PostgreSQL al 8 %.
+
+## Evidencia del Módulo 7 — dónde auditarla
+
+**Pregunta del módulo:** *"Si el sistema falla en producción, ¿cómo sabríamos qué ocurrió, dónde, a quién afectó y qué decisión lo permitió?"* → con **observabilidad** (logs con `X-Request-Id` + métrica del retraso del bucle de eventos) y decisiones registradas en ADR-005. Y de paso se cerraron amenazas **medidas**, la crítica: el `JWT_SECRET` estaba versionado en el repo.
+
+| Evidencia que pide M7 | Archivo |
+|---|---|
+| Matriz de riesgos de seguridad + controles arquitectónicos + límites de confianza | [docs/m7/10-seguridad.md](docs/m7/10-seguridad.md) |
+| Diagrama de despliegue + costo relativo de dos alternativas | [docs/m7/12-despliegue-observabilidad.md](docs/m7/12-despliegue-observabilidad.md) §1 |
+| Plan de observabilidad vinculado a los fallos del M6 | [docs/m7/12-despliegue-observabilidad.md](docs/m7/12-despliegue-observabilidad.md) §2 |
+| ADR 5 + matriz de riesgos operativos | [docs/adr/ADR-005-seguridad-y-operacion.md](docs/adr/ADR-005-seguridad-y-operacion.md) |
+| Fitness function en CI que rompe ante una violación (FF-5 secretos, FF-6 controles) | [docs/m6/fitness-functions.md](docs/m6/fitness-functions.md) · [.github/workflows/security.yml](.github/workflows/security.yml) · [.github/workflows/fitness.yml](.github/workflows/fitness.yml) |
+| Experimento antes/después de los controles y de la observabilidad | [experimentos/EXP-005-controles-seguridad-observabilidad/](experimentos/EXP-005-controles-seguridad-observabilidad/03-resultados-y-veredicto.md) |
+| ¿La lista de amenazas de la IA añade controles innecesarios? | [docs/ia/evaluacion-amenazas-ia-m7.md](docs/ia/evaluacion-amenazas-ia-m7.md) |
+| Guía de la defensa 3 (guion, demo en vivo, preguntas) | [docs/m7/guia-defensa-3.md](docs/m7/guia-defensa-3.md) |
+
+Resultados clave (medidos contra el stack real): token forjado con el secreto del repo → **200 antes / 401 después** · fuerza bruta de login → **0×429 antes / bloqueo tras 5 fallos después** · API **root → node** · Adminer **0.0.0.0 → 127.0.0.1** · retraso del bucle de eventos bajo carga de login **21 ms (reposo) → 1621 ms** (la observabilidad detecta el fallo F1 del M6).
 
 ## Evidencia del Módulo 5 — dónde auditarla
 

@@ -62,3 +62,28 @@ jobs:
         # (el defecto encontrado en EXP-003) o si el bulkhead deja de rechazar bajo saturación.
         working-directory: Docker/Postgre/backend
         run: node --test --test-timeout=20000 test/bulkheadLogin.test.js
+
+  controles-seguridad:
+    name: FF-6 Controles de seguridad y observabilidad (EXP-005 / M7)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Docker/Postgre/backend/package-lock.json
+
+      - name: Instalar dependencias del backend
+        working-directory: Docker/Postgre/backend
+        run: npm ci
+
+      - name: Pruebas de cabeceras, caché acotada, límite de login y /metrics
+        # Umbral: 5/5. Falla si se cae una cabecera, si la caché deja de tener tope,
+        # si el límite de intentos deja de bloquear, o si /metrics queda sin protección.
+        working-directory: Docker/Postgre/backend
+        run: node --test --test-timeout=20000 test/seguridadObservabilidad.test.js
