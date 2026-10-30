@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CookSmart — Módulo 6</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --ink: #17201b; --muted: #5d6862; --line: #dfe3df; --bg: #fbfaf7; --card: #ffffff;
+    --green: #1f6b4a; --green-soft: #e3f0e8; --red: #b4402c; --red-soft: #f7e4df;
+    --amber: #a86a12; --amber-soft: #f6ecd9; --blue: #2f5d8a; --blue-soft: #e2ebf4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", "DejaVu Sans", sans-serif; color: var(--ink); background: #888; }
+  .slide {
+    width: 1280px; height: 720px; background: var(--bg); position: relative; overflow: hidden;
+    padding: 56px 72px 48px; page-break-after: always; display: flex; flex-direction: column;
+  }
+  .slide:last-child { page-break-after: auto; }
+  .kicker { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+  h1 { font-size: 40px; line-height: 1.12; font-weight: 800; letter-spacing: -.01em; margin-bottom: 22px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  p, li { font-size: 19px; line-height: 1.45; }
+  .muted { color: var(--muted); }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 22px; display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; }
+  .card.green { background: var(--green-soft); border-color: #c4dccd; }
+  .card.red { background: var(--red-soft); border-color: #ecc8bf; }
+  .card.amber { background: var(--amber-soft); border-color: #e8d4ae; }
+  .card.blue { background: var(--blue-soft); border-color: #c7d6e6; }
+  ul { padding-left: 22px; } li { margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; background: var(--card); border-radius: 12px; overflow: hidden; }
+  th { text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 12px; border-bottom: 2px solid var(--line); background: #f3f4f1; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bad { color: var(--red); font-weight: 700; } .good { color: var(--green); font-weight: 700; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+  .pill.ok { background: var(--green-soft); color: var(--green); }
+  .pill.no { background: var(--red-soft); color: var(--red); }
+  .pill.mid { background: var(--amber-soft); color: var(--amber); }
+  .big { font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+  .stat .label { font-size: 15px; color: var(--muted); margin-top: 6px; }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 12px; margin: 10px 0; font-size: 16px; }
+  .bar { height: 28px; border-radius: 6px; }
+  .who { font-size: 13px; font-weight: 700; color: var(--blue); }
+  code { font-family: "DejaVu Sans Mono", monospace; font-size: .85em; background: #eef0ec; padding: 1px 6px; border-radius: 4px; }
+  .cover { background: var(--green); color: #fff; justify-content: center; }
+  .cover .kicker { color: #bfe2cf; }
+  .cover h1 { font-size: 58px; max-width: 980px; }
+  .cover p { font-size: 22px; color: #e1f0e7; }
+  .cover .foot { color: #bfe2cf; }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="slide cover">
+  <div class="kicker">Arquitectura de Software · Módulo 06 · Fase III — Evidencia ejecutable</div>
+  <h1>El sistema crece 10×. ¿Qué falla primero?</h1>
+  <p>Distribución, resiliencia, rendimiento y costo en CookSmart</p>
+  <p style="margin-top:40px;font-size:18px">Juan Manuel Bermúdez Rodríguez · Miguel Ángel Santamaría Cuero · Leonardo Juan Pablo León Robelto</p>
+  <div class="foot"><span>Semanas 11–12 · Corte 2 · Mini-comité 2</span><span>1</span></div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="kicker">La pregunta del módulo</div>
+  <h1>No se responde con argumentos: se ejecuta la prueba con carga aumentada</h1>
+  <div class="grid2">
+    <div class="card">
+      <h2>Candidatos a fallar primero</h2>
+      <p class="muted">Base de datos · API · red · autenticación · consultas · despliegue · equipo · monitoreo</p>
+      <h2 style="margin-top:22px">Qué hicimos</h2>
+      <ul>
+        <li>Re-ejecutamos la medición de M2 a 1×, 2×, 5× y 10× (50 → 500 usuarios virtuales).</li>
+        <li>Medimos CPU de la API y de PostgreSQL durante cada corrida.</li>
+        <li>Probamos tácticas de resiliencia con antes/después.</li>
+      </ul>
+    </div>
+    <div class="card green" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="kicker">Respuesta medida</div>
+      <div class="big" style="color:var(--green)">La autenticación</div>
+      <p style="margin-top:18px">El login (bcrypt costo 12) satura el <b>único núcleo</b> que usa la API, mientras PostgreSQL queda al <b>≈ 2 % de CPU</b>.</p>
+      <p style="margin-top:10px" class="muted">Y de paso: no había monitoreo que lo mostrara.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Fuente: EXP-002 §2</span><span>2</span></div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="kicker">Qué pide el módulo</div>
+  <h1>Objetivos, entregables y cómo se evalúa</h1>
+  <div class="grid3" style="flex:1">
+    <div class="card">
+      <h2>Al terminar sabemos…</h2>
+      <ul style="font-size:17px">
+        <li>Evaluar si conviene distribuir, con el costo explícito</li>
+        <li>Aplicar timeouts, retries, circuit breakers, caché, degradación</li>
+        <li>Medir bajo carga y el antes/después de una táctica</li>
+        <li>Poner una fitness function en CI</li>
+        <li>Justificar la distribución con datos propios</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Evidencia</h2>
+      <ul style="font-size:17px">
+        <li>Experimentos con antes/después en <code>/experimentos</code></li>
+        <li>Matriz de fallos y de resiliencia</li>
+        <li>Decisión de distribución con costo + ADR-004</li>
+        <li>Fitness function en CI (≤ semana 14)</li>
+        <li>Defensa individual de 7–10 min con re-decisión</li>
+      </ul>
+    </div>
+    <div class="card amber">
+      <h2>Rúbrica</h2>
+      <ul style="font-size:17px">
+        <li>Evidencia ejecutable</li>
+        <li>Trade-offs</li>
+        <li>Riesgos</li>
+        <li>Defensa oral y re-decisión</li>
+      </ul>
+      <p style="margin-top:14px;font-size:16px"><b>Regla clave:</b> la medición debe re-ejecutarse en vivo. Si no se reproduce, la fila cae a <b>Insuficiente</b>.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Módulo 06 · enunciado del curso</span><span>3</span></div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="kicker">Método</div>
+  <h1>Hipótesis con número en Git <u>antes</u> de medir</h1>
+  <div class="grid2">
+    <div class="card">
+      <h2>Protocolo de EXP-002</h2>
+      <ul>
+        <li>Mismo recorrido autenticado de M2 (login + 9 operaciones), con k6.</li>
+        <li>Niveles fijos: <b>50 · 100 · 250 · 500 VUs</b> (1× a 10×).</li>
+        <li>Calentamiento descartado + <b>3 corridas de 60 s</b> por nivel.</li>
+        <li>Se reporta la <b>mediana</b> de las 3 corridas.</li>
+        <li><code>docker stats</code> muestrea CPU de API y PostgreSQL.</li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h2>Criterio de “falla” (pre-registrado)</h2>
+      <p>P95 &gt; 3 000 ms <b>o</b> error &gt; 1 %</p>
+      <h2 style="margin-top:20px">Hipótesis</h2>
+      <ul style="font-size:17px">
+        <li><b>H-A</b> El login es la primera operación en fallar, en ≤ 250 VUs</li>
+        <li><b>H-B</b> En el primer nivel con fallas: API ≥ 90 % CPU y PostgreSQL ≤ 50 %</li>
+        <li><b>H-C</b> A 500 VUs, el P95 del resto es ≥ 5× el de 50 VUs</li>
+      </ul>
+      <p style="margin-top:10px;font-size:15px" class="muted">Pre-registro: commit <code>02a5143</code></p>
+    </div>
+  </div>
+  <div class="foot"><span>experimentos/EXP-002-crecimiento-10x/00-preregistro.md</span><span>4</span></div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="kicker">EXP-002 · Crecimiento 10×</div>
+  <h1>Así se degrada CookSmart al pasar de 50 a 500 usuarios</h1>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center">
+    <img src="degradacion-vs-carga.svg" style="width:100%;max-height:500px;border:1px solid var(--line);border-radius:12px">
+  </div>
+  <div class="foot"><span>Medianas de 3 corridas · resultados/degradacion-vs-carga.svg</span><span>5</span></div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="kicker">EXP-002 · Dónde y cómo se degrada</div>
+  <h1>La API está al 100 % desde 1×; la base de datos, ociosa</h1>
+  <table>
+    <tr><th>Nivel</th><th class="num">CPU API</th><th class="num">CPU PostgreSQL</th><th class="num">Solicitudes/s</th><th class="num">P95 login</th><th class="num">Error login</th><th class="num">Recorridos completos</th></tr>
+    <tr><td>50 VUs (1×)</td><td class="num bad">100,1 %</td><td class="num">2,4 %</td><td class="num">16,5</td><td class="num bad">22,0 s</td><td class="num">0,0 %</td><td class="num">100 %</td></tr>
+    <tr><td>100 VUs (2×)</td><td class="num bad">99,9 %</td><td class="num">1,8 %</td><td class="num">17,7</td><td class="num bad">58,9 s</td><td class="num bad">4,3 %</td><td class="num">95,7 %</td></tr>
+    <tr><td>250 VUs (5×)</td><td class="num bad">99,9 %</td><td class="num">2,5 %</td><td class="num">28,4</td><td class="num bad">60,0 s</td><td class="num bad">32,8 %</td><td class="num">67,2 %</td></tr>
+    <tr><td>500 VUs (10×)</td><td class="num bad">100,0 %</td><td class="num">2,4 %</td><td class="num">31,9</td><td class="num bad">60,0 s</td><td class="num bad">73,2 %</td><td class="num bad">19,0 %</td></tr>
+  </table>
+  <div class="grid3" style="margin-top:22px">
+    <div class="card"><p style="font-size:17px"><b>Causa:</b> un login cuesta ≈ 0,3–0,5 s de CPU (bcrypt 12). Node usa un solo hilo → ≈ 3 logins/s como máximo.</p></div>
+    <div class="card"><p style="font-size:17px"><b>Contagio:</b> las otras 9 operaciones no fallan (0 % error) pero su P95 sube ×2–×3: esperan turno en el mismo hilo.</p></div>
+    <div class="card"><p style="font-size:17px"><b>Saturación:</b> de 5× a 10× el throughput casi no sube. Solo 1 de cada 5 usuarios termina su recorrido.</p></div>
+  </div>
+  <div class="foot"><span>EXP-002 §1 · 12 núcleos en el host, la API usa 1</span><span>6</span></div>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="kicker">EXP-002 · Veredicto honesto</div>
+  <h1>Dos de nuestras tres predicciones fallaron — y eso también es evidencia</h1>
+  <table>
+    <tr><th style="width:9%">Hipótesis</th><th>Dato</th><th style="width:16%">Veredicto</th></tr>
+    <tr><td><b>H-A</b></td><td>El login falla desde 50 VUs, pero “detalle” también pasa el umbral ese nivel (P95 3 102 ms). Empate sin niveles menores para desempatar.</td><td><span class="pill no">Refutada (estricta)</span></td></tr>
+    <tr><td><b>H-B</b></td><td>A 50 VUs: API 100,1 % CPU, PostgreSQL 2,4 %.</td><td><span class="pill ok">Confirmada</span></td></tr>
+    <tr><td><b>H-C</b></td><td>El resto sube entre 1,98× y 3,19×, no 5×: el sistema se satura y “aplana”; los usuarios extra quedan atascados en el login.</td><td><span class="pill no">Refutada</span></td></tr>
+  </table>
+  <div class="grid2" style="margin-top:24px;flex:0">
+    <div class="card green"><h2>Qué decisión cambia</h2><p style="font-size:17px">La táctica debe atacar la <b>CPU del login dentro del proceso</b>, no la base de datos. Microservicios no ataca la causa: el login necesita núcleos, y eso se logra en el mismo host.</p></div>
+    <div class="card amber"><h2>Aclaración posterior</h2><p style="font-size:17px">A 10×, ≈ la mitad de los logins fallidos son <b>conexiones rechazadas</b> en la ráfaga inicial, no timeouts. Excluyéndolas, ≈ 57 % sigue expirando. La conclusión se mantiene.</p></div>
+  </div>
+  <div class="foot"><span>EXP-002 §3–§5b</span><span>7</span></div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="kicker">Matriz de fallos</div>
+  <h1>Componente por componente: qué falla, cuándo y qué tan grave</h1>
+  <table style="font-size:15px">
+    <tr><th>#</th><th>Componente</th><th>Modo de fallo</th><th>Cuándo</th><th>Evidencia</th><th>Severidad</th></tr>
+    <tr><td>F1</td><td><b>Autenticación</b></td><td>bcrypt satura el único hilo de Node</td><td>Desde 1×</td><td>Medido</td><td><span class="pill no">Crítica</span></td></tr>
+    <tr><td>F2</td><td>API (resto)</td><td>Contagio: esperan turno en el hilo ocupado</td><td>Desde 1×</td><td>Medido</td><td><span class="pill no">Alta</span></td></tr>
+    <tr><td>F3</td><td>API (capacidad)</td><td>El throughput deja de crecer; 19 % de recorridos</td><td>5×–10×</td><td>Medido</td><td><span class="pill no">Crítica</span></td></tr>
+    <tr><td>F4</td><td><b>Monitoreo</b></td><td>Sin métricas ni alertas: solo se vio con el experimento</td><td>Siempre</td><td>Medido</td><td><span class="pill no">Alta</span></td></tr>
+    <tr><td>F5</td><td>Despliegue</td><td>Un solo contenedor: reiniciar = caída (0,5–3,4 s)</td><td>Cada despliegue</td><td>Medido</td><td><span class="pill mid">Media</span></td></tr>
+    <tr><td>F6</td><td>Base de datos</td><td>Caída de la única instancia</td><td>No observado</td><td>Inferido</td><td><span class="pill mid">Alta / prob. baja</span></td></tr>
+    <tr><td>F7–F8</td><td>Consultas / pool</td><td>N+1, pool agotado: ≤ 1 conexión activa</td><td>No ocurre</td><td>Medido que no</td><td><span class="pill ok">Baja</span></td></tr>
+    <tr><td>F11</td><td>Equipo</td><td>3 personas sin guardias; distribuir multiplica la operación</td><td>Al distribuir</td><td>Inferido</td><td><span class="pill mid">Media</span></td></tr>
+    <tr><td>F12</td><td>Healthcheck</td><td>Marca <code>unhealthy</code> bajo carga; un orquestador reiniciaría en plena saturación</td><td>A 10×</td><td>Medido</td><td><span class="pill mid">Media</span></td></tr>
+  </table>
+  <div class="foot"><span>docs/m6/matriz-fallos-resiliencia.md §1 · F9 (red) no verificado</span><span>8</span></div>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <div class="kicker">Matriz de resiliencia</div>
+  <h1>Cada táctica del módulo, cruzada con los fallos medidos</h1>
+  <table style="font-size:15.5px">
+    <tr><th>Táctica</th><th>Mitiga</th><th>Decisión para CookSmart</th><th>Estado</th></tr>
+    <tr><td><b>Bulkhead + degradación del login (T1)</b></td><td>F1, F2, F3</td><td>Aísla el recurso que se satura para que no arrastre al resto</td><td><span class="pill ok">Validada</span></td></tr>
+    <tr><td><b>Caché del catálogo (T2)</b></td><td>F2, F7</td><td>Libera CPU del hilo compartido (no de la base)</td><td><span class="pill ok">Validada</span></td></tr>
+    <tr><td><b>Más núcleos del mismo host (D1)</b></td><td>F1, F3, F5</td><td>El cuello es 1 núcleo de 12</td><td><span class="pill ok">Validada (EXP-004)</span></td></tr>
+    <tr><td>Timeout</td><td>F1, F6</td><td>Hoy solo el del cliente (60 s); T1 añade timeout de cola de 1 s</td><td><span class="pill mid">Parcial</span></td></tr>
+    <tr><td>Retry con backoff</td><td>F5, F9</td><td>Solo lecturas/idempotentes. <b>Nunca</b> reintentar el login saturado</td><td><span class="pill mid">No implementado</span></td></tr>
+    <tr><td>Circuit breaker</td><td>F6</td><td>Una sola dependencia que no falla bajo carga: bajo valor hoy</td><td><span class="pill no">Descartado</span></td></tr>
+    <tr><td>Rate limiting en login</td><td>F1, abuso</td><td>Complementa T1: separa abuso de demanda legítima</td><td><span class="pill mid">Pendiente</span></td></tr>
+    <tr><td>Monitoreo mínimo</td><td>F4</td><td>CPU y latencia por ruta</td><td><span class="pill mid">Parcial</span></td></tr>
+    <tr><td>Cola durable / broker</td><td>F10</td><td>ADR-003 mantuvo escrituras síncronas</td><td><span class="pill no">Descartado</span></td></tr>
+  </table>
+  <div class="foot"><span>docs/m6/matriz-fallos-resiliencia.md §2</span><span>9</span></div>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <div class="kicker">EXP-003 · Dos tácticas medidas a 10× (nivel avanzado)</div>
+  <h1>El bulkhead protege al resto 12× mejor que la caché</h1>
+  <div class="grid2">
+    <div class="card">
+      <h2>P95 de las 9 operaciones sin login (500 VUs)</h2>
+      <div class="bar-row"><span>Base</span><div class="bar" style="width:100%;background:#c9cfca"></div><b>6 765 ms</b></div>
+      <div class="bar-row"><span>T2 caché</span><div class="bar" style="width:63%;background:var(--amber)"></div><b>4 259 ms</b></div>
+      <div class="bar-row"><span>T1 bulkhead</span><div class="bar" style="width:8.1%;background:var(--green)"></div><b>550 ms</b></div>
+      <p style="margin-top:16px;font-size:17px">Δ T1 = <b class="good">−91,9 %</b> · Δ T2 = <b class="good">−37,0 %</b> · error del resto: 0 % en las tres</p>
+      <p style="margin-top:8px;font-size:16px" class="muted">Sorpresa: esperábamos que la caché no llegara a 30 % porque la base estaba ociosa. Ahorra CPU del hilo (procesar y serializar JSON), no trabajo de la base.</p>
+    </div>
+    <div class="card">
+      <h2>Trade-offs</h2>
+      <table style="font-size:15px">
+        <tr><th></th><th>T1 bulkhead</th><th>T2 caché</th></tr>
+        <tr><td>Login</td><td>Rechaza rápido: 503 + <code>Retry-After</code> en 1,4 s (no 60 s)</td><td>Sin efecto</td></tr>
+        <tr><td>Logins exitosos</td><td>263 vs 269 (≈ igual)</td><td>268</td></tr>
+        <tr><td>Recorridos completos</td><td class="good">263 (vs 187)</td><td class="good">268</td></tr>
+        <tr><td>Costo</td><td>“Intenta de nuevo” en ráfagas; estado por proceso</td><td>Datos hasta 60 s viejos; memoria</td></tr>
+        <tr><td>¿Más capacidad de login?</td><td class="bad">No</td><td class="bad">No</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="foot"><span>experimentos/EXP-003-tacticas-resiliencia · pre-registro 387ac56</span><span>10</span></div>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <div class="kicker">Lección del módulo</div>
+  <h1>Una táctica de resiliencia con un defecto se volvió punto único de fallo</h1>
+  <div class="grid3" style="flex:1">
+    <div class="card red"><h2>1 · Qué pasó</h2><p style="font-size:17px">La primera versión del bulkhead rechazó el <b>98,8 %</b> de los logins con 503 y <b>ninguno</b> tuvo éxito en las 3 corridas.</p></div>
+    <div class="card amber"><h2>2 · Por qué</h2><p style="font-size:17px">Si un cliente se iba mientras esperaba en cola, su cupo nunca se liberaba. Con los 2 cupos fugados, el login quedaba bloqueado para siempre.</p></div>
+    <div class="card green"><h2>3 · Qué hicimos</h2><p style="font-size:17px">Una prueba que <b>falla</b> con el código original y <b>pasa</b> con la corrección (<code>a4bbe35</code>). Re-medimos T1 completo y la prueba quedó en CI como <b>FF-3</b>.</p></div>
+  </div>
+  <div class="card" style="margin-top:20px;flex:0"><p>Desviación declarada (D1). La evidencia defectuosa se conserva en <code>resultados/t1-con-defecto/</code>: no se borra lo que salió mal.</p></div>
+  <div class="foot"><span>EXP-003 §1 · Docker/Postgre/backend/test/bulkheadLogin.test.js</span><span>11</span></div>
+</section>
+
+<!-- 12 -->
+<section class="slide">
+  <div class="kicker">EXP-004 · Decisión de distribución medida</div>
+  <h1>4 procesos en el mismo host → 4,4× logins por segundo</h1>
+  <div class="grid3" style="margin-bottom:22px">
+    <div class="card green stat"><div class="big" style="color:var(--green)">4,4×</div><div class="label">logins exitosos/s (3,03 → 13,37)</div></div>
+    <div class="card green stat"><div class="big" style="color:var(--green)">0</div><div class="label">timeouts de login (antes 302)</div></div>
+    <div class="card stat"><div class="big">8,2 %</div><div class="label">CPU de PostgreSQL: sigue ociosa</div></div>
+  </div>
+  <table>
+    <tr><th>Métrica (500 VUs, mediana de 3)</th><th class="num">1 proceso</th><th class="num">4 procesos</th><th>Hipótesis</th></tr>
+    <tr><td>Logins exitosos por segundo</td><td class="num">3,03</td><td class="num good">13,37</td><td>H-D1a ≥ 3× <span class="pill ok">Sí</span></td></tr>
+    <tr><td>Tasa de error del login</td><td class="num">70,7 %</td><td class="num good">24,6 %</td><td>H-D1b ≤ 50 % del de w1 <span class="pill ok">35 %</span></td></tr>
+    <tr><td>CPU de PostgreSQL</td><td class="num">1,8 %</td><td class="num">8,2 %</td><td>H-D1c ≤ 50 % <span class="pill ok">Sí</span></td></tr>
+    <tr><td>Recorridos completos</td><td class="num">190</td><td class="num good">1 066</td><td class="muted">5,6× más trabajo útil</td></tr>
+  </table>
+  <p style="margin-top:14px;font-size:16px" class="muted">El 24,6 % restante son las conexiones rechazadas en la ráfaga inicial (igual con 1 o 4 procesos). Estimado, no medido: a 10× harían falta ≈ 12 núcleos solo para el login con bcrypt 12.</p>
+  <div class="foot"><span>experimentos/EXP-004-distribucion-nucleos · variable API_WORKERS</span><span>12</span></div>
+</section>
+
+<!-- 13 -->
+<section class="slide">
+  <div class="kicker">Costo como dimensión explícita</div>
+  <h1>Órdenes de magnitud: D1 resuelve el cuello a 1/100 del costo de microservicios</h1>
+  <table>
+    <tr><th>Alternativa</th><th>Infra (USD/mes)</th><th>Operación (h/semana)</th><th>Cambios de código</th><th>¿Ataca el cuello medido?</th></tr>
+    <tr><td><b>D0</b> Monolito, 1 proceso</td><td>10¹</td><td>10⁰</td><td>Ninguno</td><td><span class="pill no">No: es lo que colapsa</span></td></tr>
+    <tr style="background:var(--green-soft)"><td><b>D1</b> Monolito, N procesos, mismo host ✅</td><td>10¹</td><td>10⁰</td><td>Solo configuración</td><td><span class="pill ok">Sí: 4,4× medido</span></td></tr>
+    <tr><td><b>D2</b> Monolito en varios hosts</td><td>10²</td><td>10⁰–10¹</td><td>Ninguno (JWT stateless)</td><td><span class="pill mid">Sí, pero sobran núcleos</span></td></tr>
+    <tr><td><b>D3</b> Microservicios (propuesta IA)</td><td>10³</td><td>10¹–10²</td><td>Reescribir integración</td><td><span class="pill mid">Indirecto: igual que D1</span></td></tr>
+  </table>
+  <div class="grid2" style="margin-top:22px;flex:0">
+    <div class="card"><p style="font-size:17px">Supuestos explícitos de nube pública de gama de entrada. <b>No es una cotización</b>: sirve para comparar alternativas entre sí.</p></div>
+    <div class="card amber"><p style="font-size:17px">Lo que más pesa no es el dinero sino <b>las horas del equipo</b>: con 3 personas, 10–100 h/semana de operación compiten con el producto.</p></div>
+  </div>
+  <div class="foot"><span>docs/m6/costo-distribucion.md</span><span>13</span></div>
+</section>
+
+<!-- 14 -->
+<section class="slide">
+  <div class="kicker">ADR-004 · Distribución y resiliencia</div>
+  <h1>Decisión: no microservicios; escalar el monolito modular</h1>
+  <div class="grid2">
+    <div class="card green">
+      <h2>Se decide</h2>
+      <ul style="font-size:18px">
+        <li><b>No</b> distribuir en microservicios (D3) ni en varios hosts (D2).</li>
+        <li><b>D1</b>: varios procesos de la API en el mismo host.</li>
+        <li><b>T1</b>: bulkhead + degradación del login (503 rápido).</li>
+        <li><b>T2</b>: caché en memoria del catálogo (TTL 60 s).</li>
+        <li>bcrypt se mantiene en 12 hasta que Seguridad decida.</li>
+        <li>FF-1, FF-2 y FF-3 se mantienen en CI.</li>
+      </ul>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="card"><h2>Reversibilidad: alta</h2><p style="font-size:17px">Todo es variable de entorno: <code>API_WORKERS=1</code>, <code>LOGIN_BULKHEAD=off</code>, <code>CACHE_CATALOGO=off</code>.</p></div>
+      <div class="card amber"><h2>Condición de entrada</h2><p style="font-size:17px">Las tres medidas se midieron <b>por separado</b>. Antes de activarlas por defecto hay que medir la combinación w4 + T1 + T2 (el estado es por proceso: 4 × 2 = 8 cupos).</p></div>
+      <div class="card blue"><h2>Veredicto del mini-comité 2</h2><p style="font-size:17px">Confirmada / Ajustada / Reconsiderada — se registra después de la sesión.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>docs/adr/ADR-004-distribucion-y-resiliencia.md</span><span>14</span></div>
+</section>
+
+<!-- 15 -->
+<section class="slide">
+  <div class="kicker">¿La estrategia de microservicios de la IA añade complejidad innecesaria?</div>
+  <h1>Sí: de 8 elementos, 6 no atacan el fallo medido</h1>
+  <table style="font-size:15.5px">
+    <tr><th>Elemento propuesto por la IA</th><th>Contraste con los datos</th><th>Veredicto</th></tr>
+    <tr><td>5 servicios, uno por contexto</td><td>Darle núcleos al login se logra con D1</td><td><span class="pill no">Innecesario</span></td></tr>
+    <tr><td>5 bases de datos</td><td>PostgreSQL al ≈ 2 % de CPU</td><td><span class="pill no">Innecesario</span></td></tr>
+    <tr><td>API Gateway</td><td>Un salto más no reduce la CPU del login</td><td><span class="pill no">Innecesario</span></td></tr>
+    <tr><td>Broker de eventos</td><td>Spike 1: 66/1000 escrituras perdidas con crash</td><td><span class="pill no">Rechazado (ADR-003)</span></td></tr>
+    <tr><td>Kubernetes + autoscaler</td><td>F12: reiniciaría la API en plena carga</td><td><span class="pill no">Riesgoso</span></td></tr>
+    <tr><td>Recomendación como servicio</td><td>No relacionado con el crecimiento</td><td><span class="pill no">Fuera de alcance</span></td></tr>
+    <tr><td>Redis como caché</td><td>La caché en memoria ya dio −37 %</td><td><span class="pill mid">Parcial, hoy no</span></td></tr>
+    <tr><td>Observabilidad</td><td>Ataca F4 (sin monitoreo)</td><td><span class="pill ok">Versión mínima</span></td></tr>
+  </table>
+  <p style="margin-top:14px;font-size:17px"><b>Lo que la IA omitió:</b> no preguntó qué fallaba, no habló de costo y no propuso aislar (bulkhead), solo escalar.</p>
+  <div class="foot"><span>docs/ia/evaluacion-microservicios-ia-m6.md</span><span>15</span></div>
+</section>
+
+<!-- 16 -->
+<section class="slide">
+  <div class="kicker">Funciones de aptitud arquitectónica</div>
+  <h1>Regla, umbral y qué rompe la CI</h1>
+  <table>
+    <tr><th>ID</th><th>Protege</th><th>Regla</th><th>Umbral</th><th>Qué rompe</th></tr>
+    <tr><td><b>FF-1</b></td><td>ADR-002: capas</td><td>Cada archivo solo importa capas permitidas; solo <code>config/</code> usa <code>pg</code></td><td>0 violaciones</td><td>Job de <code>fitness.yml</code> → PR en rojo</td></tr>
+    <tr><td><b>FF-1b</b></td><td>Que FF-1 no pase siempre</td><td>La CI inyecta una violación y exige detectarla</td><td>Debe fallar</td><td>Mismo job</td></tr>
+    <tr><td><b>FF-2</b></td><td>RNF04 / PR01</td><td><code>GET /api/recetas</code>, 50 VUs × 20 s con k6</td><td>P95 &lt; 500 ms, error &lt; 1 %</td><td><code>load-test.yml</code></td></tr>
+    <tr><td><b>FF-3</b></td><td>T1 no es punto único de fallo</td><td>El bulkhead no fuga cupos; pasa sin carga; rechaza con 503 saturado</td><td>3/3 pruebas</td><td>Job de <code>fitness.yml</code></td></tr>
+  </table>
+  <div class="grid2" style="margin-top:22px;flex:0">
+    <div class="card"><h2>Demo en vivo (segundos)</h2><p style="font-size:16px"><code>node fitness/reglas-capas.js</code> → OK<br>Agregar <code>require('pg')</code> a un controller → FALLA, exit 1</p></div>
+    <div class="card amber"><h2>Candidata declarada: FF-4</h2><p style="font-size:16px">P95 del resto bajo ráfagas de login. No está en CI aún: 60 s con cientos de VUs en un runner compartido es ruidoso.</p></div>
+  </div>
+  <div class="foot"><span>docs/m6/fitness-functions.md · .github/workflows/fitness.yml</span><span>16</span></div>
+</section>
+
+<!-- 17 -->
+<section class="slide">
+  <div class="kicker">Defensa 2 · Re-decisión</div>
+  <h1>Si el comité cambia una condición, ya sabemos qué re-decidir</h1>
+  <table>
+    <tr><th style="width:34%">Si el comité dice…</th><th style="width:30%">Re-decisión</th><th>Por qué</th></tr>
+    <tr><td>Rol <b>Finanzas</b>: presupuesto mínimo</td><td><span class="pill ok">Confirmar</span> D1 + T1 + T2</td><td>Costo adicional ≈ 0: el host tiene 11 núcleos libres</td></tr>
+    <tr><td>Rol <b>Seguridad</b>: no rechazar usuarios legítimos</td><td><span class="pill mid">Ajustar</span> más N, más cupos, rate limiting</td><td>Con más núcleos T1 rechaza menos (EXP-004)</td></tr>
+    <tr><td>99 % de disponibilidad aunque caiga una máquina</td><td><span class="pill no">Reconsiderar</span> hacia D2</td><td>D1 no sobrevive a la caída del host; costo pasa a 10²</td></tr>
+    <tr><td>Los usuarios crecen 100×</td><td><span class="pill no">Reconsiderar</span> repetir EXP-002</td><td>≈ 400 logins/s → ≈ 120 núcleos con bcrypt 12 (inferido)</td></tr>
+    <tr><td>El equipo crece y despliega por contextos</td><td><span class="pill mid">Reabrir D3</span></td><td>Por razones organizacionales, no de rendimiento</td></tr>
+  </table>
+  <div class="card" style="margin-top:20px;flex:0"><p style="font-size:17px"><b>Demo antes de entrar:</b> <code>docker compose up -d --build</code> · <code>bash experimentos/EXP-003-tacticas-resiliencia/scripts/ejecutar.sh "base t1" 1 20s</code> (≈ 2 min). Si la máquina cambia, los números cambian pero la <b>dirección</b> debe repetirse.</p></div>
+  <div class="foot"><span>ADR-004 §7 · docs/m6/guia-defensa-2.md</span><span>17</span></div>
+</section>
+
+<!-- 18 -->
+<section class="slide">
+  <div class="kicker">Límites y conclusión</div>
+  <h1>Lo que medimos, lo que no, y la respuesta final</h1>
+  <div class="grid2">
+    <div class="card amber">
+      <h2>Qué NO se verificó</h2>
+      <ul style="font-size:17px">
+        <li>Niveles por debajo de 50 VUs (para desempatar H-A)</li>
+        <li>k6 y la API en hosts distintos; red real</li>
+        <li>Más de 4 procesos y la combinación w4 + T1 + T2</li>
+        <li>Origen de las ~350 conexiones rechazadas al arrancar</li>
+        <li>Caída de PostgreSQL y pruebas largas (soak)</li>
+      </ul>
+    </div>
+    <div class="card green" style="display:flex;flex-direction:column;justify-content:center">
+      <p style="font-size:22px;line-height:1.5">Al crecer 10×, <b>falla primero la autenticación</b>, por CPU en el único hilo de la API. No es la base de datos.</p>
+      <p style="font-size:22px;line-height:1.5;margin-top:14px">La respuesta con datos no es microservicios: es <b>monolito modular + bulkhead + caché + más núcleos</b>, a 10¹ USD/mes y reversible.</p>
+    </div>
+  </div>
+  <div class="foot"><span>CookSmart · Módulo 06</span><span>18</span></div>
+</section>
+
+<!-- 19 -->
+<section class="slide">
+  <div class="kicker">Anexo · Organización interna del equipo</div>
+  <h1>Cada uno es dueño de un bloque, pero los tres defienden todo</h1>
+  <div class="grid3" style="flex:1">
+    <div class="card">
+      <div class="who">LEONARDO · medición ejecutable</div>
+      <h2 style="margin-top:6px">Bloque A — Experimentos</h2>
+      <ul style="font-size:16px">
+        <li>EXP-002 a carga 1×–10× y gráfica</li>
+        <li>EXP-004 (1 vs 4 procesos)</li>
+        <li>Dejar la demo en vivo lista y probada</li>
+        <li>Diapositivas 4–7 y 12</li>
+      </ul>
+      <p style="font-size:15px;margin-top:8px" class="muted">S11: 4 h medición · S12: 2 h demo</p>
+    </div>
+    <div class="card">
+      <div class="who">MIGUEL ÁNGEL · escenarios de calidad</div>
+      <h2 style="margin-top:6px">Bloque B — Fallos y tácticas</h2>
+      <ul style="font-size:16px">
+        <li>Matriz de fallos y de resiliencia</li>
+        <li>EXP-003: bulkhead vs caché, antes/después</li>
+        <li>El defecto D1 y FF-3</li>
+        <li>Diapositivas 8–11</li>
+      </ul>
+      <p style="font-size:15px;margin-top:8px" class="muted">S11: 3 h matrices + 3 h táctica</p>
+    </div>
+    <div class="card">
+      <div class="who">JUAN MANUEL · contexto y base</div>
+      <h2 style="margin-top:6px">Bloque C — Decisión</h2>
+      <ul style="font-size:16px">
+        <li>Costo en órdenes de magnitud</li>
+        <li>ADR-004 + veredicto del comité</li>
+        <li>Evaluación de la propuesta de la IA</li>
+        <li>Fitness functions en CI</li>
+        <li>Diapositivas 13–17</li>
+      </ul>
+      <p style="font-size:15px;margin-top:8px" class="muted">S12: 1 h costo · 1,5 h ADR · 1,5 h FF · 45 min IA</p>
+    </div>
+  </div>
+  <div class="card blue" style="margin-top:18px;flex:0"><p style="font-size:16px"><b>La defensa es individual:</b> cada dueño le explica su bloque a los otros dos (30 min c/u). Ensayo cruzado: cada uno presenta las 18 diapositivas en 8 min y los otros hacen de comité con la tabla de re-decisión.</p></div>
+  <div class="foot"><span>Uso interno · puede omitirse en la defensa</span><span>19</span></div>
+</section>
+
+</body>
+</html>
