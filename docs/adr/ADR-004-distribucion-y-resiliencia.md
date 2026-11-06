@@ -1,7 +1,7 @@
 # ADR-004 - Distribución y resiliencia ante crecimiento 10×
 
-- **Estado:** Propuesto — pendiente del veredicto del mini-comité 2 (§9)
-- **Fecha:** 2026-10-23
+- **Estado:** Aceptada (confirmada por el mini-comité el 2026-11-06, §9), con una condición de entrada antes de activar las tácticas por defecto
+- **Fecha:** 2026-10-23 (decisión) · 2026-11-06 (veredicto del comité)
 - **Decisión:** No distribuir en microservicios. Escalar el **monolito modular** usando **varios procesos en el mismo host** (D1), proteger el login con un **bulkhead con degradación** (T1) y cachear el **catálogo** en memoria (T2).
 - **Sistema:** CookSmart
 - **Relacionado con:** ADR-001 (monolito modular), ADR-002 (capas, protegido por FF-1), ADR-003 (integración síncrona)

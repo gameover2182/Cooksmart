@@ -91,7 +91,9 @@ Resultados clave (medidos contra el stack real): token forjado con el secreto de
 | Evaluación tipo comité + re-decisión ante 3 restricciones + IA adversarial | [docs/m8/evaluacion-arquitectonica.md](docs/m8/evaluacion-arquitectonica.md) |
 | Plan de evolución arquitectónica (disparadores medibles) | [docs/m8/plan-evolucion.md](docs/m8/plan-evolucion.md) |
 | Declaración final de uso de IA (aceptado / modificado / rechazado) | [docs/m8/declaracion-ia-final.md](docs/m8/declaracion-ia-final.md) |
-| ADR corregidos: veredictos del mini-comité registrados | [ADR-004 §9](docs/adr/ADR-004-distribucion-y-resiliencia.md) · [ADR-005 §9](docs/adr/ADR-005-seguridad-y-operacion.md) |
+| ADR corregidos: veredictos del mini-comité registrados (y estado del encabezado) | [ADR-004 §9](docs/adr/ADR-004-distribucion-y-resiliencia.md) · [ADR-005 §9](docs/adr/ADR-005-seguridad-y-operacion.md) |
+| Smoke test reproducible de la app (16 flujos, exit≠0 si falla) | [experimentos/smoke-aplicacion/smoke.js](experimentos/smoke-aplicacion/smoke.js) · [resultado](experimentos/smoke-aplicacion/resultado.txt) |
+| Presentación ejecutiva (estructura y control de cifras) | [docs/m8/presentacion-ejecutiva.md](docs/m8/presentacion-ejecutiva.md) |
 
 Respuesta a las tres acusaciones del comité, con evidencia: **sobreingeniería** → rechazamos microservicios con datos (E1/E4/E5); **insegura** → cerramos la amenaza crítica medida (E7); **incapaz de crecer** → medimos el 10×, hallamos el cuello y probamos dos caminos de crecimiento (E2/E4), con techo conocido y plan (D2).
 

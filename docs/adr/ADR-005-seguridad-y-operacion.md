@@ -1,7 +1,7 @@
 # ADR-005 — Seguridad, despliegue y observabilidad
 
-- **Estado:** Propuesto — veredicto del mini-comité por registrar (§9)
-- **Fecha:** 2026-10-26
+- **Estado:** Adoptado (por el mini-comité el 2026-11-06, §9)
+- **Fecha:** 2026-10-26 (decisión) · 2026-11-06 (veredicto del comité)
 - **Contexto de módulo:** M7 (Fase IV — Operación y defensa)
 - **Decisiones relacionadas:** ADR-002 (capas, base de FF-1), ADR-003 (escrituras síncronas, F10), ADR-004 (distribución y resiliencia, F1–F12)
 

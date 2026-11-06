@@ -4,6 +4,20 @@
 >
 > Escala: impacto y probabilidad en Alto / Medio / Bajo. Prioridad = combinación, ordenada de mayor a menor. **Medido** = hay experimento que lo respalda; **Inferido** = razonamiento.
 
+## 0. Criterios de clasificación (para que otro evaluador reproduzca los niveles)
+
+**Impacto** — efecto si el riesgo se materializa:
+- **Alto:** el sistema deja de cumplir su función para el usuario (no se puede iniciar sesión, se pierden datos, fuga de seguridad) o requiere intervención urgente.
+- **Medio:** degradación o trabajo extra, pero el servicio sigue utilizable.
+- **Bajo:** molestia o deuda sin efecto visible inmediato.
+
+**Probabilidad** — se asigna por su **base de evidencia**, no por intuición:
+- **Alta:** *observada en un experimento* a la carga objetivo (p. ej. P1/P6: EXP-002 mostró el colapso del login a 500 VUs; por eso son "Alta" aunque no hayan ocurrido en producción — la evidencia es la medición, no el incidente real).
+- **Media:** plausible por el diseño o el contexto, sin experimento que la fije (p. ej. secreto filtrado, TLS caducado).
+- **Baja:** no se observó pese a haberla buscado (p. ej. P10: PostgreSQL estuvo al 2–8 % de CPU en **todos** los experimentos → su caída bajo carga es poco probable con el perfil actual).
+
+**Regla impacto→probabilidad→prioridad:** la prioridad ordena primero por impacto, luego por probabilidad. Un riesgo **inferido** (sin experimento) nunca se marca probabilidad "Alta": lo más alto que alcanza es "Media", porque "Alta" se reserva para lo medido. Esto evita inflar riesgos que solo razonamos. Cada fila declara su base (**Medido** / **Inferido**) en la columna correspondiente.
+
 ## 1. Riesgos priorizados
 
 | # | Riesgo | Impacto | Prob. | Base | Mitigación | Estado |

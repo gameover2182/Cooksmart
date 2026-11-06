@@ -83,7 +83,8 @@ jobs:
         run: npm ci
 
       - name: Pruebas de cabeceras, caché acotada, límite de login y /metrics
-        # Umbral: 5/5. Falla si se cae una cabecera, si la caché deja de tener tope,
+        # Umbral: 6/6 (incluye la regresión del conteo de login en observabilidad).
+        # Falla si se cae una cabecera, si la caché deja de tener tope,
         # si el límite de intentos deja de bloquear, o si /metrics queda sin protección.
         working-directory: Docker/Postgre/backend
         run: node --test --test-timeout=20000 test/seguridadObservabilidad.test.js

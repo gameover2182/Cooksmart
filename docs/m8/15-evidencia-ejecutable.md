@@ -20,6 +20,9 @@ node --test Docker/Postgre/backend/test/seguridadObservabilidad.test.js  # FF-6 
 bash experimentos/EXP-002-crecimiento-10x/scripts/ejecutar.sh 500 1 20s
 bash experimentos/EXP-003-tacticas-resiliencia/scripts/ejecutar.sh
 node experimentos/EXP-005-controles-seguridad-observabilidad/scripts/verificar-seguridad.js despues
+
+# 4. Smoke test de la aplicación completa (16 flujos de la API, exit 0 solo si todos pasan)
+node experimentos/smoke-aplicacion/smoke.js
 ```
 
 ## 1. Matriz de evidencia: qué afirmamos y con qué respaldo
@@ -37,7 +40,7 @@ node experimentos/EXP-005-controles-seguridad-observabilidad/scripts/verificar-s
 | E9 | «La observabilidad **detecta** el fallo real (hilo bloqueado)» | **Medido** (EXP-005) | Retraso del bucle de eventos: 21 ms reposo → 1621 ms bajo carga | H-O1 confirmada | `verificar-observabilidad.js` |
 | E10 | «Las reglas de capas (ADR-002) se **cumplen** y se vigilan» | **Medido** (FF-1 en CI) | 0 violaciones; autoprueba detecta una inyectada | En CI | `fitness/reglas-capas.js` |
 | E11 | «El costo de los logs es **despreciable**» | **Medido, no concluyente** (EXP-005 H-O3) | Diferencia on/off por debajo del ruido de la máquina | Sobrecosto < ruido | §H-O3 del veredicto |
-| E12 | «La app completa (front + API + BD) **arranca y responde**» | **Medido** (CI + smoke) | `/health` ok; 15 flujos de la API responden 2xx (ver §3) | En CI (5 workflows) | `docker compose up` |
+| E12 | «La app completa (front + API + BD) **arranca y responde**» | **Medido** (CI + smoke) | `/health` ok; 16 flujos de la API responden 2xx (ver §3) | En CI (5 workflows) | `node experimentos/smoke-aplicacion/smoke.js` |
 
 **Lectura para el comité:** de las 12 afirmaciones centrales, **10 están medidas** con experimento reproducible, **1 es un argumento cuantificado y declarado como tal** (E5, costo de microservicios), y **1 quedó medida pero no concluyente por ruido** (E11), y así se reporta. Ninguna afirmación crítica de capacidad, resiliencia o seguridad descansa solo en argumento.
 
@@ -55,7 +58,9 @@ Honestidad explícita — esto es lo que el comité debe saber que **no** medimo
 
 ## 3. Smoke test de la aplicación completa (M8, reproducible)
 
-Los 15 flujos que el frontend usa contra la API, verificados end-to-end el 2026-11-06 (todos 2xx):
+> **Reproducible:** `node experimentos/smoke-aplicacion/smoke.js` ejecuta los flujos de extremo a extremo (registra un usuario nuevo, encadena todas las operaciones y **sale con código ≠ 0 si alguno falla**). Salida cruda de la última corrida en `experimentos/smoke-aplicacion/resultado.txt` (16/16 OK, 2026-11-06). El script usa el mismo contrato que el frontend (`auth-sync.js`, `recetas-loader.js`): mismas rutas y métodos.
+
+Los flujos que el frontend usa contra la API, verificados end-to-end (todos 2xx):
 
 | Flujo | Endpoint | Estado |
 |---|---|---|
