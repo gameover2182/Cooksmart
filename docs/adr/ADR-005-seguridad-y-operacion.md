@@ -63,4 +63,13 @@ Antes de poner nada "por defecto" en producción: (a) montar el proxy con TLS; (
 
 ## 9. Veredicto del mini-comité
 
-> _Por registrar tras la sesión de defensa (igual que ADR-004 §9)._ El equipo revisa la matriz de amenazas, la elección D-A vs D-B y la matriz de riesgos operativos, y deja aquí el acuerdo (adoptado / adoptado con cambios / rechazado) con fecha.
+| Campo | Valor |
+|---|---|
+| Equipo evaluador (comité) | Equipo CookSmart en rol de comité técnico (M8, `docs/m8/evaluacion-arquitectonica.md`) |
+| Fecha de la sesión | 2026-11-06 |
+| Rol representado | Seguridad / Operación |
+| **Veredicto** | **Adoptado** |
+| Observaciones del comité | La amenaza crítica (secreto versionado) se cerró con medición antes/después (E7) y se vigila con FF-5. Los controles C1–C6 y la observabilidad son baratos y están medidos (E8, E9). Se aceptan los riesgos residuales R-S1 (enumeración) y R-S2 (token tras cambio de contraseña) como decisión documentada. |
+| Re-decisión tras el veredicto | Se reabre si aparece PII regulada (Restricción B del M8: cifrado en reposo + vault) o si se activan N workers (resolver el estado por proceso del rate-limit, P9). |
+
+> Trazabilidad decisión → evidencia → riesgo: `docs/m8/15-evidencia-ejecutable.md` (E7–E9, E11), `docs/m8/17-riesgos-priorizados.md` (P2, P3, P4, P5), `docs/m8/evaluacion-arquitectonica.md` (Restricción B). Preguntas probables: `docs/m7/guia-defensa-3.md`.
