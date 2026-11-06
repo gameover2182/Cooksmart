@@ -128,6 +128,88 @@ localStorage.setItem = function (key, value) {
     }
 };
 
+// ---- INVENTARIO (MI NEVERA) ----
+// El backend (PostgreSQL) es la fuente de verdad del inventario cuando hay sesión.
+// La página "Mi Nevera" sigue renderizando desde localStorage ('cookSmartNevera'),
+// pero aquí se hidrata desde la API y se escribe a través de ella. El backend exige
+// un id_ingrediente del catálogo (51 ingredientes), así que las altas van por el
+// catálogo; los ingredientes de texto libre solo existen sin sesión (modo local).
+
+let _catalogoIngredientes = null;
+let _mapaNombreAId = null;
+
+async function _cargarCatalogoIngredientes() {
+    if (_catalogoIngredientes) return _catalogoIngredientes;
+    const resp = await fetch(`${_AUTH_API_BASE}/ingredientes`);
+    if (!resp.ok) throw new Error(`Catálogo de ingredientes: ${resp.status}`);
+    _catalogoIngredientes = await resp.json();
+    _mapaNombreAId = new Map(
+        _catalogoIngredientes.map(i => [i.nombre_ingrediente.trim().toLowerCase(), i])
+    );
+    return _catalogoIngredientes;
+}
+
+function _escribirNeveraLocal(lista) {
+    // Escritura directa que NO dispara sincronización (no hay override para esta clave).
+    _origSetItem('cookSmartNevera', JSON.stringify(lista));
+}
+
+// Traduce una fila de la API a la forma plana que usa Mi Nevera.
+function _adaptarItemInventario(fila, catalogoPorId) {
+    const cat = catalogoPorId.get(fila.id_ingrediente);
+    // El POST de alta no devuelve nombre_ingrediente (el repo inserta sin el JOIN);
+    // se completa desde el catálogo para que la página y el matching de recetas lo tengan.
+    const nombre = (fila.nombre_ingrediente || (cat ? cat.nombre_ingrediente : '') || '').toLowerCase();
+    return {
+        id: fila.id_inventario,          // la página usa .id como identificador
+        idInventario: fila.id_inventario,
+        idIngrediente: fila.id_ingrediente,
+        nombre,
+        cantidad: fila.cantidad != null ? String(fila.cantidad) : '',
+        unidad: fila.unidad || (cat ? cat.unidad_base : ''),
+        fechaCompra: fila.fecha_compra ? String(fila.fecha_compra).split('T')[0] : null,
+        fechaVencimiento: fila.fecha_vencimiento ? String(fila.fecha_vencimiento).split('T')[0] : null,
+        categoria: cat ? cat.categoria : 'otros',
+        persistido: true,
+    };
+}
+
+async function _cargarInventarioDesdeAPI(idUsuario) {
+    await _cargarCatalogoIngredientes();
+    const catalogoPorId = new Map(_catalogoIngredientes.map(i => [i.id_ingrediente, i]));
+    const filas = await _apiFetch(`/usuarios/${idUsuario}/inventario`);
+    const lista = filas.map(f => _adaptarItemInventario(f, catalogoPorId));
+    _escribirNeveraLocal(lista);
+    window.dispatchEvent(new Event('inventarioReady'));
+    return lista;
+}
+
+window.CookSmartInventario = {
+    // Catálogo (para construir el selector de ingredientes de la página).
+    async catalogo() { return _cargarCatalogoIngredientes(); },
+    idDeNombre(nombre) {
+        const i = _mapaNombreAId && _mapaNombreAId.get((nombre || '').trim().toLowerCase());
+        return i ? i.id_ingrediente : null;
+    },
+    // Alta en la API. Devuelve el item ya adaptado (con idInventario), o lanza.
+    async agregar(idUsuario, { idIngrediente, cantidad, unidad, fechaCompra, fechaVencimiento }) {
+        await _cargarCatalogoIngredientes();
+        const catalogoPorId = new Map(_catalogoIngredientes.map(i => [i.id_ingrediente, i]));
+        const cat = catalogoPorId.get(idIngrediente);
+        // El backend exige unidad; si no se indica, usamos la unidad base del catálogo.
+        const unidadFinal = unidad || (cat ? cat.unidad_base : 'unidad');
+        const cantidadFinal = (cantidad === undefined || cantidad === null || cantidad === '') ? 1 : cantidad;
+        const fila = await _apiFetch(`/usuarios/${idUsuario}/inventario`, {
+            method: 'POST',
+            body: JSON.stringify({ idIngrediente, cantidad: cantidadFinal, unidad: unidadFinal, fechaCompra, fechaVencimiento }),
+        });
+        return _adaptarItemInventario(fila, catalogoPorId);
+    },
+    async eliminar(idUsuario, idInventario) {
+        await _apiFetch(`/usuarios/${idUsuario}/inventario/${idInventario}`, { method: 'DELETE' });
+    },
+};
+
 // ---- NAVBAR + ESTADO DE SESIÓN ----
 
 function updateNavAuthUI(usuario) {
@@ -156,6 +238,8 @@ async function _inicializarSesion() {
 
     try {
         await cargarFavoritosDesdeAPI(usuario.id_usuario);
+        // Inventario: hidratar "Mi Nevera" desde la API (no bloquea si falla).
+        _cargarInventarioDesdeAPI(usuario.id_usuario).catch(e => console.warn('Inventario API:', e));
         if (typeof window.updateNavBadge === 'function') window.updateNavBadge();
         updateNavAuthUI(usuario);
     } catch (e) {

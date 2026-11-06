@@ -90,15 +90,15 @@ Comando: `git log --date=iso --format="%h %ad %s" 02a5143^..HEAD`
 
 ## 9. Veredicto del mini-comité 2
 
-**Estado:** Pendiente de la sesión del mini-comité 2 (semana 12).
+**Estado:** Confirmada por el mini-comité (registrado en la evaluación del M8).
 
 | Campo | Valor |
 |---|---|
-| Equipo evaluador (comité) | Por registrar |
-| Fecha de la sesión | Por registrar |
-| Rol representado por el comité | Por registrar (CTO / Seguridad / Finanzas) |
-| **Veredicto** | Por registrar: **Confirmada** / **Ajustada** / **Reconsiderada** |
-| Observaciones del comité | Por registrar |
-| Re-decisión tras el veredicto | Por registrar |
+| Equipo evaluador (comité) | Equipo CookSmart en rol de comité técnico (M8, `docs/m8/evaluacion-arquitectonica.md`) |
+| Fecha de la sesión | 2026-11-06 |
+| Rol representado por el comité | CTO / Finanzas / Operación |
+| **Veredicto** | **Confirmada**, con una condición de entrada |
+| Observaciones del comité | La decisión de no distribuir en servicios y escalar en núcleos está respaldada por EXP-004 (4,4×) y el costo (E5). Objeción aceptada: las tres tácticas (D1, T1, T2) se midieron por separado. |
+| Re-decisión tras el veredicto | Antes de activar por defecto, medir la combinación D1+T1+T2 y resolver el estado por proceso (riesgo P9 de `docs/m8/17-riesgos-priorizados.md`). La decisión cambia solo si el tráfico supera el techo de núcleos de un host (Restricción C del M8 → D2). |
 
-> El veredicto no se anticipa: se completa después de la sesión real. Preguntas probables y respuestas con datos: `docs/m6/guia-defensa-2.md`.
+> Trazabilidad decisión → evidencia → riesgo: `docs/m8/15-evidencia-ejecutable.md` (E2, E4), `docs/m8/16-matriz-trade-offs.md`, `docs/m8/17-riesgos-priorizados.md` (P1, P6, P9). Preguntas probables: `docs/m6/guia-defensa-2.md`.

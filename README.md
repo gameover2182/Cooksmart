@@ -18,7 +18,7 @@ CookSmart es una plataforma web que genera recetas personalizadas usando exclusi
 
 - **Stack real (verificado en la documentación y evidencia disponible del proyecto):** HTML, CSS, JavaScript y un backend propio en Node.js/Express con PostgreSQL como persistencia. La base de datos está levantada con Docker Compose (`Docker/Postgre/`). La arquitectura actual se organiza como un monolito modular por capas: routes, controllers, services y repositories, con PostgreSQL como límite de persistencia. La autenticación del backend utiliza JWT y bcrypt.
 
-- **Semana actual:** Semanas 13–14 (Módulo 7 — Seguridad, despliegue y observabilidad · Fase IV, Operación y defensa)
+- **Semana actual:** Semanas 15–16 (Módulo 8 — Evaluación arquitectónica y defensa final · Fase IV · Corte 3)
 
 > **Nota importante:** existe un documento del proyecto en fase inicial (`Proyecto_Arquitectura_de_software.pdf`) que describe una arquitectura de microservicios con API Gateway, Redis y base de datos relacional, además de un plan de pruebas extenso. Esa arquitectura **no está implementada** en el sistema actual. Para la versión actual, se documenta como antecedente arquitectónico y no como parte del sistema base. El sistema base que documentamos es el actual: frontend estático + API propia (Node/Express) + PostgreSQL, organizada como monolito modular por capas (ver `docs/adr/ADR-001-estilo-arquitectonico.md`).
 
@@ -78,6 +78,22 @@ Resultados clave (500 VUs = 10×, medianas de 3 corridas): sin táctica, 73 % de
 | Guía de la defensa 3 (guion, demo en vivo, preguntas) | [docs/m7/guia-defensa-3.md](docs/m7/guia-defensa-3.md) |
 
 Resultados clave (medidos contra el stack real): token forjado con el secreto del repo → **200 antes / 401 después** · fuerza bruta de login → **0×429 antes / bloqueo tras 5 fallos después** · API **root → node** · Adminer **0.0.0.0 → 127.0.0.1** · retraso del bucle de eventos bajo carga de login **21 ms (reposo) → 1621 ms** (la observabilidad detecta el fallo F1 del M6).
+
+## Evidencia del Módulo 8 — dónde auditarla
+
+**Pregunta del módulo:** *"El comité rechaza su arquitectura por sobreingenierizada, insegura o incapaz de crecer. ¿Qué evidencia propia tiene, y qué descansa solo en argumentos?"* → **10 de 12 afirmaciones centrales están medidas** con experimento reproducible; lo que es argumento (costo en órdenes de magnitud) se declara como tal.
+
+| Evidencia que pide M8 | Archivo |
+|---|---|
+| Evidencia ejecutable consolidada (medido vs argumento, cómo reproducir todo) | [docs/m8/15-evidencia-ejecutable.md](docs/m8/15-evidencia-ejecutable.md) |
+| Matriz de trade-offs (calidad, costo, complejidad, evolución) | [docs/m8/16-matriz-trade-offs.md](docs/m8/16-matriz-trade-offs.md) |
+| Riesgos arquitectónicos priorizados (impacto × probabilidad + mitigación) | [docs/m8/17-riesgos-priorizados.md](docs/m8/17-riesgos-priorizados.md) |
+| Evaluación tipo comité + re-decisión ante 3 restricciones + IA adversarial | [docs/m8/evaluacion-arquitectonica.md](docs/m8/evaluacion-arquitectonica.md) |
+| Plan de evolución arquitectónica (disparadores medibles) | [docs/m8/plan-evolucion.md](docs/m8/plan-evolucion.md) |
+| Declaración final de uso de IA (aceptado / modificado / rechazado) | [docs/m8/declaracion-ia-final.md](docs/m8/declaracion-ia-final.md) |
+| ADR corregidos: veredictos del mini-comité registrados | [ADR-004 §9](docs/adr/ADR-004-distribucion-y-resiliencia.md) · [ADR-005 §9](docs/adr/ADR-005-seguridad-y-operacion.md) |
+
+Respuesta a las tres acusaciones del comité, con evidencia: **sobreingeniería** → rechazamos microservicios con datos (E1/E4/E5); **insegura** → cerramos la amenaza crítica medida (E7); **incapaz de crecer** → medimos el 10×, hallamos el cuello y probamos dos caminos de crecimiento (E2/E4), con techo conocido y plan (D2).
 
 ## Evidencia del Módulo 5 — dónde auditarla
 
