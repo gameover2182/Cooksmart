@@ -1,0 +1,22 @@
+# Smoke test CookSmart — 2026-11-06T17:13:10.562Z
+# API: http://localhost:3000/api
+
+OK    POST /auth/registro                201 id=662
+OK    POST /auth/login                   200
+OK    GET /auth/me                       200 nombre=Smoke Test
+OK    GET /recetas                       200 n=20
+OK    GET /recetas/:id                   200 ingredientes=3
+OK    POST favorito                      201
+OK    GET favoritos                      200 n=1
+OK    DELETE favorito                    204
+OK    POST inventario                    201
+OK    GET inventario                     200 n=1
+OK    DELETE inventario                  204
+OK    POST historial                     201
+OK    GET historial                      200 n=1
+OK    PATCH /auth/me (nombre)            200
+OK    PATCH preferencias                 200
+OK    PATCH password                     204
+
+# Resultado: 16/16 flujos OK
+# Todos los flujos respondieron como se espera.
