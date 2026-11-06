@@ -14,8 +14,6 @@
     <!-- Íconos de FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Firebase -->
-
     <style>
         /* =========================================
            VARIABLES Y CONFIGURACIÓN BASE
@@ -1126,6 +1124,24 @@
                 }
             });
 
+            // Con sesión, el inventario llega desde la API (auth-sync lo hidrata y
+            // dispara 'inventarioReady'); refrescamos y re-renderizamos al llegar.
+            window.addEventListener('inventarioReady', () => {
+                nevera = JSON.parse(localStorage.getItem('cookSmartNevera')) || [];
+                cargarNevera();
+                actualizarStats();
+                mostrarAlertas();
+            });
+
+            // Cargar el catálogo del backend en el datalist, para que lo que se escribe
+            // mapee a un id_ingrediente real (requisito para persistir en la cuenta).
+            if (window.CookSmartInventario) {
+                window.CookSmartInventario.catalogo().then(cat => {
+                    const extra = cat.map(i => `<option value="${i.nombre_ingrediente.toLowerCase()}">`).join('');
+                    datalist.innerHTML += extra;
+                }).catch(() => {});
+            }
+
             cargarNevera();
         }
 
@@ -1303,8 +1319,7 @@
                 categoria
             };
 
-            nevera.push(nuevoIng);
-            guardarDatos();
+            _persistirAlta(nuevoIng);
 
             // Limpiar form
             document.getElementById('ingNombre').value = '';
@@ -1313,37 +1328,83 @@
             actualizarVencimientoUI();
         }
 
+        // Centraliza el alta: con sesión persiste en la API (catálogo); sin sesión, local.
+        async function _persistirAlta(item) {
+            const usuario = window.CookSmartAuth && window.CookSmartAuth.usuarioActual();
+            if (usuario && window.CookSmartInventario) {
+                // Garantiza que el catálogo esté cargado antes de resolver el id
+                // (evita un falso "no está en el catálogo" por condición de carrera).
+                try { await window.CookSmartInventario.catalogo(); } catch (_) {}
+                const idIng = window.CookSmartInventario.idDeNombre(item.nombre);
+                if (!idIng) {
+                    alert('Elige un ingrediente del catálogo (escribe el nombre y selecciónalo de la lista) para guardarlo en tu cuenta.');
+                    return;
+                }
+                try {
+                    const guardado = await window.CookSmartInventario.agregar(usuario.id_usuario, {
+                        idIngrediente: idIng,
+                        cantidad: parseFloat(item.cantidad) || 1,
+                        unidad: null,
+                        fechaCompra: item.fechaCompra,
+                        fechaVencimiento: item.fechaVencimiento,
+                    });
+                    nevera.push(guardado);
+                    guardarDatos();
+                } catch (e) {
+                    alert('No se pudo guardar en tu cuenta: ' + (e.message || e));
+                }
+            } else {
+                nevera.push(item);
+                guardarDatos();
+            }
+        }
+
         function agregarSeleccionRapida() {
             const checkboxes = document.querySelectorAll('#quickSelectGrid input[type="checkbox"]:checked');
             if (checkboxes.length === 0) return;
 
             const hoy = new Date().toISOString().split('T')[0];
 
-            checkboxes.forEach(cb => {
-                const nombre = cb.value;
-                // Evitar duplicados exactos si se desea, pero aquí lo agregamos
-                nevera.push({
-                    id: Date.now() + Math.random(),
-                    nombre: nombre,
-                    cantidad: "Al gusto",
-                    fechaCompra: hoy,
-                    fechaVencimiento: null,
-                    categoria: cb.dataset.cat
-                });
-                cb.checked = false; // Desmarcar
-            });
+            const seleccion = Array.from(checkboxes).map(cb => ({
+                id: Date.now() + Math.random(),
+                nombre: cb.value,
+                cantidad: "1",
+                fechaCompra: hoy,
+                fechaVencimiento: null,
+                categoria: cb.dataset.cat
+            }));
+            checkboxes.forEach(cb => { cb.checked = false; });
 
-            guardarDatos();
-            alert(`${checkboxes.length} ingredientes agregados a la nevera.`);
+            // Persiste cada uno (API con sesión, local sin sesión), en serie.
+            (async () => {
+                for (const item of seleccion) await _persistirAlta(item);
+                alert(`${seleccion.length} ingrediente(s) agregado(s) a la nevera.`);
+            })();
         }
 
-        window.eliminarIngrediente = function (id) {
+        window.eliminarIngrediente = async function (id) {
+            const item = nevera.find(ing => ing.id === id);
+            const usuario = window.CookSmartAuth && window.CookSmartAuth.usuarioActual();
+            if (usuario && item && item.idInventario && window.CookSmartInventario) {
+                try {
+                    await window.CookSmartInventario.eliminar(usuario.id_usuario, item.idInventario);
+                } catch (e) {
+                    alert('No se pudo eliminar de tu cuenta: ' + (e.message || e));
+                    return;
+                }
+            }
             nevera = nevera.filter(ing => ing.id !== id);
             guardarDatos();
         };
 
-        function limpiarTodo() {
+        async function limpiarTodo() {
             if (confirm("¿Estás seguro de que deseas vaciar tu nevera por completo?")) {
+                const usuario = window.CookSmartAuth && window.CookSmartAuth.usuarioActual();
+                if (usuario && window.CookSmartInventario) {
+                    for (const item of nevera.filter(i => i.idInventario)) {
+                        await window.CookSmartInventario.eliminar(usuario.id_usuario, item.idInventario).catch(() => {});
+                    }
+                }
                 nevera = [];
                 guardarDatos();
             }
@@ -1361,11 +1422,19 @@
             if (confirm(
                 `¿Eliminar ${vencidos.length} producto(s) vencido(s)?`
             )) {
-                nevera = nevera.filter(ing => {
-                    const dias = calcularFrescura(ing.fechaVencimiento);
-                    return dias === null || dias >= 0;
-                });
-                guardarDatos();
+                (async () => {
+                    const usuario = window.CookSmartAuth && window.CookSmartAuth.usuarioActual();
+                    if (usuario && window.CookSmartInventario) {
+                        for (const item of vencidos.filter(i => i.idInventario)) {
+                            await window.CookSmartInventario.eliminar(usuario.id_usuario, item.idInventario).catch(() => {});
+                        }
+                    }
+                    nevera = nevera.filter(ing => {
+                        const dias = calcularFrescura(ing.fechaVencimiento);
+                        return dias === null || dias >= 0;
+                    });
+                    guardarDatos();
+                })();
             }
         }
 
@@ -1584,15 +1653,12 @@
         });
 
         function guardarDatos() {
+            // Espejo local para el resto de la app (recetas.html lee 'cookSmartNevera').
+            // Con sesión, la fuente de verdad es la API; este espejo refleja su estado.
             localStorage.setItem('cookSmartNevera', JSON.stringify(nevera));
             cargarNevera();
             actualizarStats();
             mostrarAlertas();
-
-            // Sincronizar con Firebase si el usuario está logueado y la función existe
-            if (window.syncToFirebase) {
-                window.syncToFirebase('nevera', nevera);
-            }
         }
 
         // Iniciar
@@ -1603,7 +1669,7 @@
         });
     </script>
 
-    <!-- Sincronización Firebase -->
+    <!-- Autenticación y sincronización con el backend (PostgreSQL) -->
     <script src="auth-sync.js"></script>
 </body>
 

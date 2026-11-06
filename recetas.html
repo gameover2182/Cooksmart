@@ -1390,25 +1390,20 @@
             window.addEventListener('recetasDBReady', aplicarFiltros);
         }
 
-        // Sincronizar preferencias desde Firebase
-        if (typeof firebase !== 'undefined') {
-            const fbAuth2 = firebase.auth();
-            const fbDB2 = firebase.database();
-            fbAuth2.onAuthStateChanged(async user => {
-                if (user) {
-                    try {
-                        const snap = await fbDB2.ref('usuarios/' + user.uid + '/preferencias').get();
-                        if (snap.exists()) {
-                            const prefs = snap.val();
-                            const restricciones = prefs.restricciones || (prefs.restriccion ? [prefs.restriccion] : []);
-                            const gustos = prefs.gustos || [];
-                            localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
-                            localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
-                            aplicarFiltros();
-                        }
-                    } catch(e) { console.warn(e); }
-                }
-            });
+        // Sincronizar preferencias del usuario desde el backend (PostgreSQL).
+        // Antes venía de Firebase (ya retirado); ahora las preferencias están en
+        // /auth/me y se guardan en localStorage para filtrar el catálogo.
+        if (window.CookSmartAuth && window.CookSmartAuth.usuarioActual()) {
+            window.CookSmartAuth.apiFetch('/auth/me')
+                .then(({ usuario }) => {
+                    const prefs = (usuario && usuario.preferencias) || {};
+                    const restricciones = prefs.restricciones || [];
+                    const gustos = prefs.gustos || [];
+                    localStorage.setItem('cookSmartRestricciones', JSON.stringify(restricciones));
+                    localStorage.setItem('cookSmartGustos', JSON.stringify(gustos));
+                    aplicarFiltros();
+                })
+                .catch(e => console.warn('No se pudieron cargar preferencias:', e));
         }
 
     </script>
