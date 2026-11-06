@@ -8,7 +8,7 @@ La evolución se activa por **umbrales**, no por calendario. Cada paso dice qué
 
 | Paso | Disparador (umbral medible) | Acción | Evidencia que lo respalda |
 |---|---|---|---|
-| **Ahora (M8)** | — | Conectar el inventario del front a la API; limpiar código muerto de Firebase | Backend de inventario ya existe y responde (smoke test §3 de `15-evidencia-ejecutable.md`) |
+| **Hecho (M8)** | — | Inventario del front **conectado** a la API; código muerto de Firebase retirado | Implementado (commit `c23267a`); verificado en vivo y por el smoke test §3 de `15-evidencia-ejecutable.md` |
 | **E1** | Logins/s sostenidos > ~2 (1 núcleo saturado) o p95 de login > 2 s | Activar `API_WORKERS=N` (D1) | E4: 4,4× con 4 procesos |
 | **E2** | Al activar N workers | Mover bulkhead/caché/rate-limit a estado compartido (Redis) antes de fiarse de los límites | P9 / R-S3 (condición de ADR-004) |
 | **E3** | CPU del host > ~70 % con todos los núcleos usados | D2: segundo host + balanceador | E5: D2 es 10² USD/mes |
@@ -21,14 +21,14 @@ La evolución se activa por **umbrales**, no por calendario. Cada paso dice qué
 
 No es rechazo ideológico: es que **ningún disparador medido** apunta a ellos. El cuello (E1) es la CPU de un hilo, que se resuelve replicando el proceso completo (E4), no partiendo el dominio. Los microservicios entran solo si algún día se **mide** que un componente necesita un ciclo de vida o un escalado propio — y entonces se extrae ese, con su costo (E5) sobre la mesa.
 
-## 3. Lo que se construye en este módulo (M8)
+## 3. Lo que se construyó en este módulo (M8) — hecho
 
-Única evolución que se ejecuta ahora, porque el backend ya está listo y cierra una deuda real:
+Única evolución ejecutada en M8, porque el backend ya estaba listo y cerraba una deuda real:
 
-- **Inventario del front → API.** Hoy "Mi Nevera" vive solo en `localStorage`; el backend tiene `POST/GET/DELETE /usuarios/:id/inventario`. Se conecta siguiendo el patrón ya probado de favoritos (sincronización en `auth-sync`), con el input de ingredientes atado al **catálogo** (el backend exige `id_ingrediente`). Resultado: el inventario persiste en Postgres y entre dispositivos.
-- **Limpieza de código muerto de Firebase** (referencias a `syncToFirebase` que ya no existe), para que el código no mienta sobre lo que hace.
+- **Inventario del front → API (implementado, commit `c23267a`).** Antes "Mi Nevera" vivía solo en `localStorage`; ahora, con sesión, sincroniza con `POST/GET/DELETE /usuarios/:id/inventario` a través de `window.CookSmartInventario` en `auth-sync.js`, con el input de ingredientes atado al **catálogo** (`/ingredientes`; el backend exige `id_ingrediente` y `unidad`). Resultado: el inventario persiste en Postgres y entre dispositivos. Sin sesión, sigue el modo local (fallback). Verificado en vivo (alta por formulario → fila en Postgres → visible al recargar; baja → borrado en servidor) y sin errores de consola.
+- **Limpieza de código muerto de Firebase** (`syncToFirebase` retirado; preferencias de recetas ahora desde `/auth/me`), para que el código no mienta sobre lo que hace.
 
-Ambos cambios son reversibles y no tocan el dominio ni el esquema.
+Ambos cambios son reversibles y no tocan el dominio ni el esquema. **Deuda que queda abierta:** un ingrediente de texto libre fuera del catálogo de 51 no persiste (solo local); es un límite consciente, no un fallo.
 
 ## 4. Lo que explícitamente NO se hará ahora
 
